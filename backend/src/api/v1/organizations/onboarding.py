@@ -1,24 +1,12 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
-import stripe
 
+from domain.organizations.schemas import AccountSessionRequest, AccountSessionResponse, AccountResponse
 from database.relational_db import User
 from core.security import auth_user
+from service.payments import StripeService, get_stripe_service
 
 router = APIRouter()
-
-
-class AccountSessionRequest(BaseModel):
-    account: str
-
-
-class AccountSessionResponse(BaseModel):
-    client_secret: str
-
-
-class AccountResponse(BaseModel):
-    account: str
 
 
 @router.post(
@@ -28,33 +16,14 @@ class AccountResponse(BaseModel):
 )
 async def create_account(
     user: Annotated[User, Depends(auth_user)],
+    stripe_service: StripeService = Depends(get_stripe_service),
 ):
     try:
-        account = stripe.Account.create(
-            controller={
-                "stripe_dashboard": {
-                    "type": "none",
-                },
-                "fees": {
-                    "payer": "application"
-                },
-                "losses": {
-                    "payments": "application"
-                },
-                "requirement_collection": "application",
-            },
-            capabilities={
-                "transfers": {"requested": True}
-            },
-            country="US",
-        )
-
-        return AccountResponse(
-            account=account.id
-        )
+        account_id = await stripe_service.create_account()
+        return AccountResponse(account=account_id)
     except Exception as e:
         print('An error occurred when calling the Stripe API to create an account: ', e)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=503, detail=str(e))
 
 
 @router.post(
@@ -65,18 +34,11 @@ async def create_account(
 async def create_account_session(
     payload: AccountSessionRequest,
     user: Annotated[User, Depends(auth_user)],
+    stripe_service: StripeService = Depends(get_stripe_service),
 ):
     try:
-        account_session = stripe.AccountSession.create(
-            account=payload.account,
-            components={
-                "account_onboarding": {"enabled": True},
-            },
-        )
-
-        return AccountSessionResponse(
-            client_secret=account_session.client_secret
-        )
+        client_secret = await stripe_service.create_account_session(payload.account)
+        return AccountSessionResponse(client_secret=client_secret)
     except Exception as e:
         print('An error occurred when calling the Stripe API to create an account session: ', e)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=503, detail=str(e))
