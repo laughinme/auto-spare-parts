@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useAuth } from "./context/AuthContext";
+import { useAuth } from "./context/useAuth.js";
 import Topbar from "./components/Topbar.jsx";
 import OnboardingFlow from "./components/onboarding/OnboardingFlow.jsx";
 import FYP from "./components/fyp/FYP.jsx";
@@ -37,6 +37,18 @@ function App() {
     }
   }, [user, route]);
 
+  // Hooks must be declared before any early returns
+  const activeOrder = useMemo(() => orders.find((o) => o.id === activeOrderId) || null, [orders, activeOrderId]);
+
+  const supplierMetrics = useMemo(() => {
+    const myOrders = orders.filter((o) => o.supplierId === SUPPLIER_SELF_ID);
+    const gmv = myOrders.reduce((sum, o) => sum + o.items.reduce((s, it) => s + it.price * it.qty, 0), 0);
+    const pending = myOrders.filter((o) => o.status === "Новый").length;
+    const mySkus = products.filter((p) => p.supplierId === SUPPLIER_SELF_ID).length;
+    const conv = myOrders.length ? Math.min(98, 20 + mySkus) : 0;
+    return { gmv, pending, mySkus, orders: myOrders.length, conv };
+  }, [orders, products]);
+
   if (isUserLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -57,7 +69,13 @@ function App() {
     } else if (payload.role === "supplier") {
       setRole("supplier");
       setSupplierProfile(payload.supplierProfile);
-      setRoute("supplier:dashboard");
+      // If Stripe clientSecret is present, require onboarding completion before dashboard
+      if (payload.stripe?.clientSecret) {
+        // For now, just direct to dashboard; embedding UI can be added later with clientSecret
+        setRoute("supplier:dashboard");
+      } else {
+        setRoute("supplier:dashboard");
+      }
     }
   };
 
@@ -87,8 +105,6 @@ function App() {
     setActiveOrderId(created[0].id);
     setRoute("order");
   };
-
-  const activeOrder = useMemo(() => orders.find((o) => o.id === activeOrderId) || null, [orders, activeOrderId]);
 
   const sendChatMessage = (orderId, author, text) => {
     setOrders((prev) =>
@@ -123,14 +139,7 @@ function App() {
     }
   };
 
-  const supplierMetrics = useMemo(() => {
-    const myOrders = orders.filter((o) => o.supplierId === SUPPLIER_SELF_ID);
-    const gmv = myOrders.reduce((sum, o) => sum + o.items.reduce((s, it) => s + it.price * it.qty, 0), 0);
-    const pending = myOrders.filter((o) => o.status === "Новый").length;
-    const mySkus = products.filter((p) => p.supplierId === SUPPLIER_SELF_ID).length;
-    const conv = myOrders.length ? Math.min(98, 20 + mySkus) : 0;
-    return { gmv, pending, mySkus, orders: myOrders.length, conv };
-  }, [orders, products]);
+  
   
   const showTopbar = route !== "onboarding";
 

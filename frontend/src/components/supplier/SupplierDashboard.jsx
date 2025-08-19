@@ -1,4 +1,5 @@
 import React from "react";
+import StripeOnboarding from "./StripeOnboarding.jsx";
 
 export default function SupplierDashboard({ supplierProfile, metrics }) {
 	return (
@@ -47,6 +48,10 @@ export default function SupplierDashboard({ supplierProfile, metrics }) {
 				</div>
 				<a className="btn primary" href="#" onClick={(e) => { e.preventDefault(); window.__setRoute && window.__setRoute("supplier:products"); }}>Открыть товары →</a>
 			</div>
+
+			{supplierProfile?.stripe?.clientSecret && (
+				<StripeOnboarding clientSecret={supplierProfile.stripe.clientSecret} />
+			)}
 		</div>
 	);
 }
