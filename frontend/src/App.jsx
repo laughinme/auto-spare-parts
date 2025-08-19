@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useAuth } from "./context/AuthContext";
 import Topbar from "./components/Topbar.jsx";
 import OnboardingFlow from "./components/onboarding/OnboardingFlow.jsx";
 import FYP from "./components/fyp/FYP.jsx";
@@ -14,53 +15,50 @@ import { SUPPLIER_SELF_ID } from "./data/constants.js";
 import { createOrdersFromCart } from "./utils/helpers.js";
 
 function App() {
-  const [route, setRoute] = useState("auth"); // auth | onboarding | fyp | product | cart | order | supplier:dashboard | supplier:products | tests
-  const [role, setRole] = useState(null); // buyer | supplier
-  const [buyerType, setBuyerType] = useState(null); // private | workshop
-  const [firstVisit, setFirstVisit] = useState(true);
-  const [user, setUser] = useState(null); // { email }
-
-  // Buyer profile
-  const [garage, setGarage] = useState([]); // array of vehicles (strings)
-
-  // Supplier profile
-  const [supplierProfile, setSupplierProfile] = useState(null); // { companyName, addressLine1, city, phone }
-
-  // Product / Cart / Order state
+  const { user, isUserLoading, logout } = useAuth();
+  
+  const [route, setRoute] = useState("fyp");
+  const [role, setRole] = useState(null);
+  const [buyerType, setBuyerType] = useState(null);
+  const [garage, setGarage] = useState([]);
+  const [supplierProfile, setSupplierProfile] = useState(null);
   const [products, setProducts] = useState(MOCK_PRODUCTS);
   const productsById = useMemo(() => Object.fromEntries(products.map((p) => [p.id, p])), [products]);
-
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [cart, setCart] = useState([]); // { productId, qty }
-  const [orders, setOrders] = useState([]); // { id, items: [...], supplierId, supplierName, chat: [] }
+  const [cart, setCart] = useState([]);
+  const [orders, setOrders] = useState([]);
   const [activeOrderId, setActiveOrderId] = useState(null);
 
   useEffect(() => {
-    if (!firstVisit) return;
-    if (!user) setRoute("auth");
-  }, [firstVisit, user]);
+    if(user && !user.is_onboarded && route !== 'onboarding') {
+      setRoute("onboarding");
+    } else if (user && user.is_onboarded && route === 'onboarding') {
+      setRoute("fyp");
+    }
+  }, [user, route]);
 
-  const handleLogin = ({ email }) => {
-    setUser({ email });
-    setRoute("fyp");
-  };
+  if (isUserLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <p className="text-lg text-slate-500">Загрузка...</p>
+      </div>
+    );
+  }
 
-  const handleRegister = ({ email }) => {
-    setUser({ email });
-    setRoute("onboarding");
-  };
-
+  if (!user) {
+    return <AuthPage />;
+  }
+  
   const handleFinishOnboarding = (payload) => {
     if (payload.role === "buyer") {
       setRole("buyer");
       setBuyerType(payload.buyerType);
-      setRoute("fyp"); // Garage widget awaits on FYP
+      setRoute("fyp");
     } else if (payload.role === "supplier") {
       setRole("supplier");
       setSupplierProfile(payload.supplierProfile);
       setRoute("supplier:dashboard");
     }
-    setFirstVisit(false);
   };
 
   const handleAddVehicle = (value) => {
@@ -125,17 +123,16 @@ function App() {
     }
   };
 
-  // Supplier metrics (backend-friendly)
   const supplierMetrics = useMemo(() => {
     const myOrders = orders.filter((o) => o.supplierId === SUPPLIER_SELF_ID);
     const gmv = myOrders.reduce((sum, o) => sum + o.items.reduce((s, it) => s + it.price * it.qty, 0), 0);
     const pending = myOrders.filter((o) => o.status === "Новый").length;
     const mySkus = products.filter((p) => p.supplierId === SUPPLIER_SELF_ID).length;
-    const conv = myOrders.length ? Math.min(98, 20 + mySkus) : 0; // mocked conversion %
+    const conv = myOrders.length ? Math.min(98, 20 + mySkus) : 0;
     return { gmv, pending, mySkus, orders: myOrders.length, conv };
   }, [orders, products]);
-
-  const showTopbar = route !== "auth" && route !== "onboarding";
+  
+  const showTopbar = route !== "onboarding";
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white text-slate-800">
@@ -147,13 +144,11 @@ function App() {
           cartCount={cart.reduce((a, b) => a + b.qty, 0)}
           isWorkshop={buyerType === "workshop"}
           showSupplierTab={role === "supplier"}
+          onLogout={logout}
         />
       )}
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {route === "auth" && (
-          <AuthPage onLogin={handleLogin} onRegister={handleRegister} />
-        )}
         {route === "onboarding" && (
           <OnboardingFlow onFinish={handleFinishOnboarding} />
         )}
@@ -205,7 +200,6 @@ function App() {
   );
 }
 
-// -------------------- Shared Styles (Design System) --------------------
 const styles = `
 .input { @apply px-3 py-2 border rounded-2xl outline-none focus:ring-2 focus:ring-sky-200 focus:border-sky-500 transition; }
 .btn { @apply inline-flex items-center justify-center px-3 py-2 rounded-2xl border text-sm font-medium transition active:translate-y-[1px]; }
@@ -221,16 +215,13 @@ const styles = `
 .seg--active { @apply bg-slate-900 text-white; }
 `;
 
-// Inject tailwind utility classes for demo (works in Canvas)
 const StyleInjector = () => <style dangerouslySetInnerHTML={{ __html: styles }} />;
 
-// Ensure styles injected
-const _origApp = App;
 export default function WrappedApp() {
   return (
     <>
       <StyleInjector />
-      <_origApp />
+      <App />
     </>
   );
 }
