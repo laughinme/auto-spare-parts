@@ -1,7 +1,7 @@
 import React from "react";
-import StripeOnboarding from "./StripeOnboarding.jsx";
 
 export default function SupplierDashboard({ supplierProfile, metrics }) {
+
 	return (
 		<div className="space-y-6">
 			<div className="flex items-center justify-between">
@@ -41,6 +41,7 @@ export default function SupplierDashboard({ supplierProfile, metrics }) {
 				</div>
 			</div>
 
+			{
 			<div className="card p-4 flex items-center justify-between">
 				<div>
 					<div className="font-semibold">Перейти к управлению товарами</div>
@@ -48,10 +49,9 @@ export default function SupplierDashboard({ supplierProfile, metrics }) {
 				</div>
 				<a className="btn primary" href="#" onClick={(e) => { e.preventDefault(); window.__setRoute && window.__setRoute("supplier:products"); }}>Открыть товары →</a>
 			</div>
+			}
 
-			{supplierProfile?.stripe?.clientSecret && (
-				<StripeOnboarding clientSecret={supplierProfile.stripe.clientSecret} />
-			)}
+			{/* Странице онбординга вынесен в отдельный маршрут */}
 		</div>
 	);
 }

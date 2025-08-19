@@ -35,8 +35,8 @@ export default function OnboardingFlow({ onFinish }) {
 	const finish = async () => {
 		if (role === "supplier") {
 			try {
-				const { data: acc } = await apiProtected.post("/organizations/onboarding/account");
-				const { data: sess } = await apiProtected.post("/organizations/onboarding/account_session", { account: acc.account });
+				const { data: acc } = await apiProtected.post("/organizations/account");
+				const { data: sess } = await apiProtected.post("/organizations/account_session", { account: acc.account });
 				onFinish({ role: "supplier", supplierProfile: { companyName, addressLine1, city, phone }, stripe: { account: acc.account, clientSecret: sess.client_secret } });
 				return;
 			} catch (e) {

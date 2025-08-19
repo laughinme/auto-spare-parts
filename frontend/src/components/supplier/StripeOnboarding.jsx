@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { loadConnectAndInitialize } from '@stripe/connect-js';
 
-export default function StripeOnboarding({ clientSecret }) {
+export default function StripeOnboarding({ clientSecret, onComplete }) {
   const containerRef = useRef(null);
   const [error, setError] = useState(null);
 
@@ -24,6 +24,14 @@ export default function StripeOnboarding({ clientSecret }) {
 
         if (unmounted) return;
         embedded = stripeConnect.create('account_onboarding');
+
+        // Try to listen for completion events from the embedded component
+        try {
+          embedded?.addEventListener?.('complete', () => {
+            onComplete?.();
+          });
+        } catch {}
+
         embedded.mount(containerRef.current);
       } catch (e) {
         console.error(e);
@@ -37,7 +45,7 @@ export default function StripeOnboarding({ clientSecret }) {
         embedded?.unmount?.();
       } catch {}
     };
-  }, [clientSecret]);
+  }, [clientSecret, onComplete]);
 
   if (error) {
     return (
