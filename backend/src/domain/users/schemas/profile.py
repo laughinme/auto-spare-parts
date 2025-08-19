@@ -20,7 +20,6 @@ class UserModel(TimestampModel):
     is_onboarded: bool
     banned: bool
 
-
 class UserPatch(BaseModel):
     username: str | None = Field(None, description="User's display name")
     profile_pic_url: str | None = Field(None)

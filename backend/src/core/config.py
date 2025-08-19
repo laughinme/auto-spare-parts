@@ -27,6 +27,9 @@ class Settings(BaseSettings):
     MEDIA_DIR: str = 'media'
     MAX_PHOTO_SIZE: int = 10 # in MB
     
+    # External services
+    STRIPE_SECRET_KEY: str
+    
     # Auth Settings    
     JWT_PRIVATE_KEY: str
     JWT_PUBLIC_KEY: str
