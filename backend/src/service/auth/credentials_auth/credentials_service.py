@@ -41,7 +41,6 @@ class CredentialsService:
     async def _hash_password(password: str) -> str:
         return await hash_password(password)
     
-    
     async def register(
         self,
         payload: UserRegister,
@@ -76,7 +75,7 @@ class CredentialsService:
         user = await self.user_repo.get_by_email(payload.email)
         if user is None:
             raise WrongCredentials()
-
+        
         await self._check_password(payload.password, user.password_hash)
         
         if await needs_rehash(user.password_hash):

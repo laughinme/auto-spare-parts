@@ -1,28 +1,18 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as api from '../api';
-import apiClient from '../api/axiosInstance';
+import { setAccessToken as setAxiosAccessToken, apiPublic } from '../api/axiosInstance';
+import { AuthContext } from './AuthContextObject.js';
 
-const AuthContext = createContext(null);
+// Context moved to separate file to satisfy Fast Refresh rules
 
 export const AuthProvider = ({ children }) => {
     const queryClient = useQueryClient();
     const [accessToken, setAccessToken] = useState(null);
 
     useEffect(() => {
-        const interceptor = apiClient.interceptors.request.use(
-            (config) => {
-                if (accessToken) {
-                    config.headers.Authorization = `Bearer ${accessToken}`;
-                }
-                return config;
-            },
-            (error) => Promise.reject(error)
-        );
-
-        return () => {
-            apiClient.interceptors.request.eject(interceptor);
-        };
+        // keep axiosProtected aware via module-level var
+        setAxiosAccessToken(accessToken);
     }, [accessToken]);
 
     const { data: user, isLoading: isUserLoading, isError } = useQuery({
@@ -38,7 +28,9 @@ export const AuthProvider = ({ children }) => {
     const loginMutation = useMutation({
         mutationFn: api.loginUser,
         onSuccess: (data) => {
-            setAccessToken(data.access_token);
+            if (data?.access_token) {
+                setAccessToken(data.access_token);
+            }
             queryClient.invalidateQueries({ queryKey: ['me'] });
         },
     });
@@ -46,7 +38,9 @@ export const AuthProvider = ({ children }) => {
     const registerMutation = useMutation({
         mutationFn: api.registerUser,
         onSuccess: (data) => {
-            setAccessToken(data.access_token);
+            if (data?.access_token) {
+                setAccessToken(data.access_token);
+            }
             queryClient.invalidateQueries({ queryKey: ['me'] });
         },
     });
@@ -63,6 +57,29 @@ export const AuthProvider = ({ children }) => {
         }
     });
 
+    // Bootstrap on mount: try refresh to get an access token if cookies present
+    useEffect(() => {
+        (async () => {
+            try {
+                const csrfCookie = document.cookie
+                    .split(';')
+                    .map((c) => c.trim())
+                    .find((c) => c.startsWith('csrf_token='));
+                const csrfToken = csrfCookie ? decodeURIComponent(csrfCookie.split('=')[1]) : null;
+                if (!csrfToken) return;
+                const { data } = await apiPublic.post('/auth/refresh', {}, {
+                    headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {},
+                    withCredentials: true,
+                });
+                if (data?.access_token) {
+                    setAccessToken(data.access_token);
+                }
+            } catch {
+                // ignore
+            }
+        })();
+    }, []);
+
     const value = {
         user: isError ? null : user,
         isUserLoading,
@@ -78,6 +95,4 @@ export const AuthProvider = ({ children }) => {
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-export const useAuth = () => {
-    return useContext(AuthContext);
-};
+// Hook moved to separate file to satisfy React Fast Refresh rules

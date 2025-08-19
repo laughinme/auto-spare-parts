@@ -7,19 +7,21 @@ from starlette.middleware.cors import CORSMiddleware
 from api import get_api_routers
 from webhooks import get_webhooks
 from core.config import Settings, configure_logging
+from core.payments import init_stripe
 from database.redis import get_redis
 # from scheduler import init_scheduler
 
 
 config = Settings() # pyright: ignore[reportCallIssue]
-configure_logging()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     redis = get_redis()
     try:
         await FastAPILimiter.init(redis)
-        yield
+        configure_logging()
+        init_stripe()
+        yield   
     finally:
         await redis.aclose()
 
@@ -31,7 +33,7 @@ app = FastAPI(
 )
 
 # Mount static
-# app.mount('/media', StaticFiles(directory=config.MEDIA_DIR, check_dir=False), 'media')
+app.mount('/media', StaticFiles(directory=config.MEDIA_DIR, check_dir=False), 'media')
 
 # Including routers
 app.include_router(get_api_routers())
