@@ -43,16 +43,15 @@ fun SignInScreen(
     val email by viewModel.email.collectAsStateWithLifecycle()
     val password by viewModel.password.collectAsStateWithLifecycle()
     val authState by viewModel.authState.collectAsStateWithLifecycle()
+    val emailError by viewModel.emailError.collectAsStateWithLifecycle()
+    val passwordError by viewModel.passwordError.collectAsStateWithLifecycle()
 
-    // Создаем состояние для Snackbar и скоуп для его запуска
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    // Используем LaunchedEffect для показа Snackbar при ошибке
     LaunchedEffect(key1 = authState) {
         when (val state = authState) {
             is Resource.Success -> {
-                // Навигация произойдет после успешного ответа
                 onSignInSuccess()
             }
             is Resource.Error -> {
@@ -91,6 +90,8 @@ fun SignInScreen(
                     label = { Text("Email") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
+                    isError = emailError != null,
+                    supportingText = { if (emailError != null) Text(emailError!!) },
                     enabled = authState !is Resource.Loading
                 )
                 Spacer(Modifier.height(16.dp))
@@ -100,18 +101,23 @@ fun SignInScreen(
                     label = { Text("Password") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
+                    isError = passwordError != null,
+                    supportingText = { if (passwordError != null) Text(passwordError!!) },
                     enabled = authState !is Resource.Loading
                 )
                 Spacer(Modifier.height(32.dp))
                 Button(
                     onClick = { viewModel.onSignInClicked() },
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = authState !is Resource.Loading
+                    enabled = authState !is Resource.Loading && emailError == null && passwordError == null
                 ) {
                     Text("Sign In")
                 }
-                TextButton(onClick = onNavigateToSignUp, enabled = authState !is Resource.Loading) {
-                    Text("Don't have an account? Sign Up")
+                TextButton(
+                    onClick = onNavigateToSignUp, 
+                    enabled = authState !is Resource.Loading
+                ) {
+                    Text("Don\'t have an account? Sign Up")
                 }
             }
 

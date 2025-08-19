@@ -42,7 +42,11 @@ fun SignUpScreen(
 ) {
     val email by viewModel.email.collectAsStateWithLifecycle()
     val password by viewModel.password.collectAsStateWithLifecycle()
+    val username by viewModel.username.collectAsStateWithLifecycle() // Добавлено
     val authState by viewModel.authState.collectAsStateWithLifecycle()
+    val emailError by viewModel.emailError.collectAsStateWithLifecycle()
+    val passwordError by viewModel.passwordError.collectAsStateWithLifecycle()
+    val usernameError by viewModel.usernameError.collectAsStateWithLifecycle() // Добавлено
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -83,11 +87,24 @@ fun SignUpScreen(
                 Text("Sign Up", fontSize = 28.sp)
                 Spacer(Modifier.height(40.dp))
                 OutlinedTextField(
+                    value = username, // Добавлено
+                    onValueChange = { viewModel.onUsernameChanged(newUsername = it) }, // Добавлено
+                    label = { Text("Username") }, // Добавлено
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    isError = usernameError != null, // Добавлено
+                    supportingText = { if (usernameError != null) Text(usernameError!!) }, // Добавлено
+                    enabled = authState !is Resource.Loading
+                )
+                Spacer(Modifier.height(16.dp))
+                OutlinedTextField(
                     value = email,
                     onValueChange = { viewModel.onEmailChanged(newEmail = it) },
                     label = { Text("Email") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
+                    isError = emailError != null,
+                    supportingText = { if (emailError != null) Text(emailError!!) },
                     enabled = authState !is Resource.Loading
                 )
                 Spacer(Modifier.height(16.dp))
@@ -97,17 +114,22 @@ fun SignUpScreen(
                     label = { Text("Password") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
+                    isError = passwordError != null,
+                    supportingText = { if (passwordError != null) Text(passwordError!!) },
                     enabled = authState !is Resource.Loading
                 )
                 Spacer(Modifier.height(32.dp))
                 Button(
                     onClick = { viewModel.onSignUpClicked() },
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = authState !is Resource.Loading
+                    enabled = authState !is Resource.Loading && emailError == null && passwordError == null && usernameError == null // Обновлено
                 ) {
                     Text("Sign Up")
                 }
-                TextButton(onClick = onNavigateToSignIn, enabled = authState !is Resource.Loading) {
+                TextButton(
+                    onClick = onNavigateToSignIn, 
+                    enabled = authState !is Resource.Loading
+                ) {
                     Text("Already have an account? Sign In")
                 }
             }
