@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import apiProtected from "../../api/axiosInstance";
 import Stepper from "./Stepper.jsx";
 import RoleCard from "./RoleCard.jsx";
 import TagSelector from "./TagSelector.jsx";
@@ -31,7 +32,17 @@ export default function OnboardingFlow({ onFinish }) {
 	const next = () => setStep((s) => Math.min(3, s + 1));
 	const back = () => setStep((s) => Math.max(0, s - 1));
 
-	const finish = () => {
+	const finish = async () => {
+		if (role === "supplier") {
+			try {
+				const { data: acc } = await apiProtected.post("/organizations/onboarding/account");
+				const { data: sess } = await apiProtected.post("/organizations/onboarding/account_session", { account: acc.account });
+				onFinish({ role: "supplier", supplierProfile: { companyName, addressLine1, city, phone }, stripe: { account: acc.account, clientSecret: sess.client_secret } });
+				return;
+			} catch (e) {
+				console.error("Stripe onboarding init failed", e);
+			}
+		}
 		onFinish(
 			role === "buyer"
 				? { role: "buyer", buyerType, workshopName: buyerType === "workshop" ? (workshopName.trim() || null) : null }
