@@ -1,6 +1,7 @@
 package com.lapcevichme.templates.data.remote
 
 import com.lapcevichme.templates.data.remote.dto.CityModelDto
+import com.lapcevichme.templates.data.remote.dto.StripeOnboardingResponseDto
 import com.lapcevichme.templates.data.remote.dto.TokenPairDto
 import com.lapcevichme.templates.data.remote.dto.UserLoginRequest
 import com.lapcevichme.templates.data.remote.dto.UserModelDto
@@ -78,4 +79,7 @@ interface ApiService {
      */
     @GET("/api/v1/geo/cities/")
     suspend fun listCities(): Response<List<CityModelDto>>
+
+    @POST("your-backend/create-account-session") // <-- Замени на реальный URL
+    suspend fun createStripeAccountSession(): Response<StripeOnboardingResponseDto>
 }

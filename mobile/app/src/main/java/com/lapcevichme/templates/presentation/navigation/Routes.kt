@@ -20,6 +20,7 @@ object Routes {
     const val AGE_PICKER = "age_picker"
     const val GENDER_PICKER = "gender_picker"
     const val CITY_PICKER = "city_picker"
+    const val STRIPE_ONBOARDING = "stripe_onboarding"
 
     // --- ЭКРАНЫ ОСНОВНОГО ГРАФА (MAIN_GRAPH) ---
     // Маршруты для вкладок Bottom Navigation Bar

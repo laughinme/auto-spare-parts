@@ -1,11 +1,19 @@
 package com.lapcevichme.templates.presentation.navigation
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
+import com.lapcevichme.templates.presentation.screen.ConnectOnboardingScreen
+import com.lapcevichme.templates.presentation.screen.onboardingScreens.AgePickerScreen
 import com.lapcevichme.templates.presentation.screen.onboardingScreens.CityScreen
+import com.lapcevichme.templates.presentation.screen.onboardingScreens.GenderPickerScreen
 import com.lapcevichme.templates.presentation.screen.onboardingScreens.GreetingScreen
 import com.lapcevichme.templates.presentation.screen.onboardingScreens.SignInScreen
 import com.lapcevichme.templates.presentation.screen.onboardingScreens.SignUpScreen
@@ -60,18 +68,27 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
             route = Routes.PROFILE_CREATION_GRAPH
         ) {
             composable(Routes.AGE_PICKER) {
-//                AgePickerScreen(
-//                    onNext = { navController.navigate(Routes.GENDER_PICKER) }
-//                )
+                AgePickerScreen(
+                    onNext = { navController.navigate(Routes.GENDER_PICKER) }
+                )
             }
             composable(Routes.GENDER_PICKER) {
-//                GenderPickerScreen(
-//                    onNext = { navController.navigate(Routes.CITY_PICKER) }
-//                )
+                GenderPickerScreen(
+                    onNext = { navController.navigate(Routes.CITY_PICKER) }
+                )
             }
             composable(Routes.CITY_PICKER) {
                 CityScreen(
-                    onProfileComplete = {
+                    // Теперь переходим на экран Stripe
+                    onProfileComplete = { navController.navigate(Routes.STRIPE_ONBOARDING) }
+                )
+            }
+
+            // Добавляем новый экран в граф
+            composable(Routes.STRIPE_ONBOARDING) {
+                ConnectOnboardingScreen(
+                    onOnboardingComplete = {
+                        // После успешного онбординга переходим в основное приложение
                         navController.navigate(Routes.MAIN_GRAPH) {
                             popUpTo(Routes.PROFILE_CREATION_GRAPH) {
                                 inclusive = true
@@ -87,8 +104,13 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
             startDestination = Routes.HOME_TAB, // Стартовый экран - вкладка "Home"
             route = Routes.MAIN_GRAPH
         ) {
-//            // Экраны вкладок
-//            composable(Routes.HOME_TAB) { HomeTabScreen() }
+            // Экраны вкладок
+            composable(Routes.HOME_TAB) {
+                // TODO: Замените эту заглушку на ваш реальный HomeTabScreen()
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(text = "Home Screen (Placeholder)")
+                }
+            }
 //            composable(Routes.FRIENDS_TAB) { FriendsTabScreen() }
 //            composable(Routes.CHAT_TAB) { ChatTabScreen() }
 //            composable(Routes.PROFILE_TAB) { ProfileTabScreen(

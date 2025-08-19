@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
@@ -27,15 +28,18 @@ import com.lapcevichme.templates.presentation.navigation.AppNavigation
 import com.lapcevichme.templates.presentation.navigation.Routes
 import com.lapcevichme.templates.presentation.viewmodel.MainViewModel
 import com.lapcevichme.templates.ui.theme.AppTheme
+import com.stripe.android.connect.EmbeddedComponentManager
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
 
     private val viewModel: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        EmbeddedComponentManager.onActivityCreate(this)
 
         setContent {
             AppTheme {

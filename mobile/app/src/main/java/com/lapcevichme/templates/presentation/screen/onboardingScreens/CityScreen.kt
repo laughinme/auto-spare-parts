@@ -103,7 +103,6 @@ fun CityScreen(
             Button(
                 modifier = Modifier.height(60.dp).fillMaxWidth(0.9f),
                 onClick = onProfileComplete,
-                enabled = selectedCityId != null // Кнопка активна только если город выбран
             ) {
                 Text("Продолжить", style = MaterialTheme.typography.headlineSmall)
             }

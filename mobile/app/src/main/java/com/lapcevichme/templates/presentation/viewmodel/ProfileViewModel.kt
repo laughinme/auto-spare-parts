@@ -80,8 +80,6 @@ class ProfileViewModel @Inject constructor(
     val gender = _gender.asStateFlow()
     private val _language = MutableStateFlow("")
     val language = _language.asStateFlow()
-    private val _isPublic = MutableStateFlow(true)
-    val isPublic = _isPublic.asStateFlow()
     private val _selectedCityId = MutableStateFlow<Int?>(null)
     val selectedCityId = _selectedCityId.asStateFlow()
     private val _avatarUrl = MutableStateFlow<String?>(null)

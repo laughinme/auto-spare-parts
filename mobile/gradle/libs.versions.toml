@@ -25,6 +25,7 @@ osmdroid = "6.1.20"
 playServicesLocation = "21.3.0"
 # SIDE LIBS FROM GITHUB
 wheelpickercompose = "1.1.11"
+appcompat = "1.7.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -60,6 +61,7 @@ osmdroid = { group = "org.osmdroid", name = "osmdroid-android", version.ref = "o
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
 # SIDE LIBS FROM GITHUB
 wheelpickercompose = { module = "com.github.commandiron:WheelPickerCompose", version.ref = "wheelpickercompose" }
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
