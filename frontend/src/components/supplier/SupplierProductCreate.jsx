@@ -1,8 +1,9 @@
 import React, {useState } from "react";
 import { createProduct } from "../../api/api.js";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 export default function SupplierProductCreate({onCancel, onCreate,orgId  }) {
 
+  const queryClient = useQueryClient();
 
   const [brand, setBrand] = useState("");
   const [partNumber, setPartNumber] = useState("");
@@ -15,6 +16,14 @@ export default function SupplierProductCreate({onCancel, onCreate,orgId  }) {
     mutationFn: createProduct,
     onSuccess: (data) => {
       alert("Товар успешно создан!");
+      // Инвалидируем кэш продуктов для данной организации
+      queryClient.invalidateQueries({ 
+        queryKey: ['products', orgId] 
+      });
+      // Переходим на страницу товаров
+      if (onCancel) {
+        onCancel(); // Это вернет нас на страницу товаров
+      }
       onCreate && onCreate(data);
     },
     onError: (err) => {

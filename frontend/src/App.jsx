@@ -296,6 +296,7 @@ function App() {
 
         {route === "supplier:products" && (
           <SupplierProducts
+            orgId={user?.organization?.id}
             products={products}
             setProducts={setProducts}
             supplierProfile={supplierProfile}

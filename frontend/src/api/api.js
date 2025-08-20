@@ -7,3 +7,13 @@ export async function createProduct({ productData, orgId }) {
 
   return response.data;
 }
+export async function getProducts({ orgId, query, limit = 20, offset = 0 }) {
+    const response = await apiProtected.get(`/organizations/${orgId}/products`, {
+      params: {
+        q: query,
+        limit,
+        offset,
+      }
+    });
+    return response.data;
+  }
