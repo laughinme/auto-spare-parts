@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+const val MAIN_VIEWMODEL_TAG = "MainViewModel"
+
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val tokenManager: TokenManager
@@ -21,6 +23,7 @@ class MainViewModel @Inject constructor(
     val startDestination = _startDestination.asStateFlow()
 
     init {
+        Log.d(MAIN_VIEWMODEL_TAG, "Initialized ViewModel@${hashCode()}")
         checkUserStatus()
         Log.d("Nya~!", """                                                                                                                                                                           
           ``````````````````````````````````````````````````````````````````````````````````          
