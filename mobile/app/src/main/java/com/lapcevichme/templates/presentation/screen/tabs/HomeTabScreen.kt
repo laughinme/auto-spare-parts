@@ -1,0 +1,74 @@
+package com.lapcevichme.templates.presentation.screen.tabs
+
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.lapcevichme.templates.presentation.components.homeTabCards.QuickSearchCard
+import com.lapcevichme.templates.presentation.components.homeTabCards.SparePartCard
+import com.lapcevichme.templates.ui.theme.PreviewTheme
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HomeTabScreen() {
+    var searchQuery by remember { mutableStateOf("") }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            label = { Text("Search") },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Filled.Search,
+                    contentDescription = "Search Icon"
+                )
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        )
+        LazyColumn(modifier = Modifier.weight(1f)) {
+
+            item {
+                QuickSearchCard()
+            }
+
+            items(20) {
+                SparePartCard()
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true, name = "SparePartCard Light Preview")
+@Composable
+fun HomeTabScreenLightPreview() {
+    PreviewTheme {
+        HomeTabScreen()
+    }
+}
+
+@Preview(showBackground = true, uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES, name = "SparePartCard Dark Preview")
+@Composable
+fun HomeTabScreenDarkPreview() {
+    PreviewTheme { // Example dark theme
+        HomeTabScreen()
+    }
+}
