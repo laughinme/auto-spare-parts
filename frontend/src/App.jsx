@@ -6,6 +6,7 @@ import FYP from "./components/fyp/FYP.jsx";
 import ProductDetail from "./components/product/ProductDetail.jsx";
 import CartPage from "./components/cart/CartPage.jsx";
 import OrderPage from "./components/order/OrderPage.jsx";
+import ChatPage from "./components/chat/ChatPage.jsx";
 import SupplierDashboard from "./components/supplier/SupplierDashboard.jsx";
 import SupplierStripeOnboarding from "./components/onboarding/SupplierStripeOnboarding.jsx";
 import SupplierProducts from "./components/supplier/SupplierProducts.jsx";
@@ -190,6 +191,10 @@ function App() {
 
         {route === "cart" && (
           <CartPage cart={cart} productsById={productsById} setCart={setCart} onCheckout={handleCheckout} />
+        )}
+
+        {route === "chat" && (
+          <ChatPage role={role} />
         )}
 
         {route === "order" && activeOrder && (
