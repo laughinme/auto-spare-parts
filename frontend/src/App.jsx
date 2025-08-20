@@ -12,7 +12,6 @@ import SupplierDashboard from "./components/supplier/SupplierDashboard.jsx";
 import SupplierStripeOnboarding from "./components/onboarding/SupplierStripeOnboarding.jsx";
 import SupplierProducts from "./components/supplier/SupplierProducts.jsx";
 import SupplierProductCreate from "./components/supplier/SupplierProductCreate.jsx";
-import DevTests from "./components/dev/DevTests.jsx";
 import AuthPage from "./components/auth/AuthPage.jsx";
 import { MOCK_PRODUCTS } from "./data/mockProducts.js";
 import { SUPPLIER_SELF_ID } from "./data/constants.js";
@@ -304,6 +303,7 @@ function App() {
 
         {route === "supplier:products:new" && (
           <SupplierProductCreate
+            orgId={user?.organization?.id}
             supplierProfile={supplierProfile}
             onCancel={() => setRoute("supplier:products")}
             onCreate={(payload) => {
