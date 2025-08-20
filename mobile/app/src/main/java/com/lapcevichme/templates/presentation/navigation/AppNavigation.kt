@@ -1,23 +1,18 @@
 package com.lapcevichme.templates.presentation.navigation
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import com.lapcevichme.templates.presentation.screen.ConnectOnboardingScreen
 import com.lapcevichme.templates.presentation.screen.onboardingScreens.GreetingScreen
-import com.lapcevichme.templates.presentation.screen.onboardingScreens.RolePickerScreen // Assuming RolePickerScreen is now correctly imported
+import com.lapcevichme.templates.presentation.screen.onboardingScreens.RolePickerScreen
 import com.lapcevichme.templates.presentation.screen.onboardingScreens.SignInScreen
 import com.lapcevichme.templates.presentation.screen.onboardingScreens.SignUpScreen
 import com.lapcevichme.templates.presentation.screen.tabs.ProfileTabScreen
@@ -45,7 +40,7 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
                 )
             }
             composable(Routes.ROLE_PICKER) {
-                RolePickerScreen( // Using the actual RolePickerScreen now
+                RolePickerScreen(
                     onNavigateToSignUp = { navController.navigate(Routes.SIGN_UP) },
                     onNavigateToSignIn = { navController.navigate(Routes.SIGN_IN) }
                 )
@@ -57,7 +52,15 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
                             popUpTo(Routes.AUTH_GRAPH) { inclusive = true }
                         }
                     },
-                    onNavigateToSignUp = { navController.navigate(Routes.ROLE_PICKER) } // Changed to ROLE_PICKER
+                    // ИЗ   МЕНЕНИЕ 1: Правильный переход назад к выбору роли
+                    onNavigateToSignUp = {
+                        navController.navigate(Routes.ROLE_PICKER) {
+                            // Удаляем SignInScreen из стека
+                            popUpTo(Routes.SIGN_IN) { inclusive = true }
+                            // Гарантируем, что не создадим копию RolePickerScreen
+                            launchSingleTop = true
+                        }
+                    }
                 )
             }
             composable(Routes.SIGN_UP) {
@@ -67,33 +70,26 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
                             popUpTo(Routes.AUTH_GRAPH) { inclusive = true }
                         }
                     },
-                    onNavigateToSignIn = { navController.navigate(Routes.SIGN_IN) }
+                    // ИЗМЕНЕНИЕ 2: Правильный переход на экран входа
+                    onNavigateToSignIn = {
+                        navController.navigate(Routes.SIGN_IN) {
+                            // Удаляем SignUpScreen из стека
+                            popUpTo(Routes.SIGN_UP) { inclusive = true }
+                            // Гарантируем, что не создадим копию SignInScreen
+                            launchSingleTop = true
+                        }
+                    }
                 )
             }
         }
 
         // --- ГРАФ 2: СОЗДАНИЕ ПРОФИЛЯ ---
         navigation(
-            startDestination = Routes.AGE_PICKER, // TODO: Update startDestination if AGE_PICKER is removed or commented out
+            startDestination = Routes.AGE_PICKER, // TODO: Update startDestination
             route = Routes.PROFILE_CREATION_GRAPH
         ) {
-            // composable(Routes.AGE_PICKER) {
-            //     AgePickerScreen(
-            //         onNext = { navController.navigate(Routes.GENDER_PICKER) }
-            //     )
-            // }
-            // composable(Routes.GENDER_PICKER) {
-            //     GenderPickerScreen(
-            //         onNext = { navController.navigate(Routes.CITY_PICKER) }
-            //     )
-            // }
-            // composable(Routes.CITY_PICKER) {
-            //     CityScreen(
-            //         // Теперь переходим на экран Stripe
-            //         onProfileComplete = { navController.navigate(Routes.STRIPE_ONBOARDING) }
-            //     )
-            // }
-            composable(Routes.STRIPE_ONBOARDING) { // Assuming this is the main part of profile creation now
+            // ... (остальной код без изменений)
+            composable(Routes.STRIPE_ONBOARDING) {
                 ConnectOnboardingScreen(
                     onOnboardingComplete = {
                         navController.navigate(Routes.MAIN_GRAPH) {
@@ -111,13 +107,12 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
             startDestination = Routes.HOME_TAB,
             route = Routes.MAIN_GRAPH
         ) {
+            // ... (остальной код без изменений)
             composable(Routes.HOME_TAB) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(text = "Home Screen (Placeholder)")
                 }
             }
-            // composable(Routes.FRIENDS_TAB) { FriendsTabScreen() }
-            // composable(Routes.CHAT_TAB) { ChatTabScreen() }
             composable(Routes.PROFILE_TAB) {
                 ProfileTabScreen(
                     onLogoutSuccess = {
@@ -129,14 +124,6 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
                     }
                 )
             }
-            // composable(Routes.ADD) {
-            //     AddScreen(
-            //         onCreatedSuccessfully = {
-            //             navController.popBackStack()
-            //         }
-            //     )
-            // }
         }
     }
 }
-
