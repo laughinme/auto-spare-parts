@@ -55,15 +55,29 @@ function App() {
     return { gmv, pending, mySkus, orders: myOrders.length, conv };
   }, [orders, products]);
 
+  // Сброс флага инициализации при смене пользователя
+  useEffect(() => {
+    if (!user) {
+      setHasInitializedRole(false);
+      setRole(null);
+      console.log('User logged out, resetting role and initialization flag');
+    }
+  }, [user]);
+
   // Derive role from user object if provided by API
   // Expecting something like user.role === 'supplier' | 'buyer'
   useEffect(() => {
     if (user) {
+      console.log('Processing user data:', user);
+      
       // Сначала проверяем явные поля роли
       let apiRole = user.role || user.type || user.user_type;
+      console.log('Found explicit role:', apiRole);
       
       // Если роль не указана явно, пытаемся определить по другим данным
       if (!apiRole) {
+        console.log('No explicit role found, trying to determine from other data');
+        
         // Временная логика для определения роли (можно настроить под ваши нужды)
         // Например, если в email есть supplier/vendor/shop - это поставщик
         if (user.email && (
@@ -73,30 +87,35 @@ function App() {
           user.email.includes('seller')
         )) {
           apiRole = 'supplier';
+          console.log('Determined role as supplier from email:', user.email);
         }
         // Или если есть поле is_supplier
         else if (user.is_supplier === true) {
           apiRole = 'supplier';
+          console.log('Determined role as supplier from is_supplier field');
         }
         // По умолчанию - покупатель
         else {
           apiRole = 'buyer';
+          console.log('Defaulting to buyer role');
         }
       }
       
       if (apiRole !== role) {
-        console.log('Setting user role:', apiRole, 'for user:', user);
+        console.log('Setting user role:', apiRole, 'for user:', user.email, 'current route:', route);
         setRole(apiRole);
         
         // Если это первоначальная установка роли и пользователь на дефолтном роуте
         if (!hasInitializedRole && route === "fyp") {
+          console.log('First time role initialization on fyp route');
           setHasInitializedRole(true);
           // Перенаправляем поставщика на дашборд
           if (apiRole === "supplier") {
             console.log('Redirecting supplier to dashboard');
             setRoute("supplier:dashboard");
+          } else {
+            console.log('Buyer stays on fyp');
           }
-          // Покупатель остается на fyp
         }
       }
     }
@@ -105,15 +124,19 @@ function App() {
   // Отдельный эффект для управления роутами поставщика
   useEffect(() => {
     if (role === "supplier") {
+      console.log('Supplier route protection activated for route:', route);
+      
       // Роуты покупателя, с которых нужно перенаправить поставщика
       const buyerOnlyRoutes = ["fyp", "product", "cart"];
       
       if (buyerOnlyRoutes.includes(route)) {
+        console.log('Redirecting supplier from buyer route:', route, 'to dashboard');
         setRoute("supplier:dashboard");
       }
       
       // Перенаправляем с общего чата на специальный чат поставщика
       if (route === "chat") {
+        console.log('Redirecting supplier from general chat to supplier chat');
         setRoute("supplier:chat");
       }
     }

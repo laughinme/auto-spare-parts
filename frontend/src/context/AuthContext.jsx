@@ -30,12 +30,13 @@ export const AuthProvider = ({ children }) => {
                     // Пытаемся найти уже сохраненные данные
                     const existingData = queryClient.getQueryData(['me']);
                     if (existingData) {
+                        console.log('Returning cached mock user data:', existingData);
                         return existingData;
                     }
                     
-                    // Если данных нет, возвращаем дефолтного пользователя
-                    console.log('Returning default mock user data');
-                    return MOCK_USERS.buyer.userData;
+                    // Если данных нет, это означает проблему - не должно такого быть
+                    console.error('Mock token found but no user data cached!');
+                    throw new Error('No user data available for mock token');
                 }
                 
                 throw error;
@@ -125,7 +126,9 @@ export const AuthProvider = ({ children }) => {
                     setAccessToken(data.access_token);
                 }
             } catch {
-                // ignore
+                //ignore
+                
+
             }
         })();
     }, []);
