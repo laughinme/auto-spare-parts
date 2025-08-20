@@ -11,12 +11,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import com.lapcevichme.templates.presentation.screen.ConnectOnboardingScreen
-import com.lapcevichme.templates.presentation.screen.onboardingScreens.AgePickerScreen
-import com.lapcevichme.templates.presentation.screen.onboardingScreens.CityScreen
-import com.lapcevichme.templates.presentation.screen.onboardingScreens.GenderPickerScreen
 import com.lapcevichme.templates.presentation.screen.onboardingScreens.GreetingScreen
 import com.lapcevichme.templates.presentation.screen.onboardingScreens.SignInScreen
 import com.lapcevichme.templates.presentation.screen.onboardingScreens.SignUpScreen
+import com.lapcevichme.templates.presentation.screen.tabs.ProfileTabScreen
 
 /**
  * Главный навигационный компонент приложения.
@@ -67,22 +65,22 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
             startDestination = Routes.AGE_PICKER,
             route = Routes.PROFILE_CREATION_GRAPH
         ) {
-            composable(Routes.AGE_PICKER) {
-                AgePickerScreen(
-                    onNext = { navController.navigate(Routes.GENDER_PICKER) }
-                )
-            }
-            composable(Routes.GENDER_PICKER) {
-                GenderPickerScreen(
-                    onNext = { navController.navigate(Routes.CITY_PICKER) }
-                )
-            }
-            composable(Routes.CITY_PICKER) {
-                CityScreen(
-                    // Теперь переходим на экран Stripe
-                    onProfileComplete = { navController.navigate(Routes.STRIPE_ONBOARDING) }
-                )
-            }
+//            composable(Routes.AGE_PICKER) {
+//                AgePickerScreen(
+//                    onNext = { navController.navigate(Routes.GENDER_PICKER) }
+//                )
+//            }
+//            composable(Routes.GENDER_PICKER) {
+//                GenderPickerScreen(
+//                    onNext = { navController.navigate(Routes.CITY_PICKER) }
+//                )
+//            }
+//            composable(Routes.CITY_PICKER) {
+//                CityScreen(
+//                    // Теперь переходим на экран Stripe
+//                    onProfileComplete = { navController.navigate(Routes.STRIPE_ONBOARDING) }
+//                )
+//            }
 
             // Добавляем новый экран в граф
             composable(Routes.STRIPE_ONBOARDING) {
@@ -113,17 +111,17 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
             }
 //            composable(Routes.FRIENDS_TAB) { FriendsTabScreen() }
 //            composable(Routes.CHAT_TAB) { ChatTabScreen() }
-//            composable(Routes.PROFILE_TAB) { ProfileTabScreen(
-//                onLogoutSuccess = {
-//                    // Переходим на граф аутентификации, очищая весь стек
-//                    // до основного графа. Пользователь не сможет вернуться назад.
-//                    navController.navigate(Routes.AUTH_GRAPH) {
-//                        popUpTo(Routes.MAIN_GRAPH) {
-//                            inclusive = true
-//                        }
-//                    }
-//                }
-//            ) }
+            composable(Routes.PROFILE_TAB) { ProfileTabScreen(
+                onLogoutSuccess = {
+                    // Переходим на граф аутентификации, очищая весь стек
+                    // до основного графа. Пользователь не сможет вернуться назад.
+                    navController.navigate(Routes.AUTH_GRAPH) {
+                        popUpTo(Routes.MAIN_GRAPH) {
+                            inclusive = true
+                        }
+                    }
+                }
+            ) }
 
             // Экран добавления ___
 //            composable(Routes.ADD) {

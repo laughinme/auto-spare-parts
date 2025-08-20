@@ -9,7 +9,6 @@ import com.lapcevichme.templates.domain.model.UserProfile
 import com.lapcevichme.templates.domain.model.UserProfileUpdate
 import com.lapcevichme.templates.domain.repository.UserRepository
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.flow
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
@@ -17,7 +16,6 @@ import okhttp3.RequestBody.Companion.asRequestBody
 import retrofit2.HttpException
 import java.io.File
 import java.io.IOException
-import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 class UserRepositoryImpl @Inject constructor(
@@ -50,17 +48,11 @@ class UserRepositoryImpl @Inject constructor(
         emit(Resource.Loading())
         try {
             // --- ШАГ 1: Обновляем основные данные профиля ---
-            // Репозиторий теперь просто передает ID, которые ему дала ViewModel
             val profileRequest = UserPatchRequest(
                 username = profileData.username,
-                avatarUrl = profileData.avatarUrl,
+                profilePicUrl = profileData.profilePicUrl,
                 bio = profileData.bio,
-                birthDate = profileData.birthDate?.format(DateTimeFormatter.ISO_LOCAL_DATE),
-                gender = profileData.gender,
-                language = profileData.language,
-                cityId = profileData.cityId, // <-- Просто используем переданный ID
-                latitude = profileData.latitude,
-                longitude = profileData.longitude,
+                languageCode = profileData.languageCode
             )
 
             val profileResponse = apiService.updateProfile(profileRequest)
@@ -79,38 +71,38 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
-        override fun updateProfilePicture(file: File): Flow<Resource<UserProfile>> = flow {
-            emit(Resource.Loading())
-            try {
-                // Создаем RequestBody из файла
-                val extension = file.extension
+    override fun updateProfilePicture(file: File): Flow<Resource<UserProfile>> = flow {
+        emit(Resource.Loading())
+        try {
+            // Создаем RequestBody из файла
+            val extension = file.extension
 
-                // 2. Получаем MIME-тип из расширения. Это надежнее.
-                val mimeType =
-                    MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension) ?: "image/jpeg"
+            // 2. Получаем MIME-тип из расширения. Это надежнее.
+            val mimeType =
+                MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension) ?: "image/jpeg"
 
-                // 3. Создаем RequestBody
-                val requestFile = file.asRequestBody(mimeType.toMediaTypeOrNull())
-                val body = MultipartBody.Part.createFormData("file", file.name, requestFile)
+            // 3. Создаем RequestBody
+            val requestFile = file.asRequestBody(mimeType.toMediaTypeOrNull())
+            val body = MultipartBody.Part.createFormData("file", file.name, requestFile)
 
-                val response = apiService.updateProfilePicture(body)
-                if (response.isSuccessful) {
-                    val updatedProfile = response.body()?.toDomain()
-                    if (updatedProfile != null) {
-                        emit(Resource.Success(updatedProfile))
-                    } else {
-                        emit(Resource.Error("Empty response after picture upload"))
-                    }
+            val response = apiService.updateProfilePicture(body)
+            if (response.isSuccessful) {
+                val updatedProfile = response.body()?.toDomain()
+                if (updatedProfile != null) {
+                    emit(Resource.Success(updatedProfile))
                 } else {
-                    emit(Resource.Error("Failed to upload picture. Code: ${response.code()}"))
+                    emit(Resource.Error("Empty response after picture upload"))
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                emit(
-                    Resource.Error(
-                        e.message ?: "An unknown error occurred while uploading picture"
-                    )
-                )
+            } else {
+                emit(Resource.Error("Failed to upload picture. Code: ${response.code()}"))
             }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emit(
+                Resource.Error(
+                    e.message ?: "An unknown error occurred while uploading picture"
+                )
+            )
         }
+    }
 }
