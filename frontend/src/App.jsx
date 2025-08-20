@@ -7,6 +7,8 @@ import ProductDetail from "./components/product/ProductDetail.jsx";
 import CartPage from "./components/cart/CartPage.jsx";
 import OrderPage from "./components/order/OrderPage.jsx";
 import ChatPage from "./components/chat/ChatPage.jsx";
+import SupplierChatPage from "./components/supplier/SupplierChatPage.jsx";
+import SupplierDashboard from "./components/supplier/SupplierDashboard.jsx";
 import SupplierStripeOnboarding from "./components/onboarding/SupplierStripeOnboarding.jsx";
 import SupplierProducts from "./components/supplier/SupplierProducts.jsx";
 import SupplierProductCreate from "./components/supplier/SupplierProductCreate.jsx";
@@ -21,6 +23,7 @@ function App() {
   
   const [route, setRoute] = useState("fyp");
   const [role, setRole] = useState(null);
+  const [hasInitializedRole, setHasInitializedRole] = useState(false);
   const [buyerType] = useState(null);
   const [garage, setGarage] = useState([]);
   const [supplierProfile] = useState(null);
@@ -55,11 +58,66 @@ function App() {
   // Derive role from user object if provided by API
   // Expecting something like user.role === 'supplier' | 'buyer'
   useEffect(() => {
-    if (user && (user.role || user.type)) {
-      const apiRole = user.role || user.type;
-      if (apiRole !== role) setRole(apiRole);
+    if (user) {
+      // Сначала проверяем явные поля роли
+      let apiRole = user.role || user.type || user.user_type;
+      
+      // Если роль не указана явно, пытаемся определить по другим данным
+      if (!apiRole) {
+        // Временная логика для определения роли (можно настроить под ваши нужды)
+        // Например, если в email есть supplier/vendor/shop - это поставщик
+        if (user.email && (
+          user.email.includes('supplier') || 
+          user.email.includes('vendor') || 
+          user.email.includes('shop') ||
+          user.email.includes('seller')
+        )) {
+          apiRole = 'supplier';
+        }
+        // Или если есть поле is_supplier
+        else if (user.is_supplier === true) {
+          apiRole = 'supplier';
+        }
+        // По умолчанию - покупатель
+        else {
+          apiRole = 'buyer';
+        }
+      }
+      
+      if (apiRole !== role) {
+        console.log('Setting user role:', apiRole, 'for user:', user);
+        setRole(apiRole);
+        
+        // Если это первоначальная установка роли и пользователь на дефолтном роуте
+        if (!hasInitializedRole && route === "fyp") {
+          setHasInitializedRole(true);
+          // Перенаправляем поставщика на дашборд
+          if (apiRole === "supplier") {
+            console.log('Redirecting supplier to dashboard');
+            setRoute("supplier:dashboard");
+          }
+          // Покупатель остается на fyp
+        }
+      }
     }
-  }, [user, role]);
+  }, [user, role, hasInitializedRole, route]);
+
+  // Отдельный эффект для управления роутами поставщика
+  useEffect(() => {
+    if (role === "supplier") {
+      // Роуты покупателя, с которых нужно перенаправить поставщика
+      const buyerOnlyRoutes = ["fyp", "product", "cart"];
+      
+      if (buyerOnlyRoutes.includes(route)) {
+        setRoute("supplier:dashboard");
+      }
+      
+      // Перенаправляем с общего чата на специальный чат поставщика
+      if (route === "chat") {
+        setRoute("supplier:chat");
+      }
+    }
+  }, [role, route]);
 
   if (isUserLoading) {
     return (
@@ -192,12 +250,24 @@ function App() {
           <CartPage cart={cart} productsById={productsById} setCart={setCart} onCheckout={handleCheckout} />
         )}
 
-        {route === "chat" && (
+        {route === "chat" && role !== "supplier" && (
           <ChatPage role={role} />
+        )}
+
+        {route === "supplier:chat" && (
+          <SupplierChatPage />
         )}
 
         {route === "order" && activeOrder && (
           <OrderPage order={activeOrder} onBack={() => setRoute("fyp")} onSend={(t) => sendChatMessage(activeOrder.id, role === "buyer" ? "buyer" : "seller", t)} />
+        )}
+
+        {route === "supplier:dashboard" && (
+          <SupplierDashboard 
+            supplierProfile={supplierProfile} 
+            metrics={supplierMetrics} 
+            onNavigate={setRoute}
+          />
         )}
 
         {route === "supplier:products" && (

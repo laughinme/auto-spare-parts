@@ -11,8 +11,8 @@ export default function SupplierTopbar({ route, setRoute, onLogout }) {
 				</div>
 				<nav className="hidden md:flex items-center gap-2 text-sm">
 					<button className={navBtnCls(route === "supplier:dashboard")} onClick={() => setRoute("supplier:dashboard")}>Главная</button>
-					<button className={navBtnCls(route === "supplier:products")} onClick={() => setRoute("supplier:products")}>Товары</button>
-					<button className={navBtnCls(route === "chat")} onClick={() => setRoute("chat")}>Чат</button>
+					<button className={navBtnCls(route.startsWith("supplier:products"))} onClick={() => setRoute("supplier:products")}>Товары</button>
+					<button className={navBtnCls(route === "supplier:chat")} onClick={() => setRoute("supplier:chat")}>Чат</button>
 				</nav>
 				<div className="flex items-center gap-2">
 					<button className="px-3 py-2 rounded-xl border transition shadow-sm hover:shadow-md border-slate-200 bg-white text-xs" onClick={() => onLogout && onLogout()}>Выйти</button>

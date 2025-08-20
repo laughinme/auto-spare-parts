@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as api from '../api';
 import { setAccessToken as setAxiosAccessToken, apiPublic } from '../api/axiosInstance';
 import { AuthContext } from './AuthContextObject.js';
+import { MOCK_USERS, getMockUserByEmail } from '../data/mockUsers.js';
 
 // Context moved to separate file to satisfy Fast Refresh rules
 
@@ -17,7 +18,29 @@ export const AuthProvider = ({ children }) => {
 
     const { data: user, isLoading: isUserLoading, isError } = useQuery({
         queryKey: ['me'],
-        queryFn: api.getMyProfile,
+        queryFn: async () => {
+            try {
+                // Пытаемся получить профиль через API
+                return await api.getMyProfile();
+            } catch (error) {
+                console.log('API profile fetch failed:', error);
+                
+                // Если это моковый токен, возвращаем моковые данные
+                if (accessToken && accessToken.startsWith('mock_token_')) {
+                    // Пытаемся найти уже сохраненные данные
+                    const existingData = queryClient.getQueryData(['me']);
+                    if (existingData) {
+                        return existingData;
+                    }
+                    
+                    // Если данных нет, возвращаем дефолтного пользователя
+                    console.log('Returning default mock user data');
+                    return MOCK_USERS.buyer.userData;
+                }
+                
+                throw error;
+            }
+        },
         enabled: !!accessToken,
         retry: 1,
         onError: () => {
@@ -26,10 +49,37 @@ export const AuthProvider = ({ children }) => {
     });
 
     const loginMutation = useMutation({
-        mutationFn: api.loginUser,
+        mutationFn: async (credentials) => {
+            try {
+                // Пытаемся войти через API
+                return await api.loginUser(credentials);
+            } catch (error) {
+                console.log('API login failed, trying mock users:', error);
+                
+                // Если API недоступен, проверяем моковых пользователей
+                const mockUser = getMockUserByEmail(credentials.email);
+                if (mockUser && mockUser.password === credentials.password) {
+                    console.log('Mock login successful for:', credentials.email);
+                    
+                    // Имитируем ответ API
+                    return {
+                        access_token: `mock_token_${Date.now()}`,
+                        user: mockUser.userData
+                    };
+                }
+                
+                // Если не найден моковый пользователь, выбрасываем оригинальную ошибку
+                throw error;
+            }
+        },
         onSuccess: (data) => {
             if (data?.access_token) {
                 setAccessToken(data.access_token);
+                
+                // Если это моковые данные, сохраняем пользователя сразу
+                if (data.user && data.access_token.startsWith('mock_token_')) {
+                    queryClient.setQueryData(['me'], data.user);
+                }
             }
             queryClient.invalidateQueries({ queryKey: ['me'] });
         },
