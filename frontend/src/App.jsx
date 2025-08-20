@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useAuth } from "./context/useAuth.js";
 import Topbar from "./components/Topbar.jsx";
+import SupplierTopbar from "./components/supplier/SupplierTopbar.jsx";
 import FYP from "./components/fyp/FYP.jsx";
 import ProductDetail from "./components/product/ProductDetail.jsx";
 import CartPage from "./components/cart/CartPage.jsx";
@@ -18,7 +19,7 @@ function App() {
   const { user, isUserLoading, logout } = useAuth();
   
   const [route, setRoute] = useState("fyp");
-  const [role] = useState(null);
+  const [role, setRole] = useState(null);
   const [buyerType] = useState(null);
   const [garage, setGarage] = useState([]);
   const [supplierProfile] = useState(null);
@@ -48,6 +49,15 @@ function App() {
     const conv = myOrders.length ? Math.min(98, 20 + mySkus) : 0;
     return { gmv, pending, mySkus, orders: myOrders.length, conv };
   }, [orders, products]);
+
+  // Derive role from user object if provided by API
+  // Expecting something like user.role === 'supplier' | 'buyer'
+  useEffect(() => {
+    if (user && (user.role || user.type)) {
+      const apiRole = user.role || user.type;
+      if (apiRole !== role) setRole(apiRole);
+    }
+  }, [user, role]);
 
   if (isUserLoading) {
     return (
@@ -124,19 +134,28 @@ function App() {
   
   
   const showTopbar = route !== "onboarding:supplier_stripe";
+  const isSupplierRoute = route.startsWith("supplier:");
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white text-slate-800">
       {showTopbar && (
-        <Topbar
-          route={route}
-          setRoute={setRoute}
-          role={role}
-          cartCount={cart.reduce((a, b) => a + b.qty, 0)}
-          isWorkshop={buyerType === "workshop"}
-          showSupplierTab={role === "supplier"}
-          onLogout={logout}
-        />
+        isSupplierRoute || role === "supplier" ? (
+          <SupplierTopbar
+            route={route}
+            setRoute={setRoute}
+            onLogout={logout}
+          />
+        ) : (
+          <Topbar
+            route={route}
+            setRoute={setRoute}
+            role={role}
+            cartCount={cart.reduce((a, b) => a + b.qty, 0)}
+            isWorkshop={buyerType === "workshop"}
+            showSupplierTab={role === "supplier"}
+            onLogout={logout}
+          />
+        )
       )}
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
