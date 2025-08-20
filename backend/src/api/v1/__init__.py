@@ -6,6 +6,7 @@ def get_v1_router() -> APIRouter:
     from .users import get_users_router
     from .organizations import get_organizations_router
     from .misc import get_misc_router
+    from .products import get_products_router
     
     router = APIRouter(prefix='/v1')
 
@@ -13,5 +14,6 @@ def get_v1_router() -> APIRouter:
     router.include_router(get_users_router())
     router.include_router(get_organizations_router())
     router.include_router(get_misc_router())
+    router.include_router(get_products_router())
     
     return router

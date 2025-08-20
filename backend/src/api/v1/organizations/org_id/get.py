@@ -16,10 +16,10 @@ router = APIRouter()
     summary='Get organization by ID'
 )
 async def get_organization(
-    organization_id: UUID,
+    org_id: UUID,
     svc: Annotated[OrganizationService, Depends(get_organization_service)],
 ):
-    org = await svc.get_by_id(organization_id)
+    org = await svc.get_by_id(org_id)
     if org is None:
         raise HTTPException(status_code=404, detail='Organization not found')
     return org

@@ -51,7 +51,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173",
     ],
-    allow_methods=['*'],
-    allow_headers=['*'],
+    allow_methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allow_headers=['X-CSRF-Token', 'X-Requested-With', 'Accept', 'Content-Type', 'Authorization', 'X-Client'],
     allow_credentials=True
 )

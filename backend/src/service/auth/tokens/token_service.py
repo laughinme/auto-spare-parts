@@ -78,13 +78,17 @@ class TokenService:
     ) -> tuple[str, str, str] | None:
         payload = await self._verify_token(refresh_token)
         if payload is None or payload['typ'] != 'refresh':
+            logger.info('Failed to verify JWT: no payload or type is not "refresh"')
             return
         src = payload['src']
         
         if src == 'web':
             if csrf is None or not hmac.compare_digest(self._make_csrf(refresh_token), csrf):
+                logger.info(f'CSRF mismatch: {csrf} != {self._make_csrf(refresh_token)}')
+                logger.info('Failed to verify JWT: CSRF mismatch')
                 return
         elif src != 'mobile': 
+            logger.info('Failed to verify JWT: invalid source')
             return
         
         jti = payload['jti']
