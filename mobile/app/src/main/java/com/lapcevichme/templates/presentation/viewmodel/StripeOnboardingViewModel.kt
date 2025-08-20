@@ -2,18 +2,14 @@ package com.lapcevichme.templates.presentation.viewmodel
 import android.util.Log
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.lapcevichme.templates.domain.model.Resource
 import com.lapcevichme.templates.domain.usecase.GetConnectClientSecretUseCase
 import com.stripe.android.connect.AccountOnboardingController
 import com.stripe.android.connect.AccountOnboardingListener
 import com.stripe.android.connect.EmbeddedComponentManager
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Named
 
@@ -23,6 +19,8 @@ sealed interface OnboardingState {
     object Success : OnboardingState
     data class Error(val message: String) : OnboardingState
 }
+
+const val CONNECT_ONBOARDING_VIEWMODEL_TAG = "ConnectOnboardingViewModel"
 
 @HiltViewModel
 class ConnectOnboardingViewModel @Inject constructor(
@@ -34,6 +32,10 @@ class ConnectOnboardingViewModel @Inject constructor(
     val onboardingState = _onboardingState.asStateFlow()
 
     private var accountOnboardingController: AccountOnboardingController? = null
+
+    init {
+        Log.d(CONNECT_ONBOARDING_VIEWMODEL_TAG, "Initialized ViewModel@${hashCode()}")
+    }
 
     private val embeddedComponentManager: EmbeddedComponentManager = EmbeddedComponentManager(
         publishableKey = publishableKey,
