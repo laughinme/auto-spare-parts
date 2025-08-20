@@ -16,6 +16,8 @@ import AuthPage from "./components/auth/AuthPage.jsx";
 import { MOCK_PRODUCTS } from "./data/mockProducts.js";
 import { SUPPLIER_SELF_ID } from "./data/constants.js";
 import { createOrdersFromCart } from "./utils/helpers.js";
+import reactLogo from './assets/react.svg'
+import viteLogo from '/vite.svg'
 
 function App() {
   const { user, isUserLoading, logout } = useAuth();

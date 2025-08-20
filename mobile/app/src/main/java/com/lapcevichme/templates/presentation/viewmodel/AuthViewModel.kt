@@ -1,6 +1,7 @@
 package com.lapcevichme.templates.presentation.viewmodel
 
 import android.util.Log
+import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lapcevichme.templates.data.remote.dto.UserLoginRequest
@@ -23,14 +24,25 @@ class AuthViewModel @Inject constructor(
     private val registerUseCase: RegisterUseCase
 ) : ViewModel() {
 
-    private val _username = MutableStateFlow("") // Added
-    val username = _username.asStateFlow() // Added
-
+    // ---- Inputs ----
     private val _email = MutableStateFlow("")
     val email = _email.asStateFlow()
 
     private val _password = MutableStateFlow("")
     val password = _password.asStateFlow()
+
+    private val _username = MutableStateFlow("")  // для SignUp
+    val username = _username.asStateFlow()
+
+    // ---- UI state / errors ----
+    private val _emailError = MutableStateFlow<String?>(null)
+    val emailError = _emailError.asStateFlow()
+
+    private val _passwordError = MutableStateFlow<String?>(null)
+    val passwordError = _passwordError.asStateFlow()
+
+    private val _usernameError = MutableStateFlow<String?>(null)
+    val usernameError = _usernameError.asStateFlow()
 
     private val _authState = MutableStateFlow<Resource<TokenPair>?>(null)
     val authState = _authState.asStateFlow()
@@ -39,33 +51,84 @@ class AuthViewModel @Inject constructor(
         Log.d(AUTH_VIEWMODEL_TAG, "Initialized ViewModel@${hashCode()}")
     }
 
-    fun onUsernameChanged(newUsername: String) { // Added
-        _username.value = newUsername
-    }
-
+    // ---- Handlers ----
     fun onEmailChanged(newEmail: String) {
         _email.value = newEmail
+        validateEmail(newEmail)
     }
 
     fun onPasswordChanged(newPassword: String) {
         _password.value = newPassword
+        validatePassword(newPassword)
     }
 
+    fun onUsernameChanged(newUsername: String) {
+        _username.value = newUsername
+        validateUsername(newUsername)
+    }
+
+    // ---- Validation ----
+    private fun validateEmail(emailToValidate: String = _email.value): Boolean {
+        return if (emailToValidate.isBlank()) {
+            _emailError.value = "Email не может быть пустым"
+            false
+        } else if (!Patterns.EMAIL_ADDRESS.matcher(emailToValidate).matches()) {
+            _emailError.value = "Введите корректный email"
+            false
+        } else {
+            _emailError.value = null
+            true
+        }
+    }
+
+    private fun validatePassword(passwordToValidate: String = _password.value): Boolean {
+        return if (passwordToValidate.isBlank()) {
+            _passwordError.value = "Пароль не может быть пустым"
+            false
+        } else if (passwordToValidate.length < 6) {
+            _passwordError.value = "Пароль должен быть не менее 6 символов"
+            false
+        } else {
+            _passwordError.value = null
+            true
+        }
+    }
+
+    private fun validateUsername(usernameToValidate: String = _username.value): Boolean {
+        return if (usernameToValidate.isBlank()) {
+            _usernameError.value = "Имя пользователя не может быть пустым"
+            false
+        } else {
+            _usernameError.value = null
+            true
+        }
+    }
+
+    // ---- Actions ----
     fun onSignInClicked() {
-        viewModelScope.launch {
-            loginUseCase(UserLoginRequest(email.value, password.value))
-                .collect { result ->
-                    _authState.value = result
-                }
+        val isEmailValid = validateEmail()
+        val isPasswordValid = validatePassword()
+
+        if (isEmailValid && isPasswordValid) {
+            viewModelScope.launch {
+                _authState.value = Resource.Loading()
+                loginUseCase(UserLoginRequest(email.value, password.value))
+                    .collect { result -> _authState.value = result }
+            }
         }
     }
 
     fun onSignUpClicked() {
-        viewModelScope.launch {
-            registerUseCase(UserRegisterRequest(email.value, password.value, username.value)) // Updated
-                .collect { result ->
-                    _authState.value = result
-                }
+        val isEmailValid = validateEmail()
+        val isPasswordValid = validatePassword()
+        val isUsernameValid = validateUsername()
+
+        if (isEmailValid && isPasswordValid && isUsernameValid) {
+            viewModelScope.launch {
+                _authState.value = Resource.Loading()
+                registerUseCase(UserRegisterRequest(email.value, password.value, username.value))
+                    .collect { result -> _authState.value = result }
+            }
         }
     }
 }
