@@ -12,7 +12,8 @@ router = APIRouter()
 @router.get(
     path='/',
     response_model=Page[ProductModel],
-    summary='Public product catalog with filters and pagination'
+    summary='Public product catalog with filters and pagination',
+    # include_in_schema=False,
 )
 async def list_products(
     svc: Annotated[ProductService, Depends(get_product_service)],
@@ -25,20 +26,20 @@ async def list_products(
     # For MVP reuse org listing when org_id provided; global listing TBD
     if org_id is None:
         # Not implemented in MVP. Return empty page to keep contract.
-        return Page[ProductModel].model_validate({
+        return {
             "items": [], 
             "offset": offset, 
             "limit": limit, 
             "total": 0
-        })
+        }
     
     items, total = await svc.list_org_products(org_id, offset=offset, limit=limit, status=None, search=q)
-    return Page[ProductModel].model_validate({
+    return {
         "items": items,  # FastAPI automatically serializes Product to ProductModel
         "offset": offset,
         "limit": limit,
         "total": total,
-    })
+    }
 
 
 @router.get(
@@ -55,5 +56,3 @@ async def get_product(
     if product is None:
         raise HTTPException(404, 'Product not found')
     return product  # FastAPI automatically serializes Product to ProductModel
-
-

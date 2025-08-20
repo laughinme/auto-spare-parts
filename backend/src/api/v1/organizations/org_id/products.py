@@ -50,9 +50,9 @@ async def list_org_products(
     """Get organization products list with filters and pagination"""
     # TODO: add organization access check
     items, total = await svc.list_org_products(org_id, offset=offset, limit=limit, status=status, search=q)
-    return Page[ProductModel].model_validate({
+    return {
         "items": items,
         "offset": offset,
         "limit": limit,
         "total": total,
-    })
+    }
