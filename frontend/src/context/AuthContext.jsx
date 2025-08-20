@@ -95,4 +95,3 @@ export const AuthProvider = ({ children }) => {
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-// Hook moved to separate file to satisfy React Fast Refresh rules

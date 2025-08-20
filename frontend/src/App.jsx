@@ -9,6 +9,7 @@ import OrderPage from "./components/order/OrderPage.jsx";
 import SupplierDashboard from "./components/supplier/SupplierDashboard.jsx";
 import SupplierStripeOnboarding from "./components/onboarding/SupplierStripeOnboarding.jsx";
 import SupplierProducts from "./components/supplier/SupplierProducts.jsx";
+import SupplierProductCreate from "./components/supplier/SupplierProductCreate.jsx";
 import DevTests from "./components/dev/DevTests.jsx";
 import AuthPage from "./components/auth/AuthPage.jsx";
 import { MOCK_PRODUCTS } from "./data/mockProducts.js";
@@ -29,6 +30,7 @@ function App() {
   const [cart, setCart] = useState([]);
   const [orders, setOrders] = useState([]);
   const [activeOrderId, setActiveOrderId] = useState(null);
+  
 
   useEffect(() => {
     // Expose route setter globally for navigation from auth/register flows
@@ -199,7 +201,37 @@ function App() {
         )}
 
         {route === "supplier:products" && (
-          <SupplierProducts products={products} setProducts={setProducts} supplierProfile={supplierProfile} />
+          <SupplierProducts
+            products={products}
+            setProducts={setProducts}
+            supplierProfile={supplierProfile}
+            onCreateNavigate={() => setRoute("supplier:products:new")}
+          />
+        )}
+
+        {route === "supplier:products:new" && (
+          <SupplierProductCreate
+            supplierProfile={supplierProfile}
+            onCancel={() => setRoute("supplier:products")}
+            onCreate={(payload) => {
+              const id = `p${Date.now()}`;
+              const newProd = {
+                id,
+                title: payload.title,
+                price: Number(payload.price) || 0,
+                currency: "RUB",
+                supplierId: SUPPLIER_SELF_ID,
+                supplierName: supplierProfile?.companyName || "My Parts Company",
+                condition: "new",
+                shipEtaDays: 7,
+                category: "Misc",
+                vehicle: payload.vehicle || "Any",
+                img: payload.img, // object URL preview; in real app would be backend URL
+              };
+              setProducts((prev) => [newProd, ...prev]);
+              setRoute("supplier:products");
+            }}
+          />
         )}
 
         {route === "tests" && (
