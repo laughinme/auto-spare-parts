@@ -16,7 +16,7 @@ class OrganizationModel(TimestampModel):
     type: OrganizationType = Field(..., description="Type of organization (supplier, workshop, etc.)")
     name: str = Field(..., description="Organization name")
     country: str = Field(..., description="2-letter country code")
-    address: str = Field(..., description="Organization address")
+    address: str | None = Field(None, description="Organization address")
     
     # Relationship fields
     stripe_account_id: Optional[str] = Field(None, description="Stripe Connect account ID")
