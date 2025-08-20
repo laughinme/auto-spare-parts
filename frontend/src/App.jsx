@@ -7,7 +7,6 @@ import ProductDetail from "./components/product/ProductDetail.jsx";
 import CartPage from "./components/cart/CartPage.jsx";
 import OrderPage from "./components/order/OrderPage.jsx";
 import ChatPage from "./components/chat/ChatPage.jsx";
-import SupplierDashboard from "./components/supplier/SupplierDashboard.jsx";
 import SupplierStripeOnboarding from "./components/onboarding/SupplierStripeOnboarding.jsx";
 import SupplierProducts from "./components/supplier/SupplierProducts.jsx";
 import SupplierProductCreate from "./components/supplier/SupplierProductCreate.jsx";
@@ -199,10 +198,6 @@ function App() {
 
         {route === "order" && activeOrder && (
           <OrderPage order={activeOrder} onBack={() => setRoute("fyp")} onSend={(t) => sendChatMessage(activeOrder.id, role === "buyer" ? "buyer" : "seller", t)} />
-        )}
-
-        {route === "supplier:dashboard" && (
-          <SupplierDashboard supplierProfile={supplierProfile} metrics={supplierMetrics} />
         )}
 
         {route === "supplier:products" && (
