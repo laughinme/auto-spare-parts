@@ -1,5 +1,7 @@
 package com.lapcevichme.templates.presentation.viewmodel
 
+import android.util.Log
+import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lapcevichme.templates.data.remote.dto.UserLoginRequest
@@ -12,7 +14,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import android.util.Patterns
 import javax.inject.Inject
 
 const val AUTH_VIEWMODEL_TAG = "AuthViewModel"
@@ -23,29 +24,34 @@ class AuthViewModel @Inject constructor(
     private val registerUseCase: RegisterUseCase
 ) : ViewModel() {
 
+    // ---- Inputs ----
     private val _email = MutableStateFlow("")
     val email = _email.asStateFlow()
 
     private val _password = MutableStateFlow("")
     val password = _password.asStateFlow()
 
-    // Добавляем StateFlow для имени пользователя (понадобится для SignUp)
-    private val _username = MutableStateFlow("")
+    private val _username = MutableStateFlow("")  // для SignUp
     val username = _username.asStateFlow()
 
-    private val _authState = MutableStateFlow<Resource<TokenPair>?>(null)
-    val authState = _authState.asStateFlow()
-
+    // ---- UI state / errors ----
     private val _emailError = MutableStateFlow<String?>(null)
     val emailError = _emailError.asStateFlow()
 
     private val _passwordError = MutableStateFlow<String?>(null)
     val passwordError = _passwordError.asStateFlow()
 
-    // Добавляем StateFlow для ошибки имени пользователя (понадобится для SignUp)
     private val _usernameError = MutableStateFlow<String?>(null)
     val usernameError = _usernameError.asStateFlow()
 
+    private val _authState = MutableStateFlow<Resource<TokenPair>?>(null)
+    val authState = _authState.asStateFlow()
+
+    init {
+        Log.d(AUTH_VIEWMODEL_TAG, "Initialized ViewModel@${hashCode()}")
+    }
+
+    // ---- Handlers ----
     fun onEmailChanged(newEmail: String) {
         _email.value = newEmail
         validateEmail(newEmail)
@@ -61,6 +67,7 @@ class AuthViewModel @Inject constructor(
         validateUsername(newUsername)
     }
 
+    // ---- Validation ----
     private fun validateEmail(emailToValidate: String = _email.value): Boolean {
         return if (emailToValidate.isBlank()) {
             _emailError.value = "Email не может быть пустым"
@@ -97,6 +104,7 @@ class AuthViewModel @Inject constructor(
         }
     }
 
+    // ---- Actions ----
     fun onSignInClicked() {
         val isEmailValid = validateEmail()
         val isPasswordValid = validatePassword()
@@ -105,9 +113,7 @@ class AuthViewModel @Inject constructor(
             viewModelScope.launch {
                 _authState.value = Resource.Loading()
                 loginUseCase(UserLoginRequest(email.value, password.value))
-                    .collect { result ->
-                        _authState.value = result
-                    }
+                    .collect { result -> _authState.value = result }
             }
         }
     }
@@ -121,9 +127,7 @@ class AuthViewModel @Inject constructor(
             viewModelScope.launch {
                 _authState.value = Resource.Loading()
                 registerUseCase(UserRegisterRequest(email.value, password.value, username.value))
-                    .collect { result ->
-                        _authState.value = result
-                    }
+                    .collect { result -> _authState.value = result }
             }
         }
     }

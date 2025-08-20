@@ -45,7 +45,7 @@ async def login_user(
             max_age=settings.REFRESH_TTL,
             httponly=True,
             secure=True,
-            samesite="lax",
+            samesite="none",
         )
         response.set_cookie(
             'csrf_token',
@@ -53,7 +53,7 @@ async def login_user(
             max_age=settings.REFRESH_TTL,
             secure=True,
             httponly=False,
-            samesite='lax'
+            samesite='none'
         )
     
         return TokenPair(access_token=access, refresh_token=None)
@@ -84,7 +84,7 @@ async def logout(
     await svc.logout(token)
     
     if refresh_cookie:
-        response.delete_cookie("refresh_token", samesite="lax")
-        response.delete_cookie("csrf_token", samesite="lax")
+        response.delete_cookie("refresh_token", samesite="none")
+        response.delete_cookie("csrf_token", samesite="none")
         
     return {'message': 'Logged out successfully'}

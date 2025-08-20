@@ -1,4 +1,3 @@
-from typing_extensions import Self
 from pydantic import BaseModel, Field, EmailStr, model_validator
 
 

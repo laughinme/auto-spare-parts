@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
-    <style name="Theme.AndroidTemplates" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- Базовая тема приложения. -->
+    <!-- Используем DayNight, чтобы поддерживать и светлую, и темную темы -->
+    <!-- NoActionBar, если ты управляешь Toolbar/AppBar через Compose или кастомно -->
+    <style name="Theme.AndroidTemplates" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Здесь можно добавлять кастомизацию темы: цвета, шрифты и т.д. -->
+        <!-- Например: -->
+        <!-- <item name="colorPrimary">@color/my_primary_color</item> -->
+        <!-- <item name="colorSecondary">@color/my_secondary_color</item> -->
+        <!-- <item name="android:statusBarColor">?attr/colorPrimaryVariant</item> -->
+    </style>
 </resources>

@@ -25,7 +25,13 @@ class Settings(BaseSettings):
     
     # Media settings
     MEDIA_DIR: str = 'media'
-    MAX_PHOTO_SIZE: int # in MB
+    MAX_PHOTO_SIZE: int = 10 # in MB
+    
+    # External services
+    STRIPE_SECRET_KEY: str
+    STRIPE_WEBHOOK_SECRET: str = ''
+    STRIPE_CONNECT_WEBHOOK_SECRET: str
+    STRIPE_LOCAL_CONNECT_WEBHOOK_SECRET: str = ''
     
     # Auth Settings    
     JWT_PRIVATE_KEY: str

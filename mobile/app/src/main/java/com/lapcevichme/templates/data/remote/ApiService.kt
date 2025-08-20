@@ -1,6 +1,9 @@
 package com.lapcevichme.templates.data.remote
 
 import com.lapcevichme.templates.data.remote.dto.CityModelDto
+import com.lapcevichme.templates.data.remote.dto.StripeAccountResponseDto
+import com.lapcevichme.templates.data.remote.dto.StripeAccountSessionRequestDto
+import com.lapcevichme.templates.data.remote.dto.StripeAccountSessionResponseDto
 import com.lapcevichme.templates.data.remote.dto.TokenPairDto
 import com.lapcevichme.templates.data.remote.dto.UserLoginRequest
 import com.lapcevichme.templates.data.remote.dto.UserModelDto
@@ -78,4 +81,12 @@ interface ApiService {
      */
     @GET("/api/v1/geo/cities/")
     suspend fun listCities(): Response<List<CityModelDto>>
+
+    @POST("/api/v1/organizations/account")
+    suspend fun createStripeAccount(): Response<StripeAccountResponseDto>
+
+    @POST("/api/v1/organizations/account_session")
+    suspend fun createStripeAccountSession(
+        @Body request: StripeAccountSessionRequestDto
+    ): Response<StripeAccountSessionResponseDto>
 }

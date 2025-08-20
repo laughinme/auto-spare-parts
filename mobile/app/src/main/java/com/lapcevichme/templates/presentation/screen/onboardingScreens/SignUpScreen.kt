@@ -40,6 +40,7 @@ fun SignUpScreen(
     onSignUpSuccess: () -> Unit,
     onNavigateToSignIn: () -> Unit
 ) {
+    val username by viewModel.username.collectAsStateWithLifecycle()
     val email by viewModel.email.collectAsStateWithLifecycle()
     val password by viewModel.password.collectAsStateWithLifecycle()
     val username by viewModel.username.collectAsStateWithLifecycle() // Добавлено
@@ -86,6 +87,15 @@ fun SignUpScreen(
             ) {
                 Text("Sign Up", fontSize = 28.sp)
                 Spacer(Modifier.height(40.dp))
+                OutlinedTextField( // Added Username field
+                    value = username,
+                    onValueChange = { viewModel.onUsernameChanged(newUsername = it) },
+                    label = { Text("Username") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    enabled = authState !is Resource.Loading
+                )
+                Spacer(Modifier.height(16.dp)) // Added Spacer
                 OutlinedTextField(
                     value = username, // Добавлено
                     onValueChange = { viewModel.onUsernameChanged(newUsername = it) }, // Добавлено

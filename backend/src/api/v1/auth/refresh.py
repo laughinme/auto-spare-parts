@@ -2,6 +2,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Header, Request, Response, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi_limiter.depends import RateLimiter
+from logging import getLogger
 
 from service.auth import TokenService, get_token_service
 from domain.auth import TokenPair
@@ -10,6 +11,7 @@ from core.security import extract_jti
 
 router = APIRouter()
 config = Settings() # pyright: ignore[reportCallIssue]
+logger = getLogger(__name__)
 security = HTTPBearer(
     auto_error=False, 
     description='Send refresh token as Bearer for non-browser clients'
@@ -33,16 +35,19 @@ async def refresh_tokens(
     ),
 ) -> TokenPair:
     cookie_refresh = request.cookies.get("refresh_token")
+    logger.info(f'Cookie refresh: {cookie_refresh}')
     
     if cookie_refresh:
         if not x_csrf:
             raise HTTPException(status_code=403, detail="Missing CSRF token")
         
         result = await svc.refresh_tokens(cookie_refresh, x_csrf)
+        logger.info(f'Refresh tokens result: {result}')
         if result is None:
             # token invalid or csrf mismatch
-            response.delete_cookie("refresh_token", samesite="lax")
-            response.delete_cookie("csrf_token", samesite="lax")
+            logger.info('Refresh tokens failed: invalid refresh token or CSRF mismatch')
+            response.delete_cookie("refresh_token", samesite="none")
+            response.delete_cookie("csrf_token", samesite="none")
             raise HTTPException(status_code=401, detail="Invalid refresh token")
         
         new_access, new_refresh, new_csrf = result
@@ -53,14 +58,14 @@ async def refresh_tokens(
             max_age=config.REFRESH_TTL,
             httponly=True, 
             secure=True,
-            samesite="lax"
+            samesite="none"
         )
         response.set_cookie(
             "csrf_token", new_csrf,
             max_age=config.REFRESH_TTL,
             httponly=False, 
             secure=True, 
-            samesite="lax"
+            samesite="none"
         )
 
         # body: only short-lived access token

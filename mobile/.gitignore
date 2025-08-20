@@ -72,4 +72,6 @@ lint/tmp/
 # App Specific cases
 app/release/output.json
 .idea/codeStyles/
+# Local secrets
+secrets.properties
 
