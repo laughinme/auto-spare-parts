@@ -14,6 +14,7 @@ object Routes {
     const val GREETING = "greeting"
     const val SIGN_IN = "sign_in"
     const val SIGN_UP = "sign_up"
+    const val ROLE_PICKER = "role_picker"
 
 
     // --- ЭКРАНЫ ГРАФА СОЗДАНИЯ ПРОФИЛЯ (PROFILE_CREATION_GRAPH) ---
@@ -32,3 +33,4 @@ object Routes {
     // Маршрут для экрана добавления
     const val ADD = "add"
 }
+

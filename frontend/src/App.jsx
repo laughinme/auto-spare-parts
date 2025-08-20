@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useAuth } from "./context/useAuth.js";
 import Topbar from "./components/Topbar.jsx";
-import OnboardingFlow from "./components/onboarding/OnboardingFlow.jsx";
+import SupplierTopbar from "./components/supplier/SupplierTopbar.jsx";
 import FYP from "./components/fyp/FYP.jsx";
 import ProductDetail from "./components/product/ProductDetail.jsx";
 import CartPage from "./components/cart/CartPage.jsx";
 import OrderPage from "./components/order/OrderPage.jsx";
 import SupplierDashboard from "./components/supplier/SupplierDashboard.jsx";
+import SupplierStripeOnboarding from "./components/onboarding/SupplierStripeOnboarding.jsx";
 import SupplierProducts from "./components/supplier/SupplierProducts.jsx";
 import DevTests from "./components/dev/DevTests.jsx";
 import AuthPage from "./components/auth/AuthPage.jsx";
@@ -19,9 +20,9 @@ function App() {
   
   const [route, setRoute] = useState("fyp");
   const [role, setRole] = useState(null);
-  const [buyerType, setBuyerType] = useState(null);
+  const [buyerType] = useState(null);
   const [garage, setGarage] = useState([]);
-  const [supplierProfile, setSupplierProfile] = useState(null);
+  const [supplierProfile] = useState(null);
   const [products, setProducts] = useState(MOCK_PRODUCTS);
   const productsById = useMemo(() => Object.fromEntries(products.map((p) => [p.id, p])), [products]);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -30,12 +31,12 @@ function App() {
   const [activeOrderId, setActiveOrderId] = useState(null);
 
   useEffect(() => {
-    if(user && !user.is_onboarded && route !== 'onboarding') {
-      setRoute("onboarding");
-    } else if (user && user.is_onboarded && route === 'onboarding') {
-      setRoute("fyp");
-    }
-  }, [user, route]);
+    // Expose route setter globally for navigation from auth/register flows
+    window.__setRoute = setRoute;
+    return () => {
+      if (window.__setRoute === setRoute) window.__setRoute = undefined;
+    };
+  }, [setRoute]);
 
   // Hooks must be declared before any early returns
   const activeOrder = useMemo(() => orders.find((o) => o.id === activeOrderId) || null, [orders, activeOrderId]);
@@ -49,6 +50,15 @@ function App() {
     return { gmv, pending, mySkus, orders: myOrders.length, conv };
   }, [orders, products]);
 
+  // Derive role from user object if provided by API
+  // Expecting something like user.role === 'supplier' | 'buyer'
+  useEffect(() => {
+    if (user && (user.role || user.type)) {
+      const apiRole = user.role || user.type;
+      if (apiRole !== role) setRole(apiRole);
+    }
+  }, [user, role]);
+
   if (isUserLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -61,24 +71,6 @@ function App() {
     return <AuthPage />;
   }
   
-  const handleFinishOnboarding = (payload) => {
-    if (payload.role === "buyer") {
-      setRole("buyer");
-      setBuyerType(payload.buyerType);
-      setRoute("fyp");
-    } else if (payload.role === "supplier") {
-      setRole("supplier");
-      setSupplierProfile(payload.supplierProfile);
-      // If Stripe clientSecret is present, require onboarding completion before dashboard
-      if (payload.stripe?.clientSecret) {
-        // For now, just direct to dashboard; embedding UI can be added later with clientSecret
-        setRoute("supplier:dashboard");
-      } else {
-        setRoute("supplier:dashboard");
-      }
-    }
-  };
-
   const handleAddVehicle = (value) => {
     const v = String(value || "").trim();
     if (!v) return;
@@ -141,27 +133,32 @@ function App() {
 
   
   
-  const showTopbar = route !== "onboarding";
+  const showTopbar = route !== "onboarding:supplier_stripe";
+  const isSupplierRoute = route.startsWith("supplier:");
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white text-slate-800">
       {showTopbar && (
-        <Topbar
-          route={route}
-          setRoute={setRoute}
-          role={role}
-          cartCount={cart.reduce((a, b) => a + b.qty, 0)}
-          isWorkshop={buyerType === "workshop"}
-          showSupplierTab={role === "supplier"}
-          onLogout={logout}
-        />
+        isSupplierRoute || role === "supplier" ? (
+          <SupplierTopbar
+            route={route}
+            setRoute={setRoute}
+            onLogout={logout}
+          />
+        ) : (
+          <Topbar
+            route={route}
+            setRoute={setRoute}
+            role={role}
+            cartCount={cart.reduce((a, b) => a + b.qty, 0)}
+            isWorkshop={buyerType === "workshop"}
+            showSupplierTab={role === "supplier"}
+            onLogout={logout}
+          />
+        )
       )}
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {route === "onboarding" && (
-          <OnboardingFlow onFinish={handleFinishOnboarding} />
-        )}
-
         {route === "fyp" && (
           <FYP
             role={role}
@@ -174,6 +171,10 @@ function App() {
             setRoute={setRoute}
             onAddToCart={handleAddToCart}
           />
+        )}
+
+        {route === "onboarding:supplier_stripe" && (
+          <SupplierStripeOnboarding />
         )}
 
         {route === "product" && selectedProduct && (
@@ -193,11 +194,11 @@ function App() {
           <OrderPage order={activeOrder} onBack={() => setRoute("fyp")} onSend={(t) => sendChatMessage(activeOrder.id, role === "buyer" ? "buyer" : "seller", t)} />
         )}
 
-        {route === "supplier:dashboard" && role === "supplier" && (
+        {route === "supplier:dashboard" && (
           <SupplierDashboard supplierProfile={supplierProfile} metrics={supplierMetrics} />
         )}
 
-        {route === "supplier:products" && role === "supplier" && (
+        {route === "supplier:products" && (
           <SupplierProducts products={products} setProducts={setProducts} supplierProfile={supplierProfile} />
         )}
 

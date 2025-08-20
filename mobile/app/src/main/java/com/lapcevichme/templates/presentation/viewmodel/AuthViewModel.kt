@@ -1,5 +1,6 @@
 package com.lapcevichme.templates.presentation.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lapcevichme.templates.data.remote.dto.UserLoginRequest
@@ -22,6 +23,9 @@ class AuthViewModel @Inject constructor(
     private val registerUseCase: RegisterUseCase
 ) : ViewModel() {
 
+    private val _username = MutableStateFlow("") // Added
+    val username = _username.asStateFlow() // Added
+
     private val _email = MutableStateFlow("")
     val email = _email.asStateFlow()
 
@@ -30,6 +34,14 @@ class AuthViewModel @Inject constructor(
 
     private val _authState = MutableStateFlow<Resource<TokenPair>?>(null)
     val authState = _authState.asStateFlow()
+
+    init {
+        Log.d(AUTH_VIEWMODEL_TAG, "Initialized ViewModel@${hashCode()}")
+    }
+
+    fun onUsernameChanged(newUsername: String) { // Added
+        _username.value = newUsername
+    }
 
     fun onEmailChanged(newEmail: String) {
         _email.value = newEmail
@@ -50,8 +62,7 @@ class AuthViewModel @Inject constructor(
 
     fun onSignUpClicked() {
         viewModelScope.launch {
-            val username = "some_username" // Возьми из соответствующего StateFlow
-            registerUseCase(UserRegisterRequest(email.value, password.value, username))
+            registerUseCase(UserRegisterRequest(email.value, password.value, username.value)) // Updated
                 .collect { result ->
                     _authState.value = result
                 }

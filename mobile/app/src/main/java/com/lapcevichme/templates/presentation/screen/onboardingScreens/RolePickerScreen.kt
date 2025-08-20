@@ -18,6 +18,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton // Added
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -29,15 +30,16 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.lapcevichme.templates.presentation.viewmodel.OnboardingViewModel
+import com.lapcevichme.templates.ui.theme.PreviewTheme // Added for consistent preview
 
-// Определим простой sealed class для ролей, чтобы избежать ошибок с "магическими строками"
 @Composable
 fun RolePickerScreen(
-    viewModel: OnboardingViewModel = hiltViewModel()
+    viewModel: OnboardingViewModel = hiltViewModel(),
+    onNavigateToSignUp: () -> Unit,
+    onNavigateToSignIn: () -> Unit
 ) {
-    // Внутреннее состояние для отслеживания выбранной роли
     val selectedRole : String? by viewModel.role.collectAsStateWithLifecycle()
-    val roles = listOf("Buyer", "Seller")
+    // val roles = listOf("Buyer", "Seller") // roles list is not directly used in UI rendering, only for logic in VM
 
     Column(
         modifier = Modifier
@@ -99,23 +101,27 @@ fun RolePickerScreen(
             }
         }
 
-        // --- Нижняя часть: Кнопка "Продолжить" ---
-        Box(
+        // --- Нижняя часть: Кнопка "Продолжить" и ссылка на Sign In ---
+        Column( // Changed Box to Column to accommodate TextButton
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
-                .padding(bottom = 40.dp),
-            contentAlignment = Alignment.BottomCenter
+                .padding(bottom = 24.dp), // Adjusted padding
+            horizontalAlignment = Alignment.CenterHorizontally, // Center content in the column
+            verticalArrangement = Arrangement.Bottom // Align to bottom
         ) {
             Button(
                 modifier = Modifier
                     .height(56.dp)
                     .fillMaxWidth(0.9f),
-                onClick = {}, //TODO Миша добавь тут навигацию,
-                // Кнопка активна только если выбрана роль
+                onClick = onNavigateToSignUp, // Changed from {}
                 enabled = selectedRole != null
             ) {
                 Text("Продолжить", fontSize = 18.sp)
+            }
+            Spacer(modifier = Modifier.height(16.dp)) // Added spacer
+            TextButton(onClick = onNavigateToSignIn) { // Added TextButton
+                Text("Already have an account? Sign In")
             }
         }
     }
@@ -134,7 +140,7 @@ fun RoleCard(
 
     Card(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxSize() // Consider using .aspectRatio(1.5f) or similar for better card shape if needed
             .clickable(onClick = onClick),
         shape = MaterialTheme.shapes.extraLarge,
         border = BorderStroke(if (isSelected) 2.dp else 1.dp, borderColor),
@@ -145,7 +151,7 @@ fun RoleCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text(text = icon, fontSize = 32.sp)
+            Text(text = icon, fontSize = 32.sp) // Emoji icons might render differently on various devices/OS versions
             Column {
                 Text(text = title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(4.dp))
@@ -166,10 +172,13 @@ fun RoleCard(
 )
 @Composable
 fun RolePickerScreenPreview() {
-    // Обертка для превью, чтобы применить тему
-    MaterialTheme {
+    PreviewTheme { // Wrapped with PreviewTheme for consistency
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-            RolePickerScreen()
+            RolePickerScreen(
+                onNavigateToSignUp = {}, // Added dummy lambda
+                onNavigateToSignIn = {}  // Added dummy lambda
+            )
         }
     }
 }
+
