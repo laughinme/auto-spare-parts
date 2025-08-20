@@ -19,20 +19,25 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.lapcevichme.templates.presentation.components.homeTabCards.QuickSearchCard
 import com.lapcevichme.templates.presentation.components.homeTabCards.SparePartCard
+import com.lapcevichme.templates.presentation.viewmodel.HomeTabViewModel
 import com.lapcevichme.templates.ui.theme.PreviewTheme
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeTabScreen() {
-    var searchQuery by remember { mutableStateOf("") }
+fun HomeTabScreen(
+    viewModel: HomeTabViewModel = hiltViewModel()
+) {
+    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
 
     Column(modifier = Modifier.fillMaxSize()) {
         OutlinedTextField(
-            value = searchQuery,
-            onValueChange = { searchQuery = it },
+            value = searchQuery ?: "",
+            onValueChange = { viewModel.onSearchQueryChanged(query = it) },
             label = { Text("Search") },
             leadingIcon = {
                 Icon(

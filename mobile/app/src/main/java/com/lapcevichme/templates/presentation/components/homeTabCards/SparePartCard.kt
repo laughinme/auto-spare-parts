@@ -1,6 +1,7 @@
 package com.lapcevichme.templates.presentation.components.homeTabCards
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -51,7 +52,8 @@ fun SparePartCard(
         modifier = Modifier
             .fillMaxWidth()
             .height(160.dp)
-            .padding(horizontal = 10.dp, vertical = 5.dp),
+            .padding(horizontal = 10.dp, vertical = 5.dp)
+            .clickable(onClick = {}),//TODO Миша сделай тут навигацию на экран товара
         shape = MaterialTheme.shapes.large,
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {

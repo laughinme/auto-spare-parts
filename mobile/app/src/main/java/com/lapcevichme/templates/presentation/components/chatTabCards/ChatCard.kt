@@ -2,6 +2,7 @@ package com.lapcevichme.templates.presentation.components.chatTabCards
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,7 +36,8 @@ fun ChatCard(
     messageDate: String = "10:00"
 ) {
     Surface(modifier = Modifier.background(color = MaterialTheme.colorScheme.surface)) {
-        Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 5.dp)) {
+        Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 5.dp)
+            .clickable(onClick = {})) { //TODO Миша сделай тут навигацию на экран чата
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
