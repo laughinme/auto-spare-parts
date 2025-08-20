@@ -1,18 +1,15 @@
 import stripe
+
+from fastapi import APIRouter, Request, HTTPException
 from logging import getLogger
 
-from fastapi import APIRouter, HTTPException, Request
-
 from core.config import Settings
-from database.relational_db import UoW, OrganizationsInterface
-from service.organizations import OrganizationService, get_organization_service
-from service.payments import StripeService, get_stripe_service
 
 router = APIRouter()
 settings = Settings() # type: ignore
 logger = getLogger(__name__)
 
-STRIPE_CONNECT_WEBHOOK_SECRET = settings.STRIPE_CONNECT_WEBHOOK_SECRET
+STRIPE_LOCAL_CONNECT_WEBHOOK_SECRET = settings.STRIPE_LOCAL_CONNECT_WEBHOOK_SECRET
 
 
 async def _parse_event(request: Request):
@@ -21,17 +18,16 @@ async def _parse_event(request: Request):
         sig = request.headers.get("Stripe-Signature")
         # Construct the webhook event
         event = stripe.Webhook.construct_event(
-            payload=payload_bytes, sig_header=sig, secret=STRIPE_CONNECT_WEBHOOK_SECRET
+            payload=payload_bytes, sig_header=sig, secret=STRIPE_LOCAL_CONNECT_WEBHOOK_SECRET
         )
-        # Instead of using to_dict(), work directly with the event object
         return event
     except stripe.SignatureVerificationError:
         logger.error("Invalid signature")
         raise HTTPException(status_code=400, detail="Invalid signature")
 
 
-@router.post("/onboarding", summary="Handle Stripe Connect onboarding webhook")
-async def handle_onboarding(request: Request):
+@router.post("/local", summary="Test webhook (no-op, accepts any Connect event)")
+async def handle_test_any(request: Request):
     try:
         event = await _parse_event(request)
         logger.info(f"Received Stripe event {event.id} type={event.type}")

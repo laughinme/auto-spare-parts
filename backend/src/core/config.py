@@ -29,6 +29,9 @@ class Settings(BaseSettings):
     
     # External services
     STRIPE_SECRET_KEY: str
+    STRIPE_WEBHOOK_SECRET: str
+    STRIPE_CONNECT_WEBHOOK_SECRET: str = ''
+    STRIPE_LOCAL_CONNECT_WEBHOOK_SECRET: str
     
     # Auth Settings    
     JWT_PRIVATE_KEY: str

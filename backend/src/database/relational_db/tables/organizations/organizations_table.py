@@ -1,7 +1,8 @@
 from uuid import UUID, uuid4
-from sqlalchemy.orm import mapped_column, Mapped
+from sqlalchemy.orm import mapped_column, Mapped, relationship
 from sqlalchemy import String, ForeignKey, Uuid, Index
 from sqlalchemy.dialects.postgresql import ENUM
+from datetime import datetime, UTC
 
 from ..table_base import Base
 from ..mixins import CreatedAtMixin
@@ -12,14 +13,17 @@ class Organization(CreatedAtMixin, Base):
     __tablename__ = "organizations"
 
     id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), default=uuid4, primary_key=True)
+    owner_user_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    stripe_account_id: Mapped[str | None] = mapped_column(String, nullable=True)
+    
     type: Mapped[OrganizationType] = mapped_column(ENUM(OrganizationType, name="organization_type"), default=OrganizationType.SUPPLIER, nullable=False)
     name: Mapped[str] = mapped_column(String, nullable=False)
     country: Mapped[str] = mapped_column(String(2), nullable=False)
-    address: Mapped[str] = mapped_column(String, nullable=False)
-    owner_user_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    stripe_account_id: Mapped[str | None] = mapped_column(String, nullable=True)
+    address: Mapped[str] = mapped_column(String, nullable=True)
     kyc_status: Mapped[KycStatus] = mapped_column(ENUM(KycStatus, name="kyc_status"), default=KycStatus.NOT_STARTED, nullable=False)
     payout_schedule: Mapped[PayoutSchedule] = mapped_column(ENUM(PayoutSchedule, name="payout_schedule"), default=PayoutSchedule.WEEKLY, nullable=False)
+    
+    # Minimal Stripe linkage kept for UI flows only
 
     __table_args__ = (
         Index(
@@ -29,3 +33,5 @@ class Organization(CreatedAtMixin, Base):
             postgresql_ops={'name': 'gin_trgm_ops'}
         ),
     )
+    
+    owner: Mapped["User"] = relationship(back_populates="organization", lazy="selectin") # type: ignore

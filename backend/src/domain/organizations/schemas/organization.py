@@ -1,22 +1,29 @@
 from typing import Optional
 from uuid import UUID
+from datetime import datetime
 from pydantic import BaseModel, Field
 
 from ..enums import OrganizationType, KycStatus, PayoutSchedule
 from ...common.timestamps import TimestampModel
 
 class OrganizationModel(TimestampModel):
-    """Organization model for API responses."""
+    """
+    Organization model for API responses.
+    Stripe snapshots trimmed for MVP; UI assumes successful onboarding.
+    """
     
     id: UUID = Field(..., description="Unique identifier for the organization")
     type: OrganizationType = Field(..., description="Type of organization (supplier, workshop, etc.)")
     name: str = Field(..., description="Organization name")
     country: str = Field(..., description="2-letter country code")
     address: str = Field(..., description="Organization address")
-    owner_user_id: UUID = Field(..., description="ID of the user who owns this organization")
+    
+    # Relationship fields
     stripe_account_id: Optional[str] = Field(None, description="Stripe Connect account ID")
     kyc_status: KycStatus = Field(..., description="Know Your Customer verification status")
     payout_schedule: PayoutSchedule = Field(..., description="How often payouts are processed")
+    
+    # Stripe snapshots trimmed for MVP; UI assumes successful onboarding
     
 
 class OrganizationCreate(BaseModel):

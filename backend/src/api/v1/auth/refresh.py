@@ -41,8 +41,8 @@ async def refresh_tokens(
         result = await svc.refresh_tokens(cookie_refresh, x_csrf)
         if result is None:
             # token invalid or csrf mismatch
-            response.delete_cookie("refresh_token", samesite="lax")
-            response.delete_cookie("csrf_token", samesite="lax")
+            response.delete_cookie("refresh_token", samesite="none")
+            response.delete_cookie("csrf_token", samesite="none")
             raise HTTPException(status_code=401, detail="Invalid refresh token")
         
         new_access, new_refresh, new_csrf = result
@@ -53,14 +53,14 @@ async def refresh_tokens(
             max_age=config.REFRESH_TTL,
             httponly=True, 
             secure=True,
-            samesite="lax"
+            samesite="none"
         )
         response.set_cookie(
             "csrf_token", new_csrf,
             max_age=config.REFRESH_TTL,
             httponly=False, 
             secure=True, 
-            samesite="lax"
+            samesite="none"
         )
 
         # body: only short-lived access token

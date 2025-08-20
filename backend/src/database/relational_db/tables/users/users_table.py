@@ -47,3 +47,5 @@ class User(TimestampMixin, Base):
             postgresql_ops={'email': 'gin_trgm_ops'}
         ),
     )
+    
+    organization: Mapped["Organization"] = relationship(back_populates="owner", lazy="selectin") # type: ignore

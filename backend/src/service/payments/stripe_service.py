@@ -1,7 +1,6 @@
 import stripe
 
-from database.relational_db import UoW
-
+from database.relational_db import UoW, OrganizationsInterface
 
 class StripeService:
     """Service layer encapsulating all interactions with the Stripe API."""
@@ -12,7 +11,7 @@ class StripeService:
         account = stripe.Account.create(
             controller={
                 "stripe_dashboard": {
-                    "type": "none",
+                    "type": "express",
                 },
                 "fees": {
                     "payer": "application"
@@ -20,12 +19,12 @@ class StripeService:
                 "losses": {
                     "payments": "application"
                 },
-                "requirement_collection": "application",
+                # "requirement_collection": "application",
             },
-            capabilities={
-                "transfers": {"requested": True}
-            },
-            country="US",
+            # capabilities={
+            #     "transfers": {"requested": True}
+            # },
+            # country="US",
         )
 
         return account.id
@@ -34,7 +33,9 @@ class StripeService:
         account_session = stripe.AccountSession.create(
             account=account_id,
             components={
-                "account_onboarding": {"enabled": True},
+                "account_onboarding": {
+                    "enabled": True,
+                },
             },
         )
 
