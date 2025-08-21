@@ -1,13 +1,35 @@
 package com.lapcevichme.templates.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewModelScope
+import com.lapcevichme.templates.domain.model.ProductCondition
+import com.lapcevichme.templates.domain.model.ProductCreate
+import com.lapcevichme.templates.domain.model.ProductStatus
+import com.lapcevichme.templates.domain.model.Resource
+import com.lapcevichme.templates.domain.usecase.GetOrgIdUseCase
+import com.lapcevichme.templates.domain.usecase.SparePartCreateUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+sealed class UiEvent {
+    data class ShowSnackbar(val message: String) : UiEvent()
+    // Можно добавить другие события, например, навигацию
+}
+
 @HiltViewModel
-class SparePartCreateViewModel @Inject constructor() : ViewModel() {
+class SparePartCreateViewModel @Inject constructor(
+    private val getOrgIdUseCase: GetOrgIdUseCase,
+    private val sparePartCreateUseCase: SparePartCreateUseCase
+) : ViewModel() {
+
+    private val _uiEvent = MutableSharedFlow<UiEvent>()
+    val uiEvent = _uiEvent.asSharedFlow()
 
     //Марка (бренд) детали
     private val _brand = MutableStateFlow<String?>(null)
@@ -26,11 +48,15 @@ class SparePartCreateViewModel @Inject constructor() : ViewModel() {
     }
 
     //Состояние детали
-    private val _selectedCondition = MutableStateFlow<String?>(null)
+    private val _selectedCondition = MutableStateFlow<ProductCondition?>(null)
     val selectedCondition = _selectedCondition.asStateFlow()
 
     fun onConditionChanged(condition: String) {
-        _selectedCondition.value = condition
+        _selectedCondition.value = when(condition) {
+            "новый" -> ProductCondition.NEW
+            "б/у" -> ProductCondition.USED
+            else -> null
+        }
     }
 
     //цена детали
@@ -50,19 +76,86 @@ class SparePartCreateViewModel @Inject constructor() : ViewModel() {
     }
 
     //Статус детали
-    private val _status = MutableStateFlow<String?>("draft") // Default to "draft"
+    private val _status = MutableStateFlow<ProductStatus?>(ProductStatus.DRAFT) // Default to "draft"
     val status = _status.asStateFlow()
 
     fun onStatusChanged(status: String) {
-        _status.value = status
+        _status.value = when(status) {
+            "черновик" -> ProductStatus.DRAFT
+            "опубликован" -> ProductStatus.PUBLISHED
+            "архивирован" -> ProductStatus.ARCHIVED
+            else -> null
+        }
     }
 
     fun onCancelClicked(){
-        //TODO Сделать закрытие экрана добавления детали и переход на HomeTabScreen
+        //TODO Сделать закрытие экрана и переход на HomeTabScreen
     }
 
     fun onCreateClicked() {
-        //TODO Сделать создание детали и переход на HomeTabScreen
-    }
+        when(null) {
+            _brand.value -> {
+                _uiEvent.tryEmit(UiEvent.ShowSnackbar("Введите марку детали"))
+                return
+            }
 
+            _partNumber.value -> {
+                _uiEvent.tryEmit(UiEvent.ShowSnackbar("Введите номер детали"))
+                return
+            }
+
+            _selectedCondition.value -> {
+                _uiEvent.tryEmit(UiEvent.ShowSnackbar("Выберите состояние детали"))
+                return
+            }
+
+            _price.value -> {
+                _uiEvent.tryEmit(UiEvent.ShowSnackbar("Введите цену детали"))
+                return
+            }
+            else -> {
+                viewModelScope.launch {
+                    val orgId = getOrgIdUseCase() ?: run {
+                        _uiEvent.emit(UiEvent.ShowSnackbar("Не удалось получить ID организации"))
+                        return@launch
+                    }
+
+                    val response = sparePartCreateUseCase(orgId = orgId, product = ProductCreate(
+                        brand = _brand.value!!,
+                        partNumber = _partNumber.value!!,
+                        condition = _selectedCondition.value!!,
+                        price = _price.value!!.toDouble(),
+                        description = _description.value,
+                        status = _status.value!!
+                    ))
+
+                    when(response){
+                        is Resource.Success<*> -> {
+                            // Успешное создание детали
+                            _uiEvent.emit(UiEvent.ShowSnackbar("Деталь успешно создана!"))
+
+                            // Очистка полей после создания детали
+                            _brand.value = null
+                            _partNumber.value = null
+                            _selectedCondition.value = null
+                            _price.value = null
+                            _description.value = null
+                            _status.value = ProductStatus.DRAFT
+                        }
+                        is Resource.Error<*> -> {
+                            // Ошибка при создании детали
+                            _uiEvent.emit(UiEvent.ShowSnackbar("Ошибка при создании детали: ${response.message}"))
+                            return@launch
+                        }
+                        is Resource.Loading<*> -> {
+                            // Загрузка в процессе, можно показать индикатор загрузки
+                            // Но в данном случае мы просто продолжаем выполнение
+                        }
+                    }
+
+
+                }
+            }
+        }
+    }
 }

@@ -19,27 +19,25 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-//import androidx.compose.material.icons.filled.ArrowDropDown // No longer used directly here, but SimpleDropdownMenu might use it if kept for other purposes
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-//import androidx.compose.material3.DropdownMenuItem // No longer used directly here
 import androidx.compose.material3.ExperimentalMaterial3Api
-//import androidx.compose.material3.ExposedDropdownMenuBox // No longer used directly here
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-//import androidx.compose.runtime.mutableStateOf // No longer used directly here
-//import androidx.compose.runtime.remember // No longer used directly here
-//import androidx.compose.runtime.setValue // No longer used directly here
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.PathEffect
@@ -51,8 +49,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.lapcevichme.templates.domain.model.ProductCondition
 import com.lapcevichme.templates.presentation.viewmodel.SparePartCreateViewModel
+import com.lapcevichme.templates.presentation.viewmodel.UiEvent
 import com.lapcevichme.templates.ui.theme.PreviewTheme
+import kotlinx.coroutines.flow.collectLatest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,14 +62,30 @@ fun SparePartCreateScreen(
 ) {
     val brand by viewModel.brand.collectAsStateWithLifecycle()
     val partNumber by viewModel.partNumber.collectAsStateWithLifecycle()
-    val conditionOptions = listOf("new", "used")
+    val conditionOptions = listOf("новый", "б/у")
     val selectedCondition by viewModel.selectedCondition.collectAsStateWithLifecycle()
 
     val price by viewModel.price.collectAsStateWithLifecycle()
     val description by viewModel.description.collectAsStateWithLifecycle()
     // val status by viewModel.status.collectAsStateWithLifecycle()
 
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(key1 = true) {
+        viewModel.uiEvent.collectLatest {
+            event ->
+            when (event) {
+                is UiEvent.ShowSnackbar -> {
+                    snackbarHostState.showSnackbar(
+                        message = event.message
+                    )
+                }
+            }
+        }
+    }
+
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Добавление детали") },
@@ -86,18 +103,24 @@ fun SparePartCreateScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item { BasicInfoSection(
-                brand = brand,
-                onBrandChange = { viewModel.onBrandChanged(it!!) },
-                partNumber = partNumber,
-                onPartNumberChange = { viewModel.onPartNumberChanged(it!!) },
-                selectedCondition = selectedCondition,
-                onConditionSelected = { viewModel.onConditionChanged(it!!) },
-                conditionOptions = conditionOptions
-            ) }
+            item {
+                BasicInfoSection(
+                    brand = brand,
+                    onBrandChange = { viewModel.onBrandChanged(it!!) },
+                    partNumber = partNumber,
+                    onPartNumberChange = { viewModel.onPartNumberChanged(it!!) },
+                    selectedCondition = when(selectedCondition) {
+                        ProductCondition.NEW -> "новый"
+                        ProductCondition.USED -> "б/у"
+                        else -> null
+                    },
+                    onConditionSelected = { viewModel.onConditionChanged(it!!) },
+                    conditionOptions = conditionOptions
+                )
+            }
             item { PhotosSection() } // Assuming photos are still needed
             item { PriceAndDescriptionSection(price, { viewModel.onPriceChanged(it!!) }, description, { viewModel.onDescriptionChanged(it!!) }) }
-            item { ActionButtons() }
+            item { ActionButtons(onPublishClick = { viewModel.onCreateClicked() }) }
         }
     }
 }
@@ -157,7 +180,8 @@ fun BasicInfoSection(
 @Composable
 fun PhotosSection() { // Assuming this section remains as is for now
     SectionCard(title = "2. Фотографии") {
-        val stroke = Stroke(width = 4f,
+        val stroke = Stroke(
+            width = 4f,
             pathEffect = PathEffect.dashPathEffect(floatArrayOf(20f, 10f), 0f)
         )
         Box(
@@ -218,7 +242,7 @@ fun PriceAndDescriptionSection(
 }
 
 @Composable
-fun ActionButtons() {
+fun ActionButtons(onPublishClick: () -> Unit) { // Added onPublishClick parameter
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
@@ -226,7 +250,7 @@ fun ActionButtons() {
         OutlinedButton(onClick = { /* TODO: Handle cancel */ }) {
             Text("Отмена")
         }
-        Button(onClick = { /* TODO: Handle publish based on new schema (including status: 'draft') */ }) {
+        Button(onClick = onPublishClick) { // Use the passed lambda
             Text("Опубликовать")
         }
     }
