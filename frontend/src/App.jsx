@@ -86,14 +86,16 @@ function App() {
         console.log('Setting user role:', apiRole, 'for user:', user.email, 'current route:', route);
         setRole(apiRole);
         
-        if (!hasInitializedRole && route === "fyp") {
-          console.log('First time role initialization on fyp route');
+        // Перенаправляем пользователя при первой инициализации роли
+        if (!hasInitializedRole) {
+          console.log('First time role initialization, current route:', route);
           setHasInitializedRole(true);
           if (apiRole === "supplier") {
             console.log('Redirecting supplier to dashboard');
             setRoute("supplier:dashboard");
           } else {
-            console.log('Buyer stays on fyp');
+            console.log('Redirecting buyer to fyp');
+            setRoute("fyp");
           }
         }
       }
