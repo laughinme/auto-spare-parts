@@ -10,24 +10,25 @@ data class UserModelDto(
     @SerializedName("id")
     val id: String,
     @SerializedName("created_at")
-    val createdAt: String, // Формат "date-time"
+    val createdAt: String,
     @SerializedName("updated_at")
-    val updatedAt: String?, // Формат "date-time"
+    val updatedAt: String?,
     @SerializedName("email")
     val email: String,
     @SerializedName("username")
     val username: String?,
-    @SerializedName("profile_pic_url") // Changed from avatar_url
+    @SerializedName("profile_pic_url")
     val profilePicUrl: String?,
     @SerializedName("bio")
     val bio: String?,
-    @SerializedName("language_code") // Changed from language
+    @SerializedName("languageCode")
     val languageCode: String?,
     @SerializedName("is_onboarded")
     val isOnboarded: Boolean,
     @SerializedName("banned")
-    val isBanned: Boolean
-    // Removed: birthDate, age, gender, city, latitude, longitude
+    val isBanned: Boolean,
+    @SerializedName("organization")
+    val organization: OrganizationModelDto?
 )
 
 /**
@@ -41,7 +42,7 @@ data class UserPatchRequest(
     val profilePicUrl: String? = null,
     @SerializedName("bio")
     val bio: String? = null,
-    @SerializedName("language_code")
+    @SerializedName("languageCode")
     val languageCode: String? = null
 )
 
@@ -57,6 +58,7 @@ fun UserModelDto.toDomain(): UserProfile {
         isOnboarded = this.isOnboarded,
         createdAt = this.createdAt,
         updatedAt = this.updatedAt,
-        banned = this.isBanned
+        banned = this.isBanned,
+        organization = this.organization?.toDomain()
     )
 }

@@ -10,5 +10,6 @@ data class UserProfile(
     val isOnboarded: Boolean,
     val createdAt: String,
     val updatedAt: String?,
-    val banned: Boolean
+    val banned: Boolean,
+    val organization: OrganizationModel?
 )
