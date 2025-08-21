@@ -35,7 +35,7 @@ async def refresh_tokens(
     ),
 ) -> TokenPair:
     cookie_refresh = request.cookies.get("refresh_token")
-    logger.info(f'Cookie refresh: {cookie_refresh}')
+    # logger.info(f'Cookie refresh: {cookie_refresh}')
     
     if cookie_refresh:
         if not x_csrf:
