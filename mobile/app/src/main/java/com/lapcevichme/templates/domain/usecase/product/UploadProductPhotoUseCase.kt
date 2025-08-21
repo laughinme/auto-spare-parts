@@ -1,20 +1,20 @@
-package com.lapcevichme.templates.domain.usecase
+package com.lapcevichme.templates.domain.usecase.product
 
 import com.lapcevichme.templates.domain.model.ProductModel
-import com.lapcevichme.templates.domain.model.ProductPatch
 import com.lapcevichme.templates.domain.model.Resource
 import com.lapcevichme.templates.domain.repository.ProductRepository
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
-class UpdateProductUseCase @Inject constructor(
+class UploadProductPhotoUseCase @Inject constructor(
     private val productRepository: ProductRepository
 ) {
     operator fun invoke(
         orgId: String,
         productId: String,
-        patch: ProductPatch
+        photoBytes: ByteArray,
+        mimeType: String
     ): Flow<Resource<ProductModel>> {
-        return productRepository.updateProduct(orgId, productId, patch)
+        return productRepository.uploadProductPhoto(orgId, productId, photoBytes, mimeType)
     }
 }

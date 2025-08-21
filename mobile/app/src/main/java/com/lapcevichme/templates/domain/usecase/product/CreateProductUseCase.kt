@@ -1,4 +1,4 @@
-package com.lapcevichme.templates.domain.usecase
+package com.lapcevichme.templates.domain.usecase.product
 
 import com.lapcevichme.templates.domain.model.ProductCreate
 import com.lapcevichme.templates.domain.model.ProductModel

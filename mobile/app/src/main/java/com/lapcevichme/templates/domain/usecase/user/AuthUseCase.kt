@@ -1,4 +1,4 @@
-package com.lapcevichme.templates.domain.usecase
+package com.lapcevichme.templates.domain.usecase.user
 
 import com.lapcevichme.templates.data.remote.dto.UserLoginRequest
 import com.lapcevichme.templates.data.remote.dto.UserRegisterRequest

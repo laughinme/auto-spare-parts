@@ -1,14 +1,15 @@
 package com.lapcevichme.templates.presentation.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
-import com.lapcevichme.templates.domain.model.ProductCondition
+import com.lapcevichme.templates.domain.model.OrganizationModel
+import com.lapcevichme.templates.domain.model.enums.ProductCondition
 import com.lapcevichme.templates.domain.model.ProductCreate
-import com.lapcevichme.templates.domain.model.ProductStatus
+import com.lapcevichme.templates.domain.model.enums.ProductStatus
 import com.lapcevichme.templates.domain.model.Resource
-import com.lapcevichme.templates.domain.usecase.GetOrgIdUseCase
-import com.lapcevichme.templates.domain.usecase.SparePartCreateUseCase
+import com.lapcevichme.templates.domain.usecase.user.GetMyOrganizationsUseCase
+import com.lapcevichme.templates.domain.usecase.product.CreateProductUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,145 +18,202 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-sealed class UiEvent {
-    data class ShowSnackbar(val message: String) : UiEvent()
-    // Можно добавить другие события, например, навигацию
+const val SPARE_PART_CREATE_VIEWMODEL_TAG = "SparePartCreateViewModel"
+
+// --- СОБЫТИЯ ЭКРАНА ---
+sealed interface SparePartCreateEvent {
+    data class OnPartNumberChanged(val partNumber: String) : SparePartCreateEvent
+    data class OnBrandChanged(val brand: String) : SparePartCreateEvent
+    data class OnDescriptionChanged(val description: String) : SparePartCreateEvent
+    data class OnPriceChanged(val price: String) : SparePartCreateEvent
+    data class OnConditionChanged(val condition: String) : SparePartCreateEvent
+    data class OnStatusChanged(val status: String) : SparePartCreateEvent
+    data class OnOrganizationSelected(val orgId: String) : SparePartCreateEvent
+    object OnCreateClick : SparePartCreateEvent
+}
+
+// --- СОБЫТИЯ UI (ДЛЯ ОДНОРАЗОВЫХ ДЕЙСТВИЙ) ---
+sealed interface UiEvent {
+    data class ShowSnackbar(val message: String) : UiEvent
+    object NavigateToHome : UiEvent
 }
 
 @HiltViewModel
 class SparePartCreateViewModel @Inject constructor(
-    private val getOrgIdUseCase: GetOrgIdUseCase,
-    private val sparePartCreateUseCase: SparePartCreateUseCase
+    private val createProductUseCase: CreateProductUseCase,
+    private val getMyOrganizationsUseCase: GetMyOrganizationsUseCase
 ) : ViewModel() {
 
     private val _uiEvent = MutableSharedFlow<UiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
 
-    //Марка (бренд) детали
-    private val _brand = MutableStateFlow<String?>(null)
-    val brand = _brand.asStateFlow()
+    private val _creationState = MutableStateFlow<Resource<Unit>?>(null)
+    val creationState = _creationState.asStateFlow()
 
-    fun onBrandChanged(brand: String) {
-        _brand.value = brand
-    }
+    private val _organizations = MutableStateFlow<Resource<List<OrganizationModel>>?>(null)
+    val organizations = _organizations.asStateFlow()
 
-    //Номер детали
-    private val _partNumber = MutableStateFlow<String?>(null)
+    private val _selectedOrganizationId = MutableStateFlow<String?>(null)
+    val selectedOrganizationId = _selectedOrganizationId.asStateFlow()
+
+    private val _partNumber = MutableStateFlow("")
     val partNumber = _partNumber.asStateFlow()
 
-    fun onPartNumberChanged(partNumber: String) {
-        _partNumber.value = partNumber
-    }
+    private val _brand = MutableStateFlow("")
+    val brand = _brand.asStateFlow()
 
-    //Состояние детали
-    private val _selectedCondition = MutableStateFlow<ProductCondition?>(null)
-    val selectedCondition = _selectedCondition.asStateFlow()
+    private val _description = MutableStateFlow("")
+    val description = _description.asStateFlow()
 
-    fun onConditionChanged(condition: String) {
-        _selectedCondition.value = when(condition) {
-            "новый" -> ProductCondition.NEW
-            "б/у" -> ProductCondition.USED
-            else -> null
-        }
-    }
-
-    //цена детали
     private val _price = MutableStateFlow<String?>(null)
     val price = _price.asStateFlow()
 
-    fun onPriceChanged(price: String) {
-        _price.value = price
-    }
+    private val _condition = MutableStateFlow<ProductCondition?>(null)
+    val condition = _condition.asStateFlow()
 
-    //Описание для детали
-    private val _description = MutableStateFlow<String?>(null)
-    val description = _description.asStateFlow()
-
-    fun onDescriptionChanged(description: String) {
-        _description.value = description
-    }
-
-    //Статус детали
-    private val _status = MutableStateFlow<ProductStatus?>(ProductStatus.DRAFT) // Default to "draft"
+    private val _status = MutableStateFlow(ProductStatus.DRAFT)
     val status = _status.asStateFlow()
 
-    fun onStatusChanged(status: String) {
-        _status.value = when(status) {
-            "черновик" -> ProductStatus.DRAFT
-            "опубликован" -> ProductStatus.PUBLISHED
-            "архивирован" -> ProductStatus.ARCHIVED
-            else -> null
+    init {
+        Log.d(SPARE_PART_CREATE_VIEWMODEL_TAG, "Initialized ViewModel@${hashCode()}")
+        loadOrganizations()
+    }
+
+    private fun loadOrganizations() {
+        viewModelScope.launch {
+            _organizations.value = Resource.Loading()
+            try {
+                getMyOrganizationsUseCase().collect { result ->
+                    _organizations.value = result
+                    if (result is Resource.Success && result.data?.size == 1) {
+                        _selectedOrganizationId.value = result.data.first().id
+                    }
+                }
+            } catch (e: Exception) {
+                _organizations.value = Resource.Error(e.message ?: "Failed to load organizations")
+                Log.e(SPARE_PART_CREATE_VIEWMODEL_TAG, "Error loading organizations", e)
+            }
         }
     }
 
-    fun onCancelClicked(){
-        //TODO Сделать закрытие экрана и переход на HomeTabScreen
-    }
-
-    fun onCreateClicked() {
-        when(null) {
-            _brand.value -> {
-                _uiEvent.tryEmit(UiEvent.ShowSnackbar("Введите марку детали"))
-                return
-            }
-
-            _partNumber.value -> {
-                _uiEvent.tryEmit(UiEvent.ShowSnackbar("Введите номер детали"))
-                return
-            }
-
-            _selectedCondition.value -> {
-                _uiEvent.tryEmit(UiEvent.ShowSnackbar("Выберите состояние детали"))
-                return
-            }
-
-            _price.value -> {
-                _uiEvent.tryEmit(UiEvent.ShowSnackbar("Введите цену детали"))
-                return
-            }
-            else -> {
-                viewModelScope.launch {
-                    val orgId = getOrgIdUseCase() ?: run {
-                        _uiEvent.emit(UiEvent.ShowSnackbar("Не удалось получить ID организации"))
-                        return@launch
-                    }
-
-                    val response = sparePartCreateUseCase(orgId = orgId, product = ProductCreate(
-                        brand = _brand.value!!,
-                        partNumber = _partNumber.value!!,
-                        condition = _selectedCondition.value!!,
-                        price = _price.value!!.toDouble(),
-                        description = _description.value,
-                        status = _status.value!!
-                    ))
-
-                    when(response){
-                        is Resource.Success<*> -> {
-                            // Успешное создание детали
-                            _uiEvent.emit(UiEvent.ShowSnackbar("Деталь успешно создана!"))
-
-                            // Очистка полей после создания детали
-                            _brand.value = null
-                            _partNumber.value = null
-                            _selectedCondition.value = null
-                            _price.value = null
-                            _description.value = null
-                            _status.value = ProductStatus.DRAFT
-                        }
-                        is Resource.Error<*> -> {
-                            // Ошибка при создании детали
-                            _uiEvent.emit(UiEvent.ShowSnackbar("Ошибка при создании детали: ${response.message}"))
-                            return@launch
-                        }
-                        is Resource.Loading<*> -> {
-                            // Загрузка в процессе, можно показать индикатор загрузки
-                            // Но в данном случае мы просто продолжаем выполнение
-                        }
-                    }
-
-
+    fun onEvent(event: SparePartCreateEvent) {
+        when (event) {
+            is SparePartCreateEvent.OnPartNumberChanged -> _partNumber.value = event.partNumber
+            is SparePartCreateEvent.OnBrandChanged -> _brand.value = event.brand
+            is SparePartCreateEvent.OnDescriptionChanged -> _description.value = event.description
+            is SparePartCreateEvent.OnPriceChanged -> _price.value = event.price
+            is SparePartCreateEvent.OnConditionChanged -> {
+                // ----- ИЗМЕНЕНИЕ ЗДЕСЬ -----
+                // Добавлена логика для преобразования русской строки из UI в нужный enum.
+                _condition.value = when (event.condition.lowercase()) {
+                    "новый" -> ProductCondition.NEW
+                    "б/у" -> ProductCondition.USED
+                    else -> null
                 }
             }
+            is SparePartCreateEvent.OnStatusChanged -> {
+                val foundStatus = ProductStatus.entries.find {
+                    it.name.equals(event.status, ignoreCase = true)
+                } ?: when (event.status.lowercase()) {
+                    "черновик" -> ProductStatus.DRAFT
+                    "опубликован" -> ProductStatus.PUBLISHED
+                    "архивирован" -> ProductStatus.ARCHIVED
+                    else -> null
+                }
+                if (foundStatus != null) {
+                    _status.value = foundStatus
+                }
+            }
+            is SparePartCreateEvent.OnOrganizationSelected -> {
+                _selectedOrganizationId.value = event.orgId
+            }
+            SparePartCreateEvent.OnCreateClick -> createSparePartInternal()
         }
+    }
+
+    private fun createSparePartInternal() {
+        viewModelScope.launch {
+            val orgId = _selectedOrganizationId.value
+            val currentPartNumber = _partNumber.value
+            val currentBrand = _brand.value
+            val currentPriceString = _price.value
+            val currentCondition = _condition.value
+            val currentStatus = _status.value
+
+            var isValid = true
+            var errorMessage = ""
+
+            if (orgId == null) {
+                isValid = false
+                errorMessage = "Выберите организацию."
+            } else if (currentBrand.isBlank()) {
+                isValid = false
+                errorMessage = "Бренд не может быть пустым."
+            } else if (currentPartNumber.isBlank()) {
+                isValid = false
+                errorMessage = "Номер запчасти не может быть пустым."
+            } else if (currentPriceString.isNullOrBlank() || currentPriceString.toDoubleOrNull() == null || currentPriceString.toDoubleOrNull()!! <= 0) {
+                isValid = false
+                errorMessage = "Укажите корректную цену."
+            } else if (currentCondition == null) {
+                isValid = false
+                errorMessage = "Выберите состояние товара."
+            }
+
+            if (!isValid) {
+                _uiEvent.emit(UiEvent.ShowSnackbar(errorMessage))
+                _creationState.value = Resource.Error(errorMessage)
+                return@launch
+            }
+
+            _creationState.value = Resource.Loading()
+
+            try {
+                val productCreateRequest = ProductCreate(
+                    brand = currentBrand,
+                    partNumber = currentPartNumber,
+                    price = currentPriceString!!.toDouble(),
+                    condition = currentCondition!!,
+                    description = _description.value.takeIf { it.isNotBlank() },
+                    status = currentStatus
+                )
+
+                createProductUseCase(orgId!!, productCreateRequest).collect { result ->
+                    when (result) {
+                        is Resource.Success -> {
+                            _creationState.value = Resource.Success(Unit)
+                            _uiEvent.emit(UiEvent.ShowSnackbar("Запчасть успешно создана! ID: ${result.data?.id ?: ""}"))
+                            _uiEvent.emit(UiEvent.NavigateToHome)
+                            clearInputFields()
+                            Log.d(SPARE_PART_CREATE_VIEWMODEL_TAG, "Product created successfully.")
+                        }
+                        is Resource.Error -> {
+                            val errorMsg = result.message ?: "Неизвестная ошибка при создании"
+                            _creationState.value = Resource.Error(errorMsg)
+                            _uiEvent.emit(UiEvent.ShowSnackbar(errorMsg))
+                            Log.e(SPARE_PART_CREATE_VIEWMODEL_TAG, "Error creating product: $errorMsg")
+                        }
+                        is Resource.Loading -> {
+                            _creationState.value = Resource.Loading()
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                val errorMsg = e.message ?: "Ошибка при вызове CreateProductUseCase"
+                _creationState.value = Resource.Error(errorMsg)
+                _uiEvent.emit(UiEvent.ShowSnackbar(errorMsg))
+                Log.e(SPARE_PART_CREATE_VIEWMODEL_TAG, "Exception in createProductUseCase: $errorMsg", e)
+            }
+        }
+    }
+
+    private fun clearInputFields() {
+        _partNumber.value = ""
+        _brand.value = ""
+        _description.value = ""
+        _price.value = null
+        _condition.value = null
+        _status.value = ProductStatus.DRAFT
+        _selectedOrganizationId.value = null
     }
 }

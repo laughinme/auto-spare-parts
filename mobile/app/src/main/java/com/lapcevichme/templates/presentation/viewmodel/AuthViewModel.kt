@@ -8,8 +8,8 @@ import com.lapcevichme.templates.data.remote.dto.UserLoginRequest
 import com.lapcevichme.templates.data.remote.dto.UserRegisterRequest
 import com.lapcevichme.templates.domain.model.Resource
 import com.lapcevichme.templates.domain.model.TokenPair
-import com.lapcevichme.templates.domain.usecase.LoginUseCase
-import com.lapcevichme.templates.domain.usecase.RegisterUseCase
+import com.lapcevichme.templates.domain.usecase.user.LoginUseCase
+import com.lapcevichme.templates.domain.usecase.user.RegisterUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

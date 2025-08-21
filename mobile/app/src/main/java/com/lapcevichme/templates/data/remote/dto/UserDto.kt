@@ -28,7 +28,7 @@ data class UserModelDto(
     @SerializedName("banned")
     val isBanned: Boolean,
     @SerializedName("organization")
-    val organization: OrganizationModelDto?
+    val organization: OrganizationDto?
 )
 
 /**

@@ -1,4 +1,4 @@
-package com.lapcevichme.templates.domain.usecase
+package com.lapcevichme.templates.domain.usecase.location
 
 import android.location.Location
 import com.example.hackathon.domain.location.LocationTracker

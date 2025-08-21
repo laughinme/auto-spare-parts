@@ -5,8 +5,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
-import com.example.partmarketplace.SparePartCreateScreen
 import com.lapcevichme.templates.presentation.screen.ConnectOnboardingScreen // Убедись, что импорт есть
+import com.lapcevichme.templates.presentation.screen.SparePartCreateScreen
 import com.lapcevichme.templates.presentation.screen.onboardingScreens.GreetingScreen
 import com.lapcevichme.templates.presentation.screen.onboardingScreens.RolePickerScreen
 import com.lapcevichme.templates.presentation.screen.onboardingScreens.SignInScreen
@@ -15,6 +15,7 @@ import com.lapcevichme.templates.presentation.screen.tabs.ChatTabScreen
 import com.lapcevichme.templates.presentation.screen.tabs.GarageTabScreen
 import com.lapcevichme.templates.presentation.screen.tabs.HomeTabScreen
 import com.lapcevichme.templates.presentation.screen.tabs.ProfileTabScreen
+import com.lapcevichme.templates.presentation.viewmodel.OnboardingViewModel // <-- ДОБАВЛЕН ИМПОРТ
 
 /**
  * Главный навигационный компонент приложения.
@@ -59,15 +60,22 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
                     }
                 )
             }
+            // В AppNavigation.kt
+// ...
             composable(Routes.SIGN_UP) {
-                // SignUpScreen теперь принимает onSignUpSuccess: (selectedRole: String?) -> Unit
                 SignUpScreen(
-                    onSignUpSuccess = { selectedRole -> // <-- selectedRole из SignUpScreen
-                        if (selectedRole == "Seller") { // "Seller" - это значение, которое устанавливается в OnboardingViewModel
+                    onSignUpSuccess = { selectedRole ->
+                        // ДОБАВЛЯЕМ ЛОГИ ЗДЕСЬ
+                        android.util.Log.d("AppNavigation_RoleDebug", "Role received in AppNavigation: '$selectedRole'")
+                        android.util.Log.d("AppNavigation_RoleDebug", "Comparing with OnboardingViewModel.ROLE_SELLER ('${OnboardingViewModel.ROLE_SELLER}')")
+
+                        if (selectedRole == OnboardingViewModel.ROLE_SELLER) {
+                            android.util.Log.d("AppNavigation_RoleDebug", "Condition MET: Navigating to STRIPE_ONBOARDING")
                             navController.navigate(Routes.STRIPE_ONBOARDING) {
                                 popUpTo(Routes.AUTH_GRAPH) { inclusive = true }
                             }
                         } else {
+                            android.util.Log.d("AppNavigation_RoleDebug", "Condition NOT MET: Navigating to MAIN_GRAPH. Actual role was: '$selectedRole'")
                             navController.navigate(Routes.MAIN_GRAPH) {
                                 popUpTo(Routes.AUTH_GRAPH) { inclusive = true }
                             }
@@ -81,6 +89,7 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
                     }
                 )
             }
+// ...
         }
 
         // --- ГРАФ 2: СОЗДАНИЕ ПРОФИЛЯ (УДАЛЕН/ЗАКОММЕНТИРОВАН) ---

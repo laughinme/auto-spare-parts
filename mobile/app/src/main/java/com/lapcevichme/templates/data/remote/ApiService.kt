@@ -1,6 +1,7 @@
 package com.lapcevichme.templates.data.remote
 
 import com.lapcevichme.templates.data.remote.dto.CityModelDto
+import com.lapcevichme.templates.data.remote.dto.OrganizationDto
 import com.lapcevichme.templates.data.remote.dto.PageDto
 import com.lapcevichme.templates.data.remote.dto.StripeAccountResponseDto
 import com.lapcevichme.templates.data.remote.dto.StripeAccountSessionRequestDto
@@ -210,4 +211,7 @@ interface ApiService {
         @Path("org_id") orgId: String,
         @Path("product_id") productId: String
     ): Response<ProductDto>
+
+    @GET("api/v1/organizations/my")
+    suspend fun getMyOrganizations(): List<OrganizationDto>
 }

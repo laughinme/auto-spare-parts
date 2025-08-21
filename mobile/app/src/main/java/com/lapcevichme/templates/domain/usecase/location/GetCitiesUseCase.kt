@@ -1,4 +1,4 @@
-package com.lapcevichme.templates.domain.usecase
+package com.lapcevichme.templates.domain.usecase.location
 
 import com.lapcevichme.templates.domain.model.City
 import com.lapcevichme.templates.domain.model.Resource

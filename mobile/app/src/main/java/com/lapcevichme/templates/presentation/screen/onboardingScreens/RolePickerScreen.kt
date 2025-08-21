@@ -18,7 +18,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton // Added
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -29,17 +29,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+// Убедись, что OnboardingViewModel импортирован, если константы в нем
 import com.lapcevichme.templates.presentation.viewmodel.OnboardingViewModel
-import com.lapcevichme.templates.ui.theme.PreviewTheme // Added for consistent preview
+import com.lapcevichme.templates.ui.theme.PreviewTheme
 
 @Composable
 fun RolePickerScreen(
-    viewModel: OnboardingViewModel = hiltViewModel(),
+    viewModel: OnboardingViewModel = hiltViewModel(), // Используем OnboardingViewModel
     onNavigateToSignUp: () -> Unit,
     onNavigateToSignIn: () -> Unit
 ) {
     val selectedRole : String? by viewModel.role.collectAsStateWithLifecycle()
-    // val roles = listOf("Buyer", "Seller") // roles list is not directly used in UI rendering, only for logic in VM
 
     Column(
         modifier = Modifier
@@ -72,7 +72,7 @@ fun RolePickerScreen(
         // --- Центральная часть: Карточки выбора ---
         Box(
             modifier = Modifier
-                .weight(1.5f) // Даем больше места для карточек
+                .weight(1.5f)
                 .fillMaxWidth(),
             contentAlignment = Alignment.Center
         ) {
@@ -85,8 +85,8 @@ fun RolePickerScreen(
                         title = "Покупатель",
                         description = "Ищу запчасти для своих авто",
                         icon = "🛒",
-                        isSelected = selectedRole == "Buyer",
-                        onClick = { viewModel.onRoleClicked("Buyer") }
+                        isSelected = selectedRole == OnboardingViewModel.ROLE_BUYER, // Сравнение с константой
+                        onClick = { viewModel.onRoleClicked(OnboardingViewModel.ROLE_BUYER) } // Используем константу
                     )
                 }
                 Box(modifier = Modifier.weight(1f)) {
@@ -94,33 +94,33 @@ fun RolePickerScreen(
                         title = "Поставщик",
                         description = "Размещаю запчасти и обрабатываю заказы",
                         icon = "🏪",
-                        isSelected = selectedRole == "Seller",
-                        onClick = { viewModel.onRoleClicked("Seller") }
+                        isSelected = selectedRole == OnboardingViewModel.ROLE_SELLER, // Сравнение с константой
+                        onClick = { viewModel.onRoleClicked(OnboardingViewModel.ROLE_SELLER) } // Используем константу
                     )
                 }
             }
         }
 
         // --- Нижняя часть: Кнопка "Продолжить" и ссылка на Sign In ---
-        Column( // Changed Box to Column to accommodate TextButton
+        Column(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
-                .padding(bottom = 24.dp), // Adjusted padding
-            horizontalAlignment = Alignment.CenterHorizontally, // Center content in the column
-            verticalArrangement = Arrangement.Bottom // Align to bottom
+                .padding(bottom = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Bottom
         ) {
             Button(
                 modifier = Modifier
                     .height(56.dp)
                     .fillMaxWidth(0.9f),
-                onClick = onNavigateToSignUp, // Changed from {}
-                enabled = selectedRole != null
+                onClick = onNavigateToSignUp, // Навигация происходит по этой кнопке
+                enabled = selectedRole != null // Кнопка активна, если роль выбрана
             ) {
                 Text("Продолжить", fontSize = 18.sp)
             }
-            Spacer(modifier = Modifier.height(16.dp)) // Added spacer
-            TextButton(onClick = onNavigateToSignIn) { // Added TextButton
+            Spacer(modifier = Modifier.height(16.dp))
+            TextButton(onClick = onNavigateToSignIn) {
                 Text("Already have an account? Sign In")
             }
         }
@@ -140,7 +140,7 @@ fun RoleCard(
 
     Card(
         modifier = Modifier
-            .fillMaxSize() // Consider using .aspectRatio(1.5f) or similar for better card shape if needed
+            .fillMaxSize()
             .clickable(onClick = onClick),
         shape = MaterialTheme.shapes.extraLarge,
         border = BorderStroke(if (isSelected) 2.dp else 1.dp, borderColor),
@@ -151,7 +151,7 @@ fun RoleCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text(text = icon, fontSize = 32.sp) // Emoji icons might render differently on various devices/OS versions
+            Text(text = icon, fontSize = 32.sp)
             Column {
                 Text(text = title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(4.dp))
@@ -161,9 +161,6 @@ fun RoleCard(
     }
 }
 
-
-// --- Preview ---
-
 @Preview(showBackground = true, name = "Light Theme")
 @Preview(
     showBackground = true,
@@ -172,13 +169,12 @@ fun RoleCard(
 )
 @Composable
 fun RolePickerScreenPreview() {
-    PreviewTheme { // Wrapped with PreviewTheme for consistency
+    PreviewTheme {
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
             RolePickerScreen(
-                onNavigateToSignUp = {}, // Added dummy lambda
-                onNavigateToSignIn = {}  // Added dummy lambda
+                onNavigateToSignUp = {},
+                onNavigateToSignIn = {}
             )
         }
     }
 }
-

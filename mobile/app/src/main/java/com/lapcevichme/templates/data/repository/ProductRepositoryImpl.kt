@@ -2,8 +2,8 @@ package com.lapcevichme.templates.data.repository
 
 import android.util.Log
 import com.lapcevichme.templates.data.remote.ApiService
-import com.lapcevichme.templates.data.remote.dto.toDto
-import com.lapcevichme.templates.data.remote.dto.toDomain
+import com.lapcevichme.templates.domain.model.enums.toDto
+import com.lapcevichme.templates.domain.model.enums.toDomain
 import com.lapcevichme.templates.domain.model.Page
 import com.lapcevichme.templates.domain.model.ProductCreate
 import com.lapcevichme.templates.domain.model.ProductModel

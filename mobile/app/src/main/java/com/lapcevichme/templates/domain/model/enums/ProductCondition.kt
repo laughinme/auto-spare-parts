@@ -1,4 +1,4 @@
-package com.lapcevichme.templates.domain.model
+package com.lapcevichme.templates.domain.model.enums
 
 import com.google.gson.annotations.SerializedName
 

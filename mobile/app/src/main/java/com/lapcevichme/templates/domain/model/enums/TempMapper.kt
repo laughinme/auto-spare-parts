@@ -1,32 +1,31 @@
-package com.lapcevichme.templates.data.remote.dto
+// com/lapcevichme/templates/data/remote/dto/ProductMappers.kt
 
+package com.lapcevichme.templates.domain.model.enums
+
+import com.lapcevichme.templates.data.remote.dto.MediaDto
+import com.lapcevichme.templates.data.remote.dto.PageDto
+import com.lapcevichme.templates.data.remote.dto.ProductCreateDto
+import com.lapcevichme.templates.data.remote.dto.ProductDto
+import com.lapcevichme.templates.data.remote.dto.ProductPatchDto
 import com.lapcevichme.templates.domain.model.MediaModel
 import com.lapcevichme.templates.domain.model.Page
-import com.lapcevichme.templates.domain.model.ProductCondition
 import com.lapcevichme.templates.domain.model.ProductCreate
 import com.lapcevichme.templates.domain.model.ProductModel
 import com.lapcevichme.templates.domain.model.ProductPatch
-import com.lapcevichme.templates.domain.model.ProductStatus
 
+// Простое присваивание. Gson сделает всю работу.
 fun ProductCreate.toDto(): ProductCreateDto {
     return ProductCreateDto(
         brand = this.brand,
         partNumber = this.partNumber,
         price = this.price,
-        condition = this.condition.name, // Преобразуем в String
+        condition = this.condition, // <-- Просто присваиваем enum
         description = this.description,
-        status = this.status.name // Преобразуем в String
+        status = this.status // <-- Просто присваиваем enum
     )
 }
 
-fun String.toProductCondition(): ProductCondition {
-    return ProductCondition.valueOf(this.uppercase())
-}
-
-fun String.toProductStatus(): ProductStatus {
-    return ProductStatus.valueOf(this.uppercase())
-}
-
+// Простое присваивание. Gson сделает всю работу.
 fun ProductDto.toDomain(): ProductModel {
     return ProductModel(
         id = this.id,
@@ -36,9 +35,9 @@ fun ProductDto.toDomain(): ProductModel {
         brand = this.brand,
         partNumber = this.partNumber,
         price = this.price,
-        condition = this.condition.toProductCondition(), // Преобразуем из String
+        condition = this.condition, // <-- Просто присваиваем enum
         description = this.description,
-        status = this.status.toProductStatus(), // Преобразуем из String
+        status = this.status, // <-- Просто присваиваем enum
         media = this.media.map { it.toDomain() }
     )
 }
@@ -51,14 +50,15 @@ fun MediaDto.toDomain(): MediaModel {
     )
 }
 
+// Простое присваивание. Gson сделает всю работу.
 fun ProductPatch.toDto(): ProductPatchDto {
     return ProductPatchDto(
         brand = this.brand,
         partNumber = this.partNumber,
         price = this.price,
-        condition = this.condition?.name, // Преобразуем в String
+        condition = this.condition, // <-- Просто присваиваем enum
         description = this.description,
-        status = this.status?.name // Преобразуем в String
+        status = this.status // <-- Просто присваиваем enum
     )
 }
 

@@ -62,21 +62,26 @@ fun SignUpScreen(
     val focusManager = LocalFocusManager.current
     // val context = LocalContext.current // Не используется
 
+// В SignUpScreen.kt
+// ...
     LaunchedEffect(signUpState) {
         when (val state = signUpState) {
             is Resource.Success -> {
-                onSignUpSuccess(onboardingViewModel.role.value) // Роль берется из OnboardingViewModel
-                // authViewModel.onEvent(AuthEvent.ResetAuthState) // Опционально: сбросить состояние после успеха
+                val currentRole = onboardingViewModel.role.value
+                // ДОБАВЛЯЕМ ЛОГ ЗДЕСЬ
+                android.util.Log.d("SignUpScreen_RoleDebug", "Role from OnboardingViewModel in SignUpScreen: $currentRole")
+                onSignUpSuccess(currentRole)
             }
             is Resource.Error -> {
                 scope.launch {
                     snackbarHostState.showSnackbar(state.message ?: "Ошибка регистрации")
                 }
-                authViewModel.onEvent(AuthEvent.ResetAuthState) // Сбрасываем состояние, чтобы Snackbar не показывался снова
+                authViewModel.onEvent(AuthEvent.ResetAuthState)
             }
-            else -> Unit // Resource.Loading или null
+            else -> Unit
         }
     }
+// ...
 
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }

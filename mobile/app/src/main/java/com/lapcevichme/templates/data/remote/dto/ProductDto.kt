@@ -1,6 +1,10 @@
+// com/lapcevichme/templates/data/remote/dto/ProductDtos.kt
+
 package com.lapcevichme.templates.data.remote.dto
 
 import com.google.gson.annotations.SerializedName
+import com.lapcevichme.templates.domain.model.enums.ProductCondition
+import com.lapcevichme.templates.domain.model.enums.ProductStatus
 
 data class ProductCreateDto(
     @SerializedName("brand")
@@ -10,11 +14,11 @@ data class ProductCreateDto(
     @SerializedName("price")
     val price: Double,
     @SerializedName("condition")
-    val condition: String, // Используем String для соответствия ProductCondition
+    val condition: ProductCondition, // <-- Тип изменен
     @SerializedName("description")
     val description: String? = null,
     @SerializedName("status")
-    val status: String = "DRAFT" // Используем String для соответствия ProductStatus
+    val status: ProductStatus = ProductStatus.DRAFT // <-- Тип изменен
 )
 
 data class ProductDto(
@@ -33,11 +37,11 @@ data class ProductDto(
     @SerializedName("price")
     val price: Double,
     @SerializedName("condition")
-    val condition: String, // Используем String для соответствия ProductCondition
+    val condition: ProductCondition, // <-- Тип изменен
     @SerializedName("description")
     val description: String? = null,
     @SerializedName("status")
-    val status: String = "DRAFT", // Используем String для соответствия ProductStatus
+    val status: ProductStatus, // <-- Тип изменен
     @SerializedName("media")
     val media: List<MediaDto>
 )
@@ -59,16 +63,16 @@ data class ProductPatchDto(
     @SerializedName("price")
     val price: Double? = null,
     @SerializedName("condition")
-    val condition: String? = null, // Используем String для соответствия ProductCondition
+    val condition: ProductCondition? = null, // <-- Тип изменен
     @SerializedName("description")
     val description: String? = null,
     @SerializedName("status")
-    val status: String? = null // Используем String для соответствия ProductStatus
+    val status: ProductStatus? = null // <-- Тип изменен
 )
 
-data class PageDto<ProductDto>(
+data class PageDto<T>( // Используем Generic T вместо ProductDto
     @SerializedName("items")
-    val items: List<ProductDto>,
+    val items: List<T>,
     @SerializedName("offset")
     val offset: Int,
     @SerializedName("limit")
@@ -76,5 +80,3 @@ data class PageDto<ProductDto>(
     @SerializedName("total")
     val total: Int
 )
-
-

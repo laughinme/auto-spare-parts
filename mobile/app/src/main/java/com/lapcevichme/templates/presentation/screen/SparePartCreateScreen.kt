@@ -1,4 +1,4 @@
-package com.example.partmarketplace
+package com.lapcevichme.templates.presentation.screen
 
 import android.content.res.Configuration
 import androidx.compose.foundation.border
@@ -22,7 +22,11 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -36,8 +40,11 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.PathEffect
@@ -49,7 +56,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.lapcevichme.templates.domain.model.ProductCondition
+import com.lapcevichme.templates.domain.model.enums.ProductCondition
+import com.lapcevichme.templates.domain.model.Resource
+import com.lapcevichme.templates.presentation.viewmodel.SparePartCreateEvent
 import com.lapcevichme.templates.presentation.viewmodel.SparePartCreateViewModel
 import com.lapcevichme.templates.presentation.viewmodel.UiEvent
 import com.lapcevichme.templates.ui.theme.PreviewTheme
@@ -60,26 +69,28 @@ import kotlinx.coroutines.flow.collectLatest
 fun SparePartCreateScreen(
     viewModel: SparePartCreateViewModel = hiltViewModel()
 ) {
+    // Использование `collectAsStateWithLifecycle` - это отличный выбор.
+    // Он останавливает подписку на Flow, когда приложение в фоне, экономя ресурсы.
     val brand by viewModel.brand.collectAsStateWithLifecycle()
     val partNumber by viewModel.partNumber.collectAsStateWithLifecycle()
     val conditionOptions = listOf("новый", "б/у")
-    val selectedCondition by viewModel.selectedCondition.collectAsStateWithLifecycle()
+    val selectedCondition by viewModel.condition.collectAsStateWithLifecycle()
 
     val price by viewModel.price.collectAsStateWithLifecycle()
     val description by viewModel.description.collectAsStateWithLifecycle()
-    // val status by viewModel.status.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
 
+    // LaunchedEffect для подписки на одноразовые события - идеальное решение.
     LaunchedEffect(key1 = true) {
-        viewModel.uiEvent.collectLatest {
-            event ->
+        viewModel.uiEvent.collectLatest { event ->
             when (event) {
                 is UiEvent.ShowSnackbar -> {
                     snackbarHostState.showSnackbar(
                         message = event.message
                     )
                 }
+                else -> {}
             }
         }
     }
@@ -103,39 +114,54 @@ fun SparePartCreateScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            item { OrganizationSection(viewModel = viewModel) }
             item {
                 BasicInfoSection(
                     brand = brand,
-                    onBrandChange = { viewModel.onBrandChanged(it!!) },
+                    onBrandChange = { viewModel.onEvent(SparePartCreateEvent.OnBrandChanged(it)) }, // <-- ВОТ ЗДЕСЬ ПРОПУЩЕНА ЗАПЯТАЯ
                     partNumber = partNumber,
-                    onPartNumberChange = { viewModel.onPartNumberChanged(it!!) },
-                    selectedCondition = when(selectedCondition) {
+                    onPartNumberChange = { viewModel.onEvent(SparePartCreateEvent.OnPartNumberChanged(it)) },
+                    selectedCondition = when (selectedCondition) {
                         ProductCondition.NEW -> "новый"
                         ProductCondition.USED -> "б/у"
                         else -> null
                     },
-                    onConditionSelected = { viewModel.onConditionChanged(it!!) },
+                    onConditionSelected = { viewModel.onEvent(SparePartCreateEvent.OnConditionChanged(it)) },
                     conditionOptions = conditionOptions
                 )
             }
-            item { PhotosSection() } // Assuming photos are still needed
-            item { PriceAndDescriptionSection(price, { viewModel.onPriceChanged(it!!) }, description, { viewModel.onDescriptionChanged(it!!) }) }
-            item { ActionButtons(onPublishClick = { viewModel.onCreateClicked() }) }
+            item { PhotosSection() }
+            item {
+                PriceAndDescriptionSection(
+                    price = price,
+                    onPriceChange = { viewModel.onEvent(SparePartCreateEvent.OnPriceChanged(it)) },
+                    description = description,
+                    onDescriptionChange = { viewModel.onEvent(SparePartCreateEvent.OnDescriptionChanged(it)) }
+                )
+            }
+            item { ActionButtons(onPublishClick = { viewModel.onEvent(SparePartCreateEvent.OnCreateClick) }) }
         }
+    }
+}
+
+@Composable
+fun OrganizationSection(viewModel: SparePartCreateViewModel) {
+    SectionCard(title = "1. Организация") {
+        OrganizationSelector(viewModel = viewModel)
     }
 }
 
 @Composable
 fun BasicInfoSection(
     brand: String?,
-    onBrandChange: (String?) -> Unit,
+    onBrandChange: (String) -> Unit,
     partNumber: String?,
-    onPartNumberChange: (String?) -> Unit,
+    onPartNumberChange: (String) -> Unit,
     selectedCondition: String?,
-    onConditionSelected: (String?) -> Unit,
+    onConditionSelected: (String) -> Unit,
     conditionOptions: List<String>
 ) {
-    SectionCard(title = "1. Основная информация") {
+    SectionCard(title = "2. Основная информация") {
         OutlinedTextField(
             value = brand ?: "",
             onValueChange = onBrandChange,
@@ -170,7 +196,7 @@ fun BasicInfoSection(
                         selected = (option == selectedCondition),
                         onClick = { onConditionSelected(option) }
                     )
-                    Text(text = option, modifier = Modifier.padding(start = 4.dp)) // Displaying condition options like "new", "used"
+                    Text(text = option, modifier = Modifier.padding(start = 4.dp))
                 }
             }
         }
@@ -178,8 +204,8 @@ fun BasicInfoSection(
 }
 
 @Composable
-fun PhotosSection() { // Assuming this section remains as is for now
-    SectionCard(title = "2. Фотографии") {
+fun PhotosSection() {
+    SectionCard(title = "3. Фотографии") {
         val stroke = Stroke(
             width = 4f,
             pathEffect = PathEffect.dashPathEffect(floatArrayOf(20f, 10f), 0f)
@@ -213,16 +239,16 @@ fun PhotosSection() { // Assuming this section remains as is for now
 @Composable
 fun PriceAndDescriptionSection(
     price: String?,
-    onPriceChange: (String?) -> Unit,
+    onPriceChange: (String) -> Unit,
     description: String?,
-    onDescriptionChange: (String?) -> Unit
+    onDescriptionChange: (String) -> Unit
 ) {
-    SectionCard(title = "3. Цена и описание") { // Updated section number
+    SectionCard(title = "4. Цена и описание") {
         OutlinedTextField(
             value = price ?: "",
             onValueChange = onPriceChange,
             label = { Text("Цена") },
-            leadingIcon = { Text("₽") }, // Consider if currency symbol is fixed or part of price
+            leadingIcon = { Text("₽") },
             trailingIcon = { Text("RUB") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier.fillMaxWidth(),
@@ -242,7 +268,7 @@ fun PriceAndDescriptionSection(
 }
 
 @Composable
-fun ActionButtons(onPublishClick: () -> Unit) { // Added onPublishClick parameter
+fun ActionButtons(onPublishClick: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
@@ -250,7 +276,7 @@ fun ActionButtons(onPublishClick: () -> Unit) { // Added onPublishClick paramete
         OutlinedButton(onClick = { /* TODO: Handle cancel */ }) {
             Text("Отмена")
         }
-        Button(onClick = onPublishClick) { // Use the passed lambda
+        Button(onClick = onPublishClick) {
             Text("Опубликовать")
         }
     }
@@ -272,6 +298,90 @@ fun SectionCard(title: String, content: @Composable ColumnScope.() -> Unit) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun OrganizationSelector(
+    viewModel: SparePartCreateViewModel
+) {
+    val organizationsResource by viewModel.organizations.collectAsState()
+    val selectedOrgId by viewModel.selectedOrganizationId.collectAsState()
+
+    var expanded by remember { mutableStateOf(false) }
+
+    // Очень хороший прием - использовать `remember` с ключами.
+    // Это гарантирует, что имя будет пересчитано только когда изменится ID или сам список.
+    val selectedOrganizationName = remember(selectedOrgId, organizationsResource) {
+        (organizationsResource as? Resource.Success)?.data?.find { it.id == selectedOrgId }?.name ?: ""
+    }
+
+    Column {
+        when (val resource = organizationsResource) {
+            is Resource.Loading -> {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                    CircularProgressIndicator()
+                }
+            }
+            is Resource.Success -> {
+                val organizationsList = resource.data
+                if (organizationsList.isNullOrEmpty()) {
+                    Text("Список организаций пуст. Пожалуйста, сначала создайте организацию.")
+                } else {
+                    ExposedDropdownMenuBox(
+                        expanded = expanded,
+                        onExpandedChange = { expanded = !expanded },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        OutlinedTextField(
+                            value = selectedOrganizationName,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Выберите организацию") },
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                            },
+                            modifier = Modifier
+                                .menuAnchor()
+                                .fillMaxWidth()
+                        )
+                        ExposedDropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            organizationsList.forEach { organization ->
+                                DropdownMenuItem(
+                                    text = { Text(organization.name) },
+                                    onClick = {
+                                        viewModel.onEvent(
+                                            SparePartCreateEvent.OnOrganizationSelected(
+                                                organization.id
+                                            )
+                                        )
+                                        expanded = false
+                                    },
+                                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            is Resource.Error -> {
+                Text(
+                    "Ошибка загрузки организаций: ${resource.message}",
+                    color = MaterialTheme.colorScheme.error
+                )
+                Button(onClick = { /* viewModel.loadOrganizations() */ }) {
+                    Text("Попробовать снова")
+                }
+            }
+            null -> {
+                Text("Загрузка списка организаций...")
+            }
+        }
+    }
+}
+
 
 @Preview(showBackground = true, name = "Light Theme SparePartCreateScreen")
 @Preview(
@@ -280,7 +390,7 @@ fun SectionCard(title: String, content: @Composable ColumnScope.() -> Unit) {
     name = "Dark Theme SparePartCreateScreen"
 )
 @Composable
-fun SparePartCreateScreenPreview() { // Renamed preview function for clarity
+fun SparePartCreateScreenPreview() {
     PreviewTheme {
         SparePartCreateScreen()
     }

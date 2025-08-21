@@ -6,7 +6,7 @@ import com.lapcevichme.templates.domain.model.enums.KycStatus
 import com.lapcevichme.templates.domain.model.enums.OrganizationType
 import com.lapcevichme.templates.domain.model.enums.PayoutSchedule
 
-data class OrganizationModelDto(
+data class OrganizationDto(
     @SerializedName("created_at")
     val createdAt: String,
     @SerializedName("updated_at")
@@ -29,7 +29,7 @@ data class OrganizationModelDto(
     val payoutSchedule: PayoutSchedule
 )
 
-fun OrganizationModelDto.toDomain(): OrganizationModel {
+fun OrganizationDto.toDomain(): OrganizationModel {
     return OrganizationModel(
         createdAt = this.createdAt,
         updatedAt = this.updatedAt,
