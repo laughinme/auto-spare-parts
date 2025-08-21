@@ -1,6 +1,6 @@
 package com.lapcevichme.templates.domain.model
 
-data class ProductPatch(
+data class  ProductPatch(
     val brand: String? = null,
     val partNumber: String? = null,
     val price: Double? = null,
