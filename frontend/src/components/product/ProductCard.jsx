@@ -60,6 +60,9 @@ export default function ProductCard({
   onView,     // для просмотра деталей товара
   onAddToCart, // для добавления в корзину
   onEdit,     // для редактирования (поставщик)
+  onDelete,   // для удаления товара (поставщик)
+  isDeleting = false, // состояние загрузки при удалении
+  isEditing = false, // состояние загрузки при редактировании
   onUpdateQuantity, // для изменения количества в корзине
   onRemove,   // для удаления из корзины
   className = ""
@@ -177,7 +180,7 @@ export default function ProductCard({
             alt={getProductTitle()}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
           />
-          <div className="absolute top-3 right-3">
+          <div className="absolute top-3 right-3 flex flex-col gap-2">
             <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
               product.condition === 'new' 
                 ? 'bg-green-100 text-green-800 border border-green-200' 
@@ -185,6 +188,35 @@ export default function ProductCard({
             }`}>
               {product.condition === 'new' ? '✨ Новый' : '🔧 Б/У'}
             </span>
+            {/* Delete button - appears on hover */}
+            {onDelete && (
+              <button 
+                className={`transition-all duration-300 transform text-white p-2 rounded-full shadow-lg hover:shadow-xl ${
+                  isDeleting 
+                    ? 'opacity-100 translate-y-0 bg-gray-400 cursor-not-allowed' 
+                    : 'opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 bg-red-500 hover:bg-red-600'
+                }`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!isDeleting) {
+                    onDelete && onDelete(product);
+                  }
+                }}
+                disabled={isDeleting}
+                title={isDeleting ? "Удаление..." : "Удалить товар"}
+              >
+                {isDeleting ? (
+                  <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd"/>
+                  </svg>
+                )}
+              </button>
+            )}
           </div>
           <div className="absolute top-3 left-3">
             <div className="bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg">
@@ -214,18 +246,73 @@ export default function ProductCard({
               <div className="w-2 h-2 bg-green-400 rounded-full"></div>
               <span className="text-xs text-gray-600 font-medium">В наличии</span>
             </div>
-            <button 
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit && onEdit(product);
-              }}
-            >
-              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
-              </svg>
-              Редактировать
-            </button>
+            <div className="flex items-center gap-2">
+              <button 
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                  isEditing 
+                    ? 'text-gray-400 bg-gray-50 cursor-not-allowed' 
+                    : 'text-blue-600 hover:text-blue-700 hover:bg-blue-50'
+                }`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!isEditing) {
+                    onEdit && onEdit(product);
+                  }
+                }}
+                disabled={isEditing}
+              >
+                {isEditing ? (
+                  <>
+                    <svg className="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Редактируется...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+                    </svg>
+                    Редактировать
+                  </>
+                )}
+              </button>
+              {onDelete && (
+                <button 
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                    isDeleting 
+                      ? 'text-gray-400 bg-gray-50 cursor-not-allowed' 
+                      : 'text-red-600 hover:text-red-700 hover:bg-red-50'
+                  }`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!isDeleting) {
+                      onDelete && onDelete(product);
+                    }
+                  }}
+                  disabled={isDeleting}
+                  title={isDeleting ? "Удаление..." : "Удалить товар"}
+                >
+                  {isDeleting ? (
+                    <>
+                      <svg className="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Удаление...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd"/>
+                      </svg>
+                      Удалить
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>

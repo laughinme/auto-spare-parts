@@ -16,13 +16,12 @@ export default defineConfig({
   server: {
     https: true,
     proxy: {
-      // Ключ можно сделать более точным, чтобы не перехватывать лишнего
       '/api/v1': { 
         target: 'https://backend-auto-spare-parts.fly.dev',
         changeOrigin: true,
-        // Опция 'rewrite' полностью убрана, так как путь уже правильный
+        secure: true, // Ensure HTTPS verification
+        followRedirects: true, // Handle redirects properly
       },
     },
   },
-
 })
