@@ -22,13 +22,13 @@ import com.lapcevichme.templates.presentation.viewmodel.OnboardingViewModel // <
  * @param navController NavController для управления навигацией.
  * @param startDestination Стартовый маршрут-граф, который определяется в MainActivity.
  */
+
 @Composable
 fun AppNavigation(navController: NavHostController, startDestination: String) {
     NavHost(
         navController = navController,
         startDestination = startDestination
     ) {
-        // --- ГРАФ 1: АУТЕНТИФИКАЦИЯ ---
         navigation(
             startDestination = Routes.GREETING,
             route = Routes.AUTH_GRAPH
@@ -60,12 +60,9 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
                     }
                 )
             }
-            // В AppNavigation.kt
-// ...
             composable(Routes.SIGN_UP) {
                 SignUpScreen(
                     onSignUpSuccess = { selectedRole ->
-                        // ДОБАВЛЯЕМ ЛОГИ ЗДЕСЬ
                         android.util.Log.d("AppNavigation_RoleDebug", "Role received in AppNavigation: '$selectedRole'")
                         android.util.Log.d("AppNavigation_RoleDebug", "Comparing with OnboardingViewModel.ROLE_SELLER ('${OnboardingViewModel.ROLE_SELLER}')")
 
@@ -89,20 +86,8 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
                     }
                 )
             }
-// ...
         }
 
-        // --- ГРАФ 2: СОЗДАНИЕ ПРОФИЛЯ (УДАЛЕН/ЗАКОММЕНТИРОВАН) ---
-        /*
-        navigation(
-            startDestination = Routes.AGE_PICKER, // Старый startDestination
-            route = Routes.PROFILE_CREATION_GRAPH
-        ) {
-            // composable(Routes.STRIPE_ONBOARDING) { ... } был здесь
-        }
-        */
-
-        // --- ГРАФ 3: ОСНОВНОЕ ПРИЛОЖЕНИЕ ---
         navigation(
             startDestination = Routes.HOME_TAB,
             route = Routes.MAIN_GRAPH
@@ -127,23 +112,20 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
                 )
             }
             composable(Routes.ADD) {
+                // 5. ПЕРЕДАЕМ navController.popBackStack() В КАЧЕСТВЕ ДЕЙСТВИЯ
                 SparePartCreateScreen(
-//                    onCreatedSuccessfully = {
-//                        navController.popBackStack()
-//                    }
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    }
                 )
             }
 
-            // Stripe Onboarding как обычный экран в MAIN_GRAPH
             composable(Routes.STRIPE_ONBOARDING) {
                 ConnectOnboardingScreen(
                     onOnboardingComplete = {
-                        // После завершения Stripe Onboarding, если пользователь пришел сюда после регистрации,
-                        // он должен попасть в MAIN_GRAPH. Если он пришел из Профиля, он должен вернуться в Профиль.
-                        // Для сценария "после регистрации" -> MAIN_GRAPH:
-                        navController.navigate(Routes.HOME_TAB) { // Явно навигируем на главный экран табов
-                            popUpTo(Routes.MAIN_GRAPH) { inclusive = true } // Делает MAIN_GRAPH (содержащий HOME_TAB) корневым
-                            launchSingleTop = true // Чтобы не создавать новый экземпляр HOME_TAB, если он уже в стеке
+                        navController.navigate(Routes.HOME_TAB) {
+                            popUpTo(Routes.MAIN_GRAPH) { inclusive = true }
+                            launchSingleTop = true
                         }
                     }
                 )

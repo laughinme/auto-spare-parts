@@ -64,13 +64,13 @@ import com.lapcevichme.templates.presentation.viewmodel.UiEvent
 import com.lapcevichme.templates.ui.theme.PreviewTheme
 import kotlinx.coroutines.flow.collectLatest
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SparePartCreateScreen(
-    viewModel: SparePartCreateViewModel = hiltViewModel()
+    viewModel: SparePartCreateViewModel = hiltViewModel(),
+    onNavigateBack: () -> Unit // <-- 1. ДОБАВЛЕН ПАРАМЕТР ДЛЯ НАВИГАЦИИ НАЗАД
 ) {
-    // Использование `collectAsStateWithLifecycle` - это отличный выбор.
-    // Он останавливает подписку на Flow, когда приложение в фоне, экономя ресурсы.
     val brand by viewModel.brand.collectAsStateWithLifecycle()
     val partNumber by viewModel.partNumber.collectAsStateWithLifecycle()
     val conditionOptions = listOf("новый", "б/у")
@@ -81,7 +81,6 @@ fun SparePartCreateScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // LaunchedEffect для подписки на одноразовые события - идеальное решение.
     LaunchedEffect(key1 = true) {
         viewModel.uiEvent.collectLatest { event ->
             when (event) {
@@ -118,7 +117,7 @@ fun SparePartCreateScreen(
             item {
                 BasicInfoSection(
                     brand = brand,
-                    onBrandChange = { viewModel.onEvent(SparePartCreateEvent.OnBrandChanged(it)) }, // <-- ВОТ ЗДЕСЬ ПРОПУЩЕНА ЗАПЯТАЯ
+                    onBrandChange = { viewModel.onEvent(SparePartCreateEvent.OnBrandChanged(it)) },
                     partNumber = partNumber,
                     onPartNumberChange = { viewModel.onEvent(SparePartCreateEvent.OnPartNumberChanged(it)) },
                     selectedCondition = when (selectedCondition) {
@@ -139,7 +138,13 @@ fun SparePartCreateScreen(
                     onDescriptionChange = { viewModel.onEvent(SparePartCreateEvent.OnDescriptionChanged(it)) }
                 )
             }
-            item { ActionButtons(onPublishClick = { viewModel.onEvent(SparePartCreateEvent.OnCreateClick) }) }
+            item {
+                // 2. ПЕРЕДАЕМ ДЕЙСТВИЕ В КОМПОНЕНТ КНОПОК
+                ActionButtons(
+                    onPublishClick = { viewModel.onEvent(SparePartCreateEvent.OnCreateClick) },
+                    onCancelClick = onNavigateBack
+                )
+            }
         }
     }
 }
@@ -268,12 +273,13 @@ fun PriceAndDescriptionSection(
 }
 
 @Composable
-fun ActionButtons(onPublishClick: () -> Unit) {
+fun ActionButtons(onPublishClick: () -> Unit, onCancelClick: () -> Unit) { // <-- 3. ДОБАВЛЕН ПАРАМЕТР onCancelClick
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
     ) {
-        OutlinedButton(onClick = { /* TODO: Handle cancel */ }) {
+        // 4. ИСПОЛЬЗУЕМ ПАРАМЕТР В КНОПКЕ
+        OutlinedButton(onClick = onCancelClick) {
             Text("Отмена")
         }
         Button(onClick = onPublishClick) {
@@ -308,8 +314,6 @@ fun OrganizationSelector(
 
     var expanded by remember { mutableStateOf(false) }
 
-    // Очень хороший прием - использовать `remember` с ключами.
-    // Это гарантирует, что имя будет пересчитано только когда изменится ID или сам список.
     val selectedOrganizationName = remember(selectedOrgId, organizationsResource) {
         (organizationsResource as? Resource.Success)?.data?.find { it.id == selectedOrgId }?.name ?: ""
     }
@@ -392,6 +396,6 @@ fun OrganizationSelector(
 @Composable
 fun SparePartCreateScreenPreview() {
     PreviewTheme {
-        SparePartCreateScreen()
+        SparePartCreateScreen(onNavigateBack = {})
     }
 }
