@@ -1,6 +1,7 @@
 import aiofiles
 import shutil
 from uuid import UUID, uuid4
+from datetime import datetime
 from pathlib import Path
 from fastapi import UploadFile, status, HTTPException
 from redis.asyncio import Redis
@@ -167,3 +168,120 @@ class ProductService:
         
         await self.media_repo.add(media)
         await self.uow.commit()
+
+    async def search_published_products(
+        self,
+        *,
+        offset: int = 0,
+        limit: int = 20,
+        search: str | None = None,
+        brand: str | None = None,
+        condition: str | None = None,
+        price_min: float | None = None,
+        price_max: float | None = None,
+    ) -> tuple[list[Product], int]:
+        """Search published products with filters for public catalog"""
+        return await self.products_repo.list_published_products(
+            offset=offset,
+            limit=limit,
+            search=search,
+            brand=brand,
+            condition=condition,
+            price_min=price_min,
+            price_max=price_max,
+        )
+
+    async def get_feed_products(
+        self,
+        *,
+        offset: int = 0,
+        limit: int = 20,
+    ) -> tuple[list[Product], int]:
+        """Get products for feed (For You Page)"""
+        return await self.products_repo.get_feed_products(
+            offset=offset,
+            limit=limit,
+        )
+
+    async def search_published_products_cursor(
+        self,
+        *,
+        limit: int = 20,
+        search: str | None = None,
+        brand: str | None = None,
+        condition: str | None = None,
+        price_min: float | None = None,
+        price_max: float | None = None,
+        cursor: str | None = None,
+    ) -> tuple[list[Product], str | None]:
+        """Search published products with cursor pagination (same pattern as admin users)"""
+        cursor_created_at = None
+        cursor_id = None
+        if cursor:
+            try:
+                ts_str, id_str = cursor.split("_", 1)
+                cursor_created_at = datetime.fromisoformat(ts_str)
+                cursor_id = UUID(id_str)
+            except Exception:
+                raise HTTPException(400, detail='Invalid cursor')
+
+        products = await self.products_repo.search_published_products_cursor(
+            limit=limit,
+            search=search,
+            brand=brand,
+            condition=condition,
+            price_min=price_min,
+            price_max=price_max,
+            cursor_created_at=cursor_created_at,
+            cursor_id=cursor_id,
+        )
+
+        next_cursor = None
+        if len(products) == limit:
+            last = products[-1]
+            if last.created_at is None:
+                next_cursor = None
+            else:
+                next_cursor = f"{last.created_at.isoformat()}_{last.id}"
+
+        return products, next_cursor
+
+    async def get_feed_products_cursor(
+        self,
+        *,
+        limit: int = 20,
+        cursor: str | None = None,
+    ) -> tuple[list[Product], str | None]:
+        """Get products for feed using cursor pagination (same pattern as admin users)"""
+        cursor_created_at = None
+        cursor_id = None
+        if cursor:
+            try:
+                ts_str, id_str = cursor.split("_", 1)
+                cursor_created_at = datetime.fromisoformat(ts_str)
+                cursor_id = UUID(id_str)
+            except Exception:
+                raise HTTPException(400, detail='Invalid cursor')
+
+        products = await self.products_repo.get_feed_products_cursor(
+            limit=limit,
+            cursor_created_at=cursor_created_at,
+            cursor_id=cursor_id,
+        )
+
+        next_cursor = None
+        if len(products) == limit:
+            last = products[-1]
+            if last.created_at is None:
+                next_cursor = None
+            else:
+                next_cursor = f"{last.created_at.isoformat()}_{last.id}"
+
+        return products, next_cursor
+
+    async def get_published_product(self, product_id: UUID | str) -> Product | None:
+        """Get published product by ID for public viewing"""
+        product = await self.products_repo.get_by_id(product_id)
+        if product and product.status == ProductStatus.PUBLISHED:
+            return product
+        return None
