@@ -13,9 +13,9 @@ fun ProductCreate.toDto(): ProductCreateDto {
         brand = this.brand,
         partNumber = this.partNumber,
         price = this.price,
-        condition = this.condition.name, // Преобразуем в String
+        condition = this.condition.name.lowercase(), // Преобразуем в String
         description = this.description,
-        status = this.status.name // Преобразуем в String
+        status = this.status.name.lowercase() // Преобразуем в String
     )
 }
 

@@ -1,12 +1,13 @@
 package com.lapcevichme.templates.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.lapcevichme.templates.domain.model.ProductCondition
 import com.lapcevichme.templates.domain.model.ProductCreate
+import com.lapcevichme.templates.domain.model.ProductModel
 import com.lapcevichme.templates.domain.model.ProductStatus
 import com.lapcevichme.templates.domain.model.Resource
+import com.lapcevichme.templates.domain.usecase.CreateProductUseCase
 import com.lapcevichme.templates.domain.usecase.GetOrgIdUseCase
 import com.lapcevichme.templates.domain.usecase.SparePartCreateUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -14,6 +15,8 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -25,7 +28,7 @@ sealed class UiEvent {
 @HiltViewModel
 class SparePartCreateViewModel @Inject constructor(
     private val getOrgIdUseCase: GetOrgIdUseCase,
-    private val sparePartCreateUseCase: SparePartCreateUseCase
+    private val createProductUseCase: CreateProductUseCase
 ) : ViewModel() {
 
     private val _uiEvent = MutableSharedFlow<UiEvent>()
@@ -120,40 +123,38 @@ class SparePartCreateViewModel @Inject constructor(
                         return@launch
                     }
 
-                    val response = sparePartCreateUseCase(orgId = orgId, product = ProductCreate(
+                    createProductUseCase(orgId = orgId, product = ProductCreate(
                         brand = _brand.value!!,
                         partNumber = _partNumber.value!!,
                         condition = _selectedCondition.value!!,
                         price = _price.value!!.toDouble(),
                         description = _description.value,
                         status = _status.value!!
-                    ))
+                    )).collect { result ->
+                        when (result) {
+                            is Resource.Success -> {
+                                // Успешное создание детали
+                                _uiEvent.emit(UiEvent.ShowSnackbar("Деталь успешно создана!"))
 
-                    when(response){
-                        is Resource.Success<*> -> {
-                            // Успешное создание детали
-                            _uiEvent.emit(UiEvent.ShowSnackbar("Деталь успешно создана!"))
+                                // Очистка полей после создания детали
+                                _brand.value = null
+                                _partNumber.value = null
+                                _selectedCondition.value = null
+                                _price.value = null
+                                _description.value = null
+                                _status.value = ProductStatus.DRAFT
+                            }
+                            is Resource.Error -> {
+                                // Ошибка при создании детали
+                                _uiEvent.emit(UiEvent.ShowSnackbar("Ошибка при создании детали: ${result.message}"))
+                            }
 
-                            // Очистка полей после создания детали
-                            _brand.value = null
-                            _partNumber.value = null
-                            _selectedCondition.value = null
-                            _price.value = null
-                            _description.value = null
-                            _status.value = ProductStatus.DRAFT
-                        }
-                        is Resource.Error<*> -> {
-                            // Ошибка при создании детали
-                            _uiEvent.emit(UiEvent.ShowSnackbar("Ошибка при создании детали: ${response.message}"))
-                            return@launch
-                        }
-                        is Resource.Loading<*> -> {
-                            // Загрузка в процессе, можно показать индикатор загрузки
-                            // Но в данном случае мы просто продолжаем выполнение
+                            is Resource.Loading -> {
+                                // Загрузка в процессе, можно показать индикатор загрузки
+                                // Но в данном случае мы просто продолжаем выполнение
+                            }
                         }
                     }
-
-
                 }
             }
         }
