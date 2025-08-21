@@ -16,11 +16,10 @@ import AuthPage from "./components/auth/AuthPage.jsx";
 import { MOCK_PRODUCTS } from "./data/mockProducts.js";
 import { SUPPLIER_SELF_ID } from "./data/constants.js";
 import { createOrdersFromCart } from "./utils/helpers.js";
-// import reactLogo from './assets/react.svg'
-// import viteLogo from '/vite.svg'
 
 function App() {
-  const { user, isUserLoading, logout } = useAuth();
+  // Получаем новое состояние isRestoringSession из контекста
+  const { user, isUserLoading, logout, isRestoringSession } = useAuth();
   
   const [route, setRoute] = useState("fyp");
   const [previousRoute, setPreviousRoute] = useState("fyp");
@@ -36,16 +35,13 @@ function App() {
   const [orders, setOrders] = useState([]);
   const [activeOrderId, setActiveOrderId] = useState(null);
   
-
   useEffect(() => {
-    // Expose route setter globally for navigation from auth/register flows
     window.__setRoute = setRoute;
     return () => {
       if (window.__setRoute === setRoute) window.__setRoute = undefined;
     };
   }, [setRoute]);
 
-  // Hooks must be declared before any early returns
   const activeOrder = useMemo(() => orders.find((o) => o.id === activeOrderId) || null, [orders, activeOrderId]);
 
   const supplierMetrics = useMemo(() => {
@@ -57,7 +53,6 @@ function App() {
     return { gmv, pending, mySkus, orders: myOrders.length, conv };
   }, [orders, products]);
 
-  // Сброс флага инициализации при смене пользователя
   useEffect(() => {
     if (!user) {
       setHasInitializedRole(false);
@@ -66,38 +61,22 @@ function App() {
     }
   }, [user]);
 
-  // Derive role from user object if provided by API
-  // Expecting something like user.role === 'supplier' | 'buyer'
   useEffect(() => {
     if (user) {
       console.log('Processing user data:', user);
       
-      // Сначала проверяем явные поля роли
       let apiRole = user.role || user.type || user.user_type;
       console.log('Found explicit role:', apiRole);
       
-      // Если роль не указана явно, пытаемся определить по другим данным
       if (!apiRole) {
         console.log('No explicit role found, trying to determine from other data');
-        
-        // Временная логика для определения роли (можно настроить под ваши нужды)
-        // Например, если в email есть supplier/vendor/shop - это поставщик
-        if (user.email && (
-          user.email.includes('supplier') || 
-          user.email.includes('vendor') || 
-          user.email.includes('shop') ||
-          user.email.includes('seller')
-        )) {
+        if (user.email && (user.email.includes('supplier') || user.email.includes('vendor') || user.email.includes('shop') || user.email.includes('seller'))) {
           apiRole = 'supplier';
           console.log('Determined role as supplier from email:', user.email);
-        }
-        // Или если есть поле is_supplier
-        else if (user.is_supplier === true) {
+        } else if (user.is_supplier === true) {
           apiRole = 'supplier';
           console.log('Determined role as supplier from is_supplier field');
-        }
-        // По умолчанию - покупатель
-        else {
+        } else {
           apiRole = 'buyer';
           console.log('Defaulting to buyer role');
         }
@@ -107,11 +86,9 @@ function App() {
         console.log('Setting user role:', apiRole, 'for user:', user.email, 'current route:', route);
         setRole(apiRole);
         
-        // Если это первоначальная установка роли и пользователь на дефолтном роуте
         if (!hasInitializedRole && route === "fyp") {
           console.log('First time role initialization on fyp route');
           setHasInitializedRole(true);
-          // Перенаправляем поставщика на дашборд
           if (apiRole === "supplier") {
             console.log('Redirecting supplier to dashboard');
             setRoute("supplier:dashboard");
@@ -123,20 +100,14 @@ function App() {
     }
   }, [user, role, hasInitializedRole, route]);
 
-  // Отдельный эффект для управления роутами поставщика
   useEffect(() => {
     if (role === "supplier") {
       console.log('Supplier route protection activated for route:', route);
-      
-      // Роуты покупателя, с которых нужно перенаправить поставщика
       const buyerOnlyRoutes = ["fyp", "cart"];
-      
       if (buyerOnlyRoutes.includes(route)) {
         console.log('Redirecting supplier from buyer route:', route, 'to dashboard');
         setRoute("supplier:dashboard");
       }
-      
-      // Перенаправляем с общего чата на специальный чат поставщика
       if (route === "chat") {
         console.log('Redirecting supplier from general chat to supplier chat');
         setRoute("supplier:chat");
@@ -144,14 +115,25 @@ function App() {
     }
   }, [role, route]);
 
-  if (isUserLoading) {
+  // НОВЫЙ БЛОК: Показываем экран загрузки, пока идет восстановление сессии
+  if (isRestoringSession) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <p className="text-lg text-slate-500">Загрузка...</p>
+        <p className="text-lg text-slate-500">Загрузка сессии...</p>
       </div>
     );
   }
 
+  // Эта проверка остается на случай, если сессия восстановлена, но профиль еще грузится
+  if (isUserLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <p className="text-lg text-slate-500">Загрузка пользователя...</p>
+      </div>
+    );
+  }
+
+  // Если все загрузки завершены и пользователя нет, показываем страницу входа
   if (!user) {
     return <AuthPage />;
   }
@@ -163,9 +145,7 @@ function App() {
   };
   const removeVehicle = (value) => setGarage((prev) => prev.filter((x) => x !== value));
 
-  // Умная навигация с отслеживанием предыдущего роута
   const navigateTo = (newRoute) => {
-    console.log('App: navigateTo called, current route:', route, '-> new route:', newRoute);
     setPreviousRoute(route);
     setRoute(newRoute);
   };
@@ -226,8 +206,6 @@ function App() {
       }, 650);
     }
   };
-
-  
   
   const showTopbar = route !== "onboarding:supplier_stripe";
   const isSupplierRoute = route.startsWith("supplier:");
@@ -268,11 +246,7 @@ function App() {
             onAddToCart={handleAddToCart}
           />
         )}
-
-        {route === "onboarding:supplier_stripe" && (
-          <SupplierStripeOnboarding />
-        )}
-
+        {route === "onboarding:supplier_stripe" && <SupplierStripeOnboarding />}
         {route === "product" && selectedProduct && (
           <ProductDetail
             product={selectedProduct}
@@ -282,23 +256,14 @@ function App() {
             isSupplierView={role === "supplier"}
           />
         )}
-
         {route === "cart" && (
           <CartPage cart={cart} productsById={productsById} setCart={setCart} onCheckout={handleCheckout} />
         )}
-
-        {route === "chat" && role !== "supplier" && (
-          <ChatPage role={role} />
-        )}
-
-        {route === "supplier:chat" && (
-          <SupplierChatPage />
-        )}
-
+        {route === "chat" && role !== "supplier" && <ChatPage role={role} />}
+        {route === "supplier:chat" && <SupplierChatPage />}
         {route === "order" && activeOrder && (
           <OrderPage order={activeOrder} onBack={() => navigateBack()} onSend={(t) => sendChatMessage(activeOrder.id, role === "buyer" ? "buyer" : "seller", t)} />
         )}
-
         {route === "supplier:dashboard" && (
           <SupplierDashboard 
             supplierProfile={supplierProfile} 
@@ -306,7 +271,6 @@ function App() {
             onNavigate={setRoute}
           />
         )}
-
         {route === "supplier:products" && (
           <SupplierProducts
             orgId={user?.organization?.id}
@@ -315,14 +279,11 @@ function App() {
             supplierProfile={supplierProfile}
             onCreateNavigate={() => navigateTo("supplier:products:new")}
             onProductView={(product) => { 
-              console.log('App: onProductView called with product:', product);
               setSelectedProduct(product); 
-              console.log('App: navigating to product detail');
               navigateTo("product"); 
             }}
           />
         )}
-
         {route === "supplier:products:new" && (
           <SupplierProductCreate
             orgId={user?.organization?.id}
@@ -341,16 +302,12 @@ function App() {
                 shipEtaDays: 7,
                 category: "Misc",
                 vehicle: payload.vehicle || "Any",
-                img: payload.img, // object URL preview; in real app would be backend URL
+                img: payload.img,
               };
               setProducts((prev) => [newProd, ...prev]);
               navigateTo("supplier:products");
             }}
           />
-        )}
-
-        {route === "tests" && (
-          <DevTests />
         )}
       </main>
     </div>
