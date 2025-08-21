@@ -6,7 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import com.example.partmarketplace.SparePartCreateScreen
-import com.lapcevichme.templates.presentation.screen.ConnectOnboardingScreen
+import com.lapcevichme.templates.presentation.screen.ConnectOnboardingScreen // Убедись, что импорт есть
 import com.lapcevichme.templates.presentation.screen.onboardingScreens.GreetingScreen
 import com.lapcevichme.templates.presentation.screen.onboardingScreens.RolePickerScreen
 import com.lapcevichme.templates.presentation.screen.onboardingScreens.SignInScreen
@@ -51,30 +51,31 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
                             popUpTo(Routes.AUTH_GRAPH) { inclusive = true }
                         }
                     },
-                    // ИЗ   МЕНЕНИЕ 1: Правильный переход назад к выбору роли
                     onNavigateToSignUp = {
                         navController.navigate(Routes.ROLE_PICKER) {
-                            // Удаляем SignInScreen из стека
                             popUpTo(Routes.SIGN_IN) { inclusive = true }
-                            // Гарантируем, что не создадим копию RolePickerScreen
                             launchSingleTop = true
                         }
                     }
                 )
             }
             composable(Routes.SIGN_UP) {
+                // SignUpScreen теперь принимает onSignUpSuccess: (selectedRole: String?) -> Unit
                 SignUpScreen(
-                    onSignUpSuccess = {
-                        navController.navigate(Routes.PROFILE_CREATION_GRAPH) {
-                            popUpTo(Routes.AUTH_GRAPH) { inclusive = true }
+                    onSignUpSuccess = { selectedRole -> // <-- selectedRole из SignUpScreen
+                        if (selectedRole == "Seller") { // "Seller" - это значение, которое устанавливается в OnboardingViewModel
+                            navController.navigate(Routes.STRIPE_ONBOARDING) {
+                                popUpTo(Routes.AUTH_GRAPH) { inclusive = true }
+                            }
+                        } else {
+                            navController.navigate(Routes.MAIN_GRAPH) {
+                                popUpTo(Routes.AUTH_GRAPH) { inclusive = true }
+                            }
                         }
                     },
-                    // ИЗМЕНЕНИЕ 2: Правильный переход на экран входа
                     onNavigateToSignIn = {
                         navController.navigate(Routes.SIGN_IN) {
-                            // Удаляем SignUpScreen из стека
                             popUpTo(Routes.SIGN_UP) { inclusive = true }
-                            // Гарантируем, что не создадим копию SignInScreen
                             launchSingleTop = true
                         }
                     }
@@ -82,31 +83,21 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
             }
         }
 
-        // --- ГРАФ 2: СОЗДАНИЕ ПРОФИЛЯ ---
+        // --- ГРАФ 2: СОЗДАНИЕ ПРОФИЛЯ (УДАЛЕН/ЗАКОММЕНТИРОВАН) ---
+        /*
         navigation(
-            startDestination = Routes.AGE_PICKER, // TODO: Update startDestination
+            startDestination = Routes.AGE_PICKER, // Старый startDestination
             route = Routes.PROFILE_CREATION_GRAPH
         ) {
-            // ... (остальной код без изменений)
-            composable(Routes.STRIPE_ONBOARDING) {
-                ConnectOnboardingScreen(
-                    onOnboardingComplete = {
-                        navController.navigate(Routes.MAIN_GRAPH) {
-                            popUpTo(Routes.PROFILE_CREATION_GRAPH) {
-                                inclusive = true
-                            }
-                        }
-                    }
-                )
-            }
+            // composable(Routes.STRIPE_ONBOARDING) { ... } был здесь
         }
+        */
 
         // --- ГРАФ 3: ОСНОВНОЕ ПРИЛОЖЕНИЕ ---
         navigation(
             startDestination = Routes.HOME_TAB,
             route = Routes.MAIN_GRAPH
         ) {
-            // ... (остальной код без изменений)
             composable(Routes.HOME_TAB) {
                 HomeTabScreen()
             }
@@ -120,6 +111,9 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
                                 inclusive = true
                             }
                         }
+                    },
+                    onNavigateToStripeOnboarding = {
+                        navController.navigate(Routes.STRIPE_ONBOARDING)
                     }
                 )
             }
@@ -128,6 +122,21 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
 //                    onCreatedSuccessfully = {
 //                        navController.popBackStack()
 //                    }
+                )
+            }
+
+            // Stripe Onboarding как обычный экран в MAIN_GRAPH
+            composable(Routes.STRIPE_ONBOARDING) {
+                ConnectOnboardingScreen(
+                    onOnboardingComplete = {
+                        // После завершения Stripe Onboarding, если пользователь пришел сюда после регистрации,
+                        // он должен попасть в MAIN_GRAPH. Если он пришел из Профиля, он должен вернуться в Профиль.
+                        // Для сценария "после регистрации" -> MAIN_GRAPH:
+                        navController.navigate(Routes.HOME_TAB) { // Явно навигируем на главный экран табов
+                            popUpTo(Routes.MAIN_GRAPH) { inclusive = true } // Делает MAIN_GRAPH (содержащий HOME_TAB) корневым
+                            launchSingleTop = true // Чтобы не создавать новый экземпляр HOME_TAB, если он уже в стеке
+                        }
+                    }
                 )
             }
         }

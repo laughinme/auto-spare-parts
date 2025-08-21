@@ -18,6 +18,16 @@ import javax.inject.Inject
 
 const val AUTH_VIEWMODEL_TAG = "AuthViewModel"
 
+// Определение AuthEvent (может быть в отдельном файле)
+sealed class AuthEvent {
+    data class EmailChanged(val email: String) : AuthEvent()
+    data class PasswordChanged(val password: String) : AuthEvent()
+    data class UsernameChanged(val username: String) : AuthEvent()
+    object SignInClicked : AuthEvent()
+    object SignUpClicked : AuthEvent()
+    object ResetAuthState : AuthEvent() // Для сброса signInState/signUpState
+}
+
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val loginUseCase: LoginUseCase,
@@ -31,10 +41,10 @@ class AuthViewModel @Inject constructor(
     private val _password = MutableStateFlow("")
     val password = _password.asStateFlow()
 
-    private val _username = MutableStateFlow("")  // для SignUp
+    private val _username = MutableStateFlow("")
     val username = _username.asStateFlow()
 
-    // ---- UI state / errors ----
+    // ---- UI state / errors for fields ----
     private val _emailError = MutableStateFlow<String?>(null)
     val emailError = _emailError.asStateFlow()
 
@@ -44,27 +54,81 @@ class AuthViewModel @Inject constructor(
     private val _usernameError = MutableStateFlow<String?>(null)
     val usernameError = _usernameError.asStateFlow()
 
-    private val _authState = MutableStateFlow<Resource<TokenPair>?>(null)
-    val authState = _authState.asStateFlow()
+    // ---- UI state for actions ----
+    private val _signInState = MutableStateFlow<Resource<TokenPair>?>(null)
+    val signInState = _signInState.asStateFlow()
+
+    private val _signUpState = MutableStateFlow<Resource<TokenPair>?>(null)
+    val signUpState = _signUpState.asStateFlow()
+
 
     init {
         Log.d(AUTH_VIEWMODEL_TAG, "Initialized ViewModel@${hashCode()}")
     }
 
-    // ---- Handlers ----
-    fun onEmailChanged(newEmail: String) {
+    // ---- Новый обработчик событий ----
+    fun onEvent(event: AuthEvent) {
+        when (event) {
+            is AuthEvent.EmailChanged -> handleEmailChanged(event.email)
+            is AuthEvent.PasswordChanged -> handlePasswordChanged(event.password)
+            is AuthEvent.UsernameChanged -> handleUsernameChanged(event.username)
+            is AuthEvent.SignInClicked -> handleSignInClicked()
+            is AuthEvent.SignUpClicked -> handleSignUpClicked()
+            is AuthEvent.ResetAuthState -> {
+                _signInState.value = null
+                _signUpState.value = null
+            }
+        }
+    }
+
+    // ---- Приватные обработчики для каждого эвента/действия ----
+    private fun handleEmailChanged(newEmail: String) {
         _email.value = newEmail
         validateEmail(newEmail)
     }
 
-    fun onPasswordChanged(newPassword: String) {
+    private fun handlePasswordChanged(newPassword: String) {
         _password.value = newPassword
         validatePassword(newPassword)
     }
 
-    fun onUsernameChanged(newUsername: String) {
+    private fun handleUsernameChanged(newUsername: String) {
         _username.value = newUsername
         validateUsername(newUsername)
+    }
+
+    private fun handleSignInClicked() {
+        val isEmailValid = validateEmail()
+        val isPasswordValid = validatePassword()
+
+        if (isEmailValid && isPasswordValid) {
+            viewModelScope.launch {
+                _signInState.value = Resource.Loading()
+                loginUseCase(UserLoginRequest(email.value, password.value))
+                    .collect { result -> _signInState.value = result }
+            }
+        } else {
+            // Можно установить _signInState в ошибку валидации, если нужно явно передать это UI
+            Log.d(AUTH_VIEWMODEL_TAG, "Sign In validation failed.")
+        }
+    }
+
+    private fun handleSignUpClicked() {
+        val isEmailValid = validateEmail()
+        val isPasswordValid = validatePassword()
+        val isUsernameValid = validateUsername() // Убедись, что username используется в UserRegisterRequest, если он здесь валидируется
+
+        if (isEmailValid && isPasswordValid && isUsernameValid) {
+            viewModelScope.launch {
+                _signUpState.value = Resource.Loading()
+                // UserRegisterRequest не меняется и не включает роль
+                registerUseCase(UserRegisterRequest(email.value, password.value, username.value))
+                    .collect { result -> _signUpState.value = result }
+            }
+        } else {
+            // Можно установить _signUpState в ошибку валидации
+            Log.d(AUTH_VIEWMODEL_TAG, "Sign Up validation failed.")
+        }
     }
 
     // ---- Validation ----
@@ -85,9 +149,6 @@ class AuthViewModel @Inject constructor(
         return if (passwordToValidate.isBlank()) {
             _passwordError.value = "Пароль не может быть пустым"
             false
-        } else if (passwordToValidate.length < 6) {
-            _passwordError.value = "Пароль должен быть не менее 6 символов"
-            false
         } else {
             _passwordError.value = null
             true
@@ -95,6 +156,8 @@ class AuthViewModel @Inject constructor(
     }
 
     private fun validateUsername(usernameToValidate: String = _username.value): Boolean {
+        // Убедись, что UserRegisterRequest действительно использует username,
+        // иначе эта валидация не имеет смысла для процесса регистрации.
         return if (usernameToValidate.isBlank()) {
             _usernameError.value = "Имя пользователя не может быть пустым"
             false
@@ -104,31 +167,16 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    // ---- Actions ----
-    fun onSignInClicked() {
-        val isEmailValid = validateEmail()
-        val isPasswordValid = validatePassword()
-
-        if (isEmailValid && isPasswordValid) {
-            viewModelScope.launch {
-                _authState.value = Resource.Loading()
-                loginUseCase(UserLoginRequest(email.value, password.value))
-                    .collect { result -> _authState.value = result }
-            }
-        }
+    // ---- Методы для сброса состояния (если нужно извне) ----
+    // Вместо них теперь используется AuthEvent.ResetAuthState
+    /*
+    fun resetSignInState() {
+        _signInState.value = null
     }
 
-    fun onSignUpClicked() {
-        val isEmailValid = validateEmail()
-        val isPasswordValid = validatePassword()
-        val isUsernameValid = validateUsername()
-
-        if (isEmailValid && isPasswordValid && isUsernameValid) {
-            viewModelScope.launch {
-                _authState.value = Resource.Loading()
-                registerUseCase(UserRegisterRequest(email.value, password.value, username.value))
-                    .collect { result -> _authState.value = result }
-            }
-        }
+    fun resetSignUpState() {
+        _signUpState.value = null
     }
+    */
 }
+

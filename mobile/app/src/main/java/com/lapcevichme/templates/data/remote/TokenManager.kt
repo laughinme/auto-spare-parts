@@ -1,6 +1,7 @@
 package com.lapcevichme.templates.data.remote
 
 import android.content.Context
+import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
@@ -37,8 +38,11 @@ class TokenManager(private val context: Context) {
      * Возвращает Flow с access token. Flow будет эммитить новое значение при его изменении.
      */
     fun getAccessToken(): Flow<String?> {
+        Log.d("TokenManager", "getAccessToken Flow created") // Лог создания Flow
         return context.dataStore.data.map { prefs ->
-            prefs[KEY_ACCESS_TOKEN]
+            val token = prefs[KEY_ACCESS_TOKEN]
+            Log.d("TokenManager", "Access token from DataStore: $token") // Лог каждого значения из DataStore
+            token
         }
     }
 

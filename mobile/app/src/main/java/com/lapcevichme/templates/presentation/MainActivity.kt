@@ -21,6 +21,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle // Импортируем для lifecycle-aware сбора StateFlow
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.lapcevichme.templates.presentation.navigation.AppBottomAppBar
@@ -46,6 +47,9 @@ class MainActivity : AppCompatActivity() {
                 val navController = rememberNavController()
                 val startDestination by viewModel.startDestination.collectAsState()
 
+                // Получаем состояние, состоит ли пользователь в организации
+                val isUserInOrganization by viewModel.isUserInOrganization.collectAsStateWithLifecycle()
+
                 // Список маршрутов, на которых должен отображаться BottomAppBar
                 val bottomBarScreens = listOf(
                     Routes.HOME_TAB,
@@ -67,15 +71,18 @@ class MainActivity : AppCompatActivity() {
                         }
                     },
                     floatingActionButton = {
-                        if (shouldShowBottomBar) {
+                        // Обновленное условие: показываем FAB, если есть BottomBar И пользователь в организации
+                        if (shouldShowBottomBar && isUserInOrganization) {
                             FloatingActionButton(
-                                modifier = Modifier.offset(y = 60.dp),
-                                onClick = { navController.navigate(Routes.ADD) },
+                                modifier = Modifier.offset(y = 60.dp), // Возможно, этот offset нужно будет пересмотреть или сделать условным
+                                onClick = {
+                                    navController.navigate(Routes.ADD)
+                                },
                                 shape = FloatingActionButtonDefaults.shape
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Add,
-                                    contentDescription = "Добавить",
+                                    contentDescription = "Добавить товар организации", // Обновим описание
                                     modifier = Modifier.size(32.dp)
                                 )
                             }
