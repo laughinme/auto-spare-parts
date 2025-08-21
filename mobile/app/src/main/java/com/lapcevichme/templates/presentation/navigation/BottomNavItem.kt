@@ -1,12 +1,14 @@
 package com.lapcevichme.templates.presentation.navigation
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.ui.graphics.vector.ImageVector
 
 /**
@@ -21,12 +23,12 @@ sealed class BottomNavItem(
     object Home : BottomNavItem(
         route = Routes.HOME_TAB, // Используем константу из Routes
         title = "Home",
-        icon = Icons.Default.Home
+        icon = Icons.Default.ShoppingCart
     )
-    object Friends : BottomNavItem(
-        route = Routes.FRIENDS_TAB, // Используем константу из Routes
-        title = "Friends",
-        icon = Icons.Default.Face
+    object Garage : BottomNavItem(
+        route = Routes.GARAGE_TAB, // Используем константу из Routes
+        title = "Garage",
+        icon = Icons.Default.Build
     )
     object Chat : BottomNavItem(
         route = Routes.CHAT_TAB, // Используем константу из Routes

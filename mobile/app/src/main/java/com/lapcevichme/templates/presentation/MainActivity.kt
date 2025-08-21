@@ -49,7 +49,7 @@ class MainActivity : AppCompatActivity() {
                 // Список маршрутов, на которых должен отображаться BottomAppBar
                 val bottomBarScreens = listOf(
                     Routes.HOME_TAB,
-                    Routes.FRIENDS_TAB,
+                    Routes.GARAGE_TAB,
                     Routes.CHAT_TAB,
                     Routes.PROFILE_TAB
                 )
