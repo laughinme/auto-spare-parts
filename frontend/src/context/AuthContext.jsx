@@ -5,14 +5,13 @@ import { setAccessToken as setAxiosAccessToken, apiPublic } from '../api/axiosIn
 import { AuthContext } from './AuthContextObject.js';
 import { MOCK_USERS, getMockUserByEmail } from '../data/mockUsers.js';
 
-// Context moved to separate file to satisfy Fast Refresh rules
-
 export const AuthProvider = ({ children }) => {
     const queryClient = useQueryClient();
     const [accessToken, setAccessToken] = useState(null);
+    // НОВОЕ СОСТОЯНИЕ: true, пока мы пытаемся восстановить сессию
+    const [isRestoringSession, setIsRestoringSession] = useState(true);
 
     useEffect(() => {
-        // keep axiosProtected aware via module-level var
         setAxiosAccessToken(accessToken);
     }, [accessToken]);
 
@@ -20,64 +19,49 @@ export const AuthProvider = ({ children }) => {
         queryKey: ['me'],
         queryFn: async () => {
             try {
-                // Пытаемся получить профиль через API
                 return await api.getMyProfile();
             } catch (error) {
                 console.log('API profile fetch failed:', error);
-                
-                // Если это моковый токен, возвращаем моковые данные
                 if (accessToken && accessToken.startsWith('mock_token_')) {
-                    // Пытаемся найти уже сохраненные данные
                     const existingData = queryClient.getQueryData(['me']);
                     if (existingData) {
                         console.log('Returning cached mock user data:', existingData);
                         return existingData;
                     }
-                    
-                    // Если данных нет, это означает проблему - не должно такого быть
                     console.error('Mock token found but no user data cached!');
                     throw new Error('No user data available for mock token');
                 }
-                
                 throw error;
             }
         },
         enabled: !!accessToken,
         retry: 1,
-        onError: () => {
-          setAccessToken(null);
+        onError: (err) => {
+            console.error("ОШИБКА useQuery('me'): Не удалось загрузить профиль. Выход из системы.", err);
+            setAccessToken(null);
         }
     });
 
     const loginMutation = useMutation({
         mutationFn: async (credentials) => {
             try {
-                // Пытаемся войти через API
                 return await api.loginUser(credentials);
             } catch (error) {
                 console.log('API login failed, trying mock users:', error);
-                
-                // Если API недоступен, проверяем моковых пользователей
                 const mockUser = getMockUserByEmail(credentials.email);
                 if (mockUser && mockUser.password === credentials.password) {
                     console.log('Mock login successful for:', credentials.email);
-                    
-                    // Имитируем ответ API
                     return {
                         access_token: `mock_token_${Date.now()}`,
                         user: mockUser.userData
                     };
                 }
-                
-                // Если не найден моковый пользователь, выбрасываем оригинальную ошибку
                 throw error;
             }
         },
         onSuccess: (data) => {
             if (data?.access_token) {
                 setAccessToken(data.access_token);
-                
-                // Если это моковые данные, сохраняем пользователя сразу
                 if (data.user && data.access_token.startsWith('mock_token_')) {
                     queryClient.setQueryData(['me'], data.user);
                 }
@@ -108,27 +92,38 @@ export const AuthProvider = ({ children }) => {
         }
     });
 
-    // Bootstrap on mount: try refresh to get an access token if cookies present
     useEffect(() => {
+        console.log("--- [Auth] Запускаем useEffect для восстановления сессии ---");
         (async () => {
             try {
                 const csrfCookie = document.cookie
                     .split(';')
                     .map((c) => c.trim())
                     .find((c) => c.startsWith('csrf_token='));
+
                 const csrfToken = csrfCookie ? decodeURIComponent(csrfCookie.split('=')[1]) : null;
-                if (!csrfToken) return;
+
+                if (!csrfToken) {
+                    console.log("[Auth] CSRF-токен не найден, прекращаем попытку восстановления.");
+                    return;
+                }
+
+                console.log("[Auth] CSRF-токен найден, отправляем запрос на /auth/refresh...");
                 const { data } = await apiPublic.post('/auth/refresh', {}, {
-                    headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {},
+                    headers: { 'X-CSRF-Token': csrfToken },
                     withCredentials: true,
                 });
+
                 if (data?.access_token) {
+                    console.log("[Auth] Успех! Устанавливаем новый access_token.");
                     setAccessToken(data.access_token);
                 }
-            } catch {
-                //ignore
-                
-
+            } catch (err) {
+                console.error("[Auth] ОШИБКА при запросе на /auth/refresh:", err);
+            } finally {
+                // Этот блок выполнится всегда, сообщая App.jsx, что проверка завершена
+                console.log("[Auth] --- Попытка восстановления сессии завершена ---");
+                setIsRestoringSession(false);
             }
         })();
     }, []);
@@ -136,6 +131,7 @@ export const AuthProvider = ({ children }) => {
     const value = {
         user: isError ? null : user,
         isUserLoading,
+        isRestoringSession, // Добавляем новое состояние в контекст
         login: loginMutation.mutateAsync,
         register: registerMutation.mutateAsync,
         logout: logoutMutation.mutate,
@@ -147,4 +143,3 @@ export const AuthProvider = ({ children }) => {
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
-
