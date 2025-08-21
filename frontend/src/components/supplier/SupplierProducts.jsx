@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getProducts, deleteProduct, updateProduct } from '../../api/api.js';
+import { getProducts, deleteProduct, updateProduct, publishProduct, unpublishProduct } from '../../api/api.js';
 import { useDebounce } from '../../hooks/useDebounce'; 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import ProductCard from '../product/ProductCard.jsx';
@@ -232,6 +232,94 @@ function EditProductModal({ product, onSave, onCancel, isLoading }) {
     );
 }
 
+// Компонент модального окна подтверждения публикации/снятия с публикации
+function PublishConfirmationModal({ confirmationData, onConfirm, onCancel, isLoading }) {
+    const isPublish = confirmationData?.action === 'publish';
+    const actionText = isPublish ? 'Опубликовать' : 'Снять с публикации';
+    const actionDescription = isPublish 
+        ? 'Товар станет видимым в публичном каталоге и доступным для покупки всем пользователям.'
+        : 'Товар будет скрыт из публичного каталога и станет недоступным для покупки.';
+    
+    return (
+        <div 
+            className="fixed inset-0 bg-opacity-20 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300"
+            onClick={(e) => {
+                if (e.target === e.currentTarget) {
+                    onCancel();
+                }
+            }}
+        >
+            <div 
+                className="bg-white rounded-2xl shadow-2xl ring-1 ring-black ring-opacity-5 border border-gray-200 max-w-md w-full p-6 transform animate-in zoom-in-95 duration-300"
+                onClick={(e) => e.stopPropagation()}
+            >
+                <div className="flex items-center gap-3 mb-4">
+                    <div className={`p-3 rounded-full ${isPublish ? 'bg-emerald-100' : 'bg-orange-100'}`}>
+                        <svg className={`w-6 h-6 ${isPublish ? 'text-emerald-600' : 'text-orange-600'}`} fill="currentColor" viewBox="0 0 20 20">
+                            {isPublish ? (
+                                <>
+                                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+                                    <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"/>
+                                </>
+                            ) : (
+                                <>
+                                    <path fillRule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clipRule="evenodd"/>
+                                    <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z"/>
+                                </>
+                            )}
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-semibold text-gray-900">{actionText} товар</h3>
+                        <p className="text-sm text-gray-600">Подтвердите действие</p>
+                    </div>
+                </div>
+                
+                <div className="mb-6">
+                    <p className="text-gray-700 mb-3">
+                        Вы уверены, что хотите {isPublish ? 'опубликовать' : 'снять с публикации'} товар 
+                        <span className="font-semibold text-gray-900"> "{confirmationData?.productName}"</span>?
+                    </p>
+                    <p className="text-sm text-gray-500">
+                        {actionDescription}
+                    </p>
+                </div>
+                
+                <div className="flex gap-3">
+                    <button 
+                        className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium transition-colors"
+                        onClick={onCancel}
+                        disabled={isLoading}
+                    >
+                        Отмена
+                    </button>
+                    <button 
+                        className={`flex-1 px-4 py-2 text-white rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
+                            isPublish 
+                                ? 'bg-emerald-600 hover:bg-emerald-700' 
+                                : 'bg-orange-600 hover:bg-orange-700'
+                        }`}
+                        onClick={onConfirm}
+                        disabled={isLoading}
+                    >
+                        {isLoading ? (
+                            <>
+                                <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                {isPublish ? 'Публикуется...' : 'Скрывается...'}
+                            </>
+                        ) : (
+                            actionText
+                        )}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 // Компонент модального окна подтверждения удаления
 function DeleteConfirmationModal({ deleteConfirmation, onConfirm, onCancel, isLoading }) {
     return (
@@ -305,8 +393,11 @@ export default function SupplierProducts({ orgId, onCreateNavigate, onProductVie
 	const [query, setQuery] = useState("");
 	const debouncedQuery = useDebounce(query, 500);
 	const [deleteConfirmation, setDeleteConfirmation] = useState(null); // { productId, productName }
+	const [publishConfirmation, setPublishConfirmation] = useState(null); // { productId, productName, action }
 	const [editingProduct, setEditingProduct] = useState(null); // product object being edited
 	const [successMessage, setSuccessMessage] = useState(''); // success notification
+	const [publishingProducts, setPublishingProducts] = useState(new Set()); // Set of product IDs being published
+	const [unpublishingProducts, setUnpublishingProducts] = useState(new Set()); // Set of product IDs being unpublished
 
     const queryClient = useQueryClient();
 
@@ -354,6 +445,60 @@ export default function SupplierProducts({ orgId, onCreateNavigate, onProductVie
         onError: (error) => {
             console.error('Update product error:', error);
             alert('Ошибка при обновлении товара. Попробуйте еще раз.');
+        }
+    });
+
+    const publishMutation = useMutation({
+        mutationFn: ({ productId }) => publishProduct({ orgId, productId }),
+        onMutate: ({ productId }) => {
+            // Оптимистично добавляем продукт в состояние публикации
+            setPublishingProducts(prev => new Set([...prev, productId]));
+        },
+        onSuccess: (data, { productId }) => {
+            queryClient.invalidateQueries({ queryKey: ['products', orgId, debouncedQuery] });
+            setPublishingProducts(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(productId);
+                return newSet;
+            });
+            setSuccessMessage('Товар успешно опубликован в каталоге!');
+            setTimeout(() => setSuccessMessage(''), 3000);
+        },
+        onError: (error, { productId }) => {
+            console.error('Publish product error:', error);
+            setPublishingProducts(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(productId);
+                return newSet;
+            });
+            alert('Ошибка при публикации товара. Попробуйте еще раз.');
+        }
+    });
+
+    const unpublishMutation = useMutation({
+        mutationFn: ({ productId }) => unpublishProduct({ orgId, productId }),
+        onMutate: ({ productId }) => {
+            // Оптимистично добавляем продукт в состояние снятия с публикации
+            setUnpublishingProducts(prev => new Set([...prev, productId]));
+        },
+        onSuccess: (data, { productId }) => {
+            queryClient.invalidateQueries({ queryKey: ['products', orgId, debouncedQuery] });
+            setUnpublishingProducts(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(productId);
+                return newSet;
+            });
+            setSuccessMessage('Товар снят с публикации в каталоге!');
+            setTimeout(() => setSuccessMessage(''), 3000);
+        },
+        onError: (error, { productId }) => {
+            console.error('Unpublish product error:', error);
+            setUnpublishingProducts(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(productId);
+                return newSet;
+            });
+            alert('Ошибка при снятии товара с публикации. Попробуйте еще раз.');
         }
     });
 
@@ -410,6 +555,37 @@ export default function SupplierProducts({ orgId, onCreateNavigate, onProductVie
 
     const cancelEdit = () => {
         setEditingProduct(null);
+    };
+
+    const handlePublish = (product) => {
+        setPublishConfirmation({
+            productId: product.id,
+            productName: product.title || product.brand || 'товар',
+            action: 'publish'
+        });
+    };
+
+    const handleUnpublish = (product) => {
+        setPublishConfirmation({
+            productId: product.id,
+            productName: product.title || product.brand || 'товар',
+            action: 'unpublish'
+        });
+    };
+
+    const confirmPublishAction = () => {
+        if (publishConfirmation) {
+            if (publishConfirmation.action === 'publish') {
+                publishMutation.mutate({ productId: publishConfirmation.productId });
+            } else {
+                unpublishMutation.mutate({ productId: publishConfirmation.productId });
+            }
+            setPublishConfirmation(null);
+        }
+    };
+
+    const cancelPublishAction = () => {
+        setPublishConfirmation(null);
     };
     console.log('SupplierProducts debug:', {
         orgId,
@@ -469,8 +645,12 @@ export default function SupplierProducts({ orgId, onCreateNavigate, onProductVie
                             }}
                             onEdit={(product) => handleEdit(product)}
                             onDelete={(product) => handleDelete(product)}
+                            onPublish={(product) => handlePublish(product)}
+                            onUnpublish={(product) => handleUnpublish(product)}
                             isDeleting={deleteMutation.isPending && deleteConfirmation?.productId === p.id}
                             isEditing={editingProduct?.id === p.id}
+                            isPublishing={publishingProducts.has(p.id)}
+                            isUnpublishing={unpublishingProducts.has(p.id)}
                         />
                     ))}
                 </div>
@@ -493,6 +673,16 @@ export default function SupplierProducts({ orgId, onCreateNavigate, onProductVie
                     onConfirm={confirmDelete}
                     onCancel={cancelDelete}
                     isLoading={deleteMutation.isPending}
+                />
+            )}
+
+            {/* Publish/Unpublish Confirmation Modal */}
+            {publishConfirmation && (
+                <PublishConfirmationModal
+                    confirmationData={publishConfirmation}
+                    onConfirm={confirmPublishAction}
+                    onCancel={cancelPublishAction}
+                    isLoading={publishMutation.isPending || unpublishMutation.isPending}
                 />
             )}
         </div>
