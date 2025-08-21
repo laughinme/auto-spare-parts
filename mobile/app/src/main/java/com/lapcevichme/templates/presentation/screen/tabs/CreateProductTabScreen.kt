@@ -1,7 +1,12 @@
 package com.lapcevichme.templates.presentation.screen.tabs
 
 import android.content.res.Configuration
+import android.net.Uri // ADDED
+import androidx.activity.compose.rememberLauncherForActivityResult // ADDED
+import androidx.activity.result.PickVisualMediaRequest // ADDED
+import androidx.activity.result.contract.ActivityResultContracts // ADDED
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable // ADDED
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,6 +24,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Edit // ADDED
+import androidx.compose.material.icons.filled.Delete // ADDED
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -28,6 +35,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton // ADDED
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -47,8 +55,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.ContentScale // ADDED
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -56,6 +67,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage // ADDED
 import com.lapcevichme.templates.domain.model.enums.ProductCondition
 import com.lapcevichme.templates.domain.model.Resource
 import com.lapcevichme.templates.presentation.viewmodel.SparePartCreateEvent
@@ -69,7 +81,7 @@ import kotlinx.coroutines.flow.collectLatest
 @Composable
 fun SparePartCreateScreen(
     viewModel: SparePartCreateViewModel = hiltViewModel(),
-    onNavigateBack: () -> Unit // <-- 1. ДОБАВЛЕН ПАРАМЕТР ДЛЯ НАВИГАЦИИ НАЗАД
+    onNavigateBack: () -> Unit
 ) {
     val brand by viewModel.brand.collectAsStateWithLifecycle()
     val partNumber by viewModel.partNumber.collectAsStateWithLifecycle()
@@ -78,8 +90,17 @@ fun SparePartCreateScreen(
 
     val price by viewModel.price.collectAsStateWithLifecycle()
     val description by viewModel.description.collectAsStateWithLifecycle()
+    val selectedImageUri by viewModel.selectedImageUri.collectAsStateWithLifecycle() // ADDED
 
     val snackbarHostState = remember { SnackbarHostState() }
+
+    // ADDED: Launcher for picking an image
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+        onResult = { uri: Uri? ->
+            viewModel.onEvent(SparePartCreateEvent.OnImageSelected(uri))
+        }
+    )
 
     LaunchedEffect(key1 = true) {
         viewModel.uiEvent.collectLatest { event ->
@@ -129,7 +150,20 @@ fun SparePartCreateScreen(
                     conditionOptions = conditionOptions
                 )
             }
-            item { PhotosSection() }
+            // MODIFIED: Pass selectedImageUri and launcher to PhotosSection
+            item {
+                PhotosSection(
+                    selectedImageUri = selectedImageUri,
+                    onImageClick = {
+                        imagePickerLauncher.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
+                    },
+                    onRemoveImageClick = {
+                        viewModel.onEvent(SparePartCreateEvent.OnImageSelected(null))
+                    }
+                )
+            }
             item {
                 PriceAndDescriptionSection(
                     price = price,
@@ -139,7 +173,6 @@ fun SparePartCreateScreen(
                 )
             }
             item {
-                // 2. ПЕРЕДАЕМ ДЕЙСТВИЕ В КОМПОНЕНТ КНОПОК
                 ActionButtons(
                     onPublishClick = { viewModel.onEvent(SparePartCreateEvent.OnCreateClick) },
                     onCancelClick = onNavigateBack
@@ -208,33 +241,68 @@ fun BasicInfoSection(
     }
 }
 
+// MODIFIED: PhotosSection to handle image selection and display
 @Composable
-fun PhotosSection() {
+fun PhotosSection(
+    selectedImageUri: Uri?,
+    onImageClick: () -> Unit,
+    onRemoveImageClick: () -> Unit
+) {
     SectionCard(title = "3. Фотографии") {
-        val stroke = Stroke(
-            width = 4f,
-            pathEffect = PathEffect.dashPathEffect(floatArrayOf(20f, 10f), 0f)
-        )
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .height(150.dp)
-                .border(
-                    width = 2.dp,
-                    color = MaterialTheme.colorScheme.outline,
-                    shape = RoundedCornerShape(12.dp)
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Upload Icon",
-                    modifier = Modifier.size(48.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+        if (selectedImageUri == null) {
+            // The 'stroke' variable with PathEffect for dashed border is removed
+            // as Modifier.border() doesn't directly use it for a dashed effect.
+            // A custom Canvas would be needed for a true dashed border.
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(150.dp)
+                    .border( // CORRECTED: Solid border
+                        width = 2.dp, // Defined width
+                        brush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.outline), // Using brush
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    .clickable { onImageClick() }, // Make the whole box clickable
+                contentAlignment = Alignment.Center
+            ) {
+                // The inner Box with a redundant border has been removed.
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Upload Icon",
+                        modifier = Modifier.size(48.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text("Нажмите для загрузки", color = MaterialTheme.colorScheme.primary)
+                    Text("PNG, JPG до 10MB", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        } else {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp) // Increased height for selected image
+                    .clip(RoundedCornerShape(12.dp)) // Clip image to rounded corners
+            ) {
+                AsyncImage(
+                    model = selectedImageUri,
+                    contentDescription = "Выбранное изображение",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop // Crop to fill bounds
                 )
-                Text("Нажмите для загрузки", color = MaterialTheme.colorScheme.primary)
-                Text("PNG, JPG до 10MB", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Row( // Buttons to change or remove image
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    IconButton(onClick = onImageClick) { // Edit button
+                        Icon(Icons.Filled.Edit, contentDescription = "Изменить фото", tint = MaterialTheme.colorScheme.surface)
+                    }
+                    IconButton(onClick = onRemoveImageClick) { // Delete button
+                        Icon(Icons.Filled.Delete, contentDescription = "Удалить фото", tint = MaterialTheme.colorScheme.surface)
+                    }
+                }
             }
         }
     }
@@ -273,12 +341,11 @@ fun PriceAndDescriptionSection(
 }
 
 @Composable
-fun ActionButtons(onPublishClick: () -> Unit, onCancelClick: () -> Unit) { // <-- 3. ДОБАВЛЕН ПАРАМЕТР onCancelClick
+fun ActionButtons(onPublishClick: () -> Unit, onCancelClick: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
     ) {
-        // 4. ИСПОЛЬЗУЕМ ПАРАМЕТР В КНОПКЕ
         OutlinedButton(onClick = onCancelClick) {
             Text("Отмена")
         }
@@ -379,7 +446,7 @@ fun OrganizationSelector(
                     Text("Попробовать снова")
                 }
             }
-            null -> {
+            null -> { // Should ideally be handled by Resource.Loading or initial state
                 Text("Загрузка списка организаций...")
             }
         }
@@ -396,6 +463,9 @@ fun OrganizationSelector(
 @Composable
 fun SparePartCreateScreenPreview() {
     PreviewTheme {
+        // ViewModel instance for preview might require a fake/mock implementation
+        // For simplicity, passing a default hiltViewModel might work in some preview contexts
+        // or you'd need to mock the ViewModel and its state for reliable previews.
         SparePartCreateScreen(onNavigateBack = {})
     }
 }

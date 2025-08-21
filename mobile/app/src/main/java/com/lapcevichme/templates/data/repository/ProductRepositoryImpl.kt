@@ -2,8 +2,8 @@ package com.lapcevichme.templates.data.repository
 
 import android.util.Log
 import com.lapcevichme.templates.data.remote.ApiService
-import com.lapcevichme.templates.domain.model.enums.toDto
-import com.lapcevichme.templates.domain.model.enums.toDomain
+import com.lapcevichme.templates.domain.model.enums.toDto // Предполагается, что ProductCreate имеет метод toDto()
+import com.lapcevichme.templates.domain.model.enums.toDomain // Предполагается, что ProductDto имеет метод toDomain()
 import com.lapcevichme.templates.domain.model.Page
 import com.lapcevichme.templates.domain.model.ProductCreate
 import com.lapcevichme.templates.domain.model.ProductModel
@@ -71,11 +71,12 @@ class ProductRepositoryImpl @Inject constructor(
         emit(Resource.Loading())
         try {
             // Placeholder orgId - this logic might need review for a real app
+            // TODO: Resolve orgId from a more reliable source, not hardcoded.
             val orgId = "PLACEHOLDER_ORG_ID" // This needs to be resolved from context/user session
             Log.d(TAG, "getProduct using placeholder orgId: $orgId for productId: $productId")
 
             val response = apiService.getOrganizationProductDetails(
-                orgId = orgId, // This might need to be dynamic or removed if not needed by API
+                orgId = orgId, 
                 productId = productId
             )
             if (response.isSuccessful && response.body() != null) {
@@ -99,23 +100,50 @@ class ProductRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun createProduct(orgId: String, product: ProductCreate): Flow<Resource<ProductModel>> = flow {
-        Log.d(TAG, "createProduct called for orgId: $orgId, product brand: ${product.brand}")
+    override fun createProduct(
+        orgId: String,
+        product: ProductCreate,
+        photoBytes: ByteArray?,
+        mimeType: String?
+    ): Flow<Resource<ProductModel>> = flow {
+        Log.d(TAG, "createProduct called for orgId: $orgId, product brand: ${product.brand}, with photo: ${photoBytes != null}")
         emit(Resource.Loading())
         try {
-            val productCreateDto = product.toDto()
-            val response = apiService.createProduct(orgId, productCreateDto)
-            if (response.isSuccessful && response.body() != null) {
-                Log.d(TAG, "createProduct successful for orgId: $orgId. New product ID: ${response.body()!!.id}")
-                emit(Resource.Success(response.body()!!.toDomain()))
+            val productCreateDto = product.toDto() 
+            val createProductResponse = apiService.createProduct(orgId, productCreateDto)
+
+            if (createProductResponse.isSuccessful && createProductResponse.body() != null) {
+                val createdProductDto = createProductResponse.body()!!
+                Log.d(TAG, "Product created successfully with ID: ${createdProductDto.id}")
+
+                if (photoBytes != null && mimeType != null) {
+                    Log.d(TAG, "Attempting to upload photo for product ID: ${createdProductDto.id}")
+                    val requestFile = photoBytes.toRequestBody(mimeType.toMediaTypeOrNull())
+                    val photoPart = MultipartBody.Part.createFormData("file", "photo.jpg", requestFile) // Changed "photo" to "photo.jpg" for potentially better server handling
+
+                    val uploadPhotoResponse = apiService.uploadProductPhoto(orgId, createdProductDto.id, photoPart)
+
+                    if (uploadPhotoResponse.isSuccessful && uploadPhotoResponse.body() != null) {
+                        Log.d(TAG, "Photo uploaded successfully for product ID: ${createdProductDto.id}")
+                        emit(Resource.Success(uploadPhotoResponse.body()!!.toDomain())) 
+                    } else {
+                        val errorBody = uploadPhotoResponse.errorBody()?.stringSafely()
+                        Log.e(TAG, "Photo upload failed for product ID: ${createdProductDto.id}. Code: ${uploadPhotoResponse.code()}, Message: ${uploadPhotoResponse.message()}, ErrorBody: $errorBody")
+                        // Product created, but photo upload failed.
+                        // Emitting success with product data without updated photo.
+                        // Consider if this should be a Resource.Error if photo is critical.
+                        Log.w(TAG, "Product (ID: ${createdProductDto.id}) created, but photo upload failed. Returning product data with potentially outdated/missing media.")
+                        emit(Resource.Success(createdProductDto.toDomain())) // Return product data from create call
+                    }
+                } else {
+                    // No photo was provided, return the successfully created product
+                    Log.d(TAG, "No photo provided. Returning created product data for ID: ${createdProductDto.id}")
+                    emit(Resource.Success(createdProductDto.toDomain()))
+                }
             } else {
-                val errorBody = response.errorBody()?.stringSafely()
-                Log.e(TAG, "createProduct failed for orgId: $orgId. Code: ${response.code()}, Message: ${response.message()}, ErrorBody: $errorBody")
-                emit(
-                    Resource.Error(
-                        errorBody ?: "Failed to create product: ${response.code()}"
-                    )
-                )
+                val errorBody = createProductResponse.errorBody()?.stringSafely()
+                Log.e(TAG, "createProduct API call failed for orgId: $orgId. Code: ${createProductResponse.code()}, Message: ${createProductResponse.message()}, ErrorBody: $errorBody")
+                emit(Resource.Error(errorBody ?: "Failed to create product: ${createProductResponse.code()}"))
             }
         } catch (e: HttpException) {
             Log.e(TAG, "createProduct HttpException for orgId: $orgId. Message: ${e.localizedMessage}", e)
@@ -123,6 +151,9 @@ class ProductRepositoryImpl @Inject constructor(
         } catch (e: IOException) {
             Log.e(TAG, "createProduct IOException for orgId: $orgId. Message: ${e.message}", e)
             emit(Resource.Error("Failed to connect to the server."))
+        } catch (e: Exception) { 
+            Log.e(TAG, "createProduct general Exception for orgId: $orgId. Message: ${e.message}", e)
+            emit(Resource.Error(e.message ?: "An unexpected error occurred."))
         }
     }
 
@@ -245,8 +276,7 @@ class ProductRepositoryImpl @Inject constructor(
         emit(Resource.Loading())
         try {
             val requestBody = photoBytes.toRequestBody(mimeType.toMediaTypeOrNull())
-            // Имя файла "photo" здесь захардкожено. Убедитесь, что сервер ожидает именно такое имя или сделайте его динамическим.
-            val body = MultipartBody.Part.createFormData("file", "photo", requestBody)
+            val body = MultipartBody.Part.createFormData("file", "photo.jpg", requestBody) // Changed "photo" to "photo.jpg"
             val response = apiService.uploadProductPhoto(orgId, productId, body)
             if (response.isSuccessful && response.body() != null) {
                 Log.d(TAG, "uploadProductPhoto successful for orgId: $orgId, productId: $productId.")

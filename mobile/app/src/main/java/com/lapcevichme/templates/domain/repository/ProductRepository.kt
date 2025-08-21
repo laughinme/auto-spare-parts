@@ -17,7 +17,12 @@ interface ProductRepository {
 
     fun getProduct(productId: String): Flow<Resource<ProductModel>>
 
-    fun createProduct(orgId: String, product: ProductCreate): Flow<Resource<ProductModel>>
+    fun createProduct(
+        orgId: String,
+        product: ProductCreate,
+        photoBytes: ByteArray?, // Изменено
+        mimeType: String?     // Изменено
+    ): Flow<Resource<ProductModel>>
 
     fun updateProduct(
         orgId: String,

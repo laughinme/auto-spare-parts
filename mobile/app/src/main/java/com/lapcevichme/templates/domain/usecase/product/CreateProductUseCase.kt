@@ -10,7 +10,14 @@ import javax.inject.Inject
 class CreateProductUseCase @Inject constructor(
     private val productRepository: ProductRepository
 ) {
-    operator fun invoke(orgId: String, product: ProductCreate): Flow<Resource<ProductModel>> {
-        return productRepository.createProduct(orgId, product)
+    operator fun invoke(
+        orgId: String,
+        product: ProductCreate,
+        photoBytes: ByteArray?, // Добавляем nullable ByteArray
+        mimeType: String?      // Добавляем nullable String
+    ): Flow<Resource<ProductModel>> {
+        // Передаем новые параметры в репозиторий
+        return productRepository.createProduct(orgId, product, photoBytes, mimeType)
     }
 }
+
