@@ -13,7 +13,7 @@ router = APIRouter()
     path='/',
     response_model=Page[ProductModel],
     summary='Public product catalog with filters and pagination',
-    # include_in_schema=False,
+    include_in_schema=False,
 )
 async def list_products(
     svc: Annotated[ProductService, Depends(get_product_service)],
@@ -45,7 +45,8 @@ async def list_products(
 @router.get(
     path='/{product_id}',
     response_model=ProductModel,
-    summary='Public product details page'
+    summary='Public product details page',
+    include_in_schema=False,
 )
 async def get_product(
     product_id: UUID,
