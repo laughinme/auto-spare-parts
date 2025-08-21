@@ -7,11 +7,10 @@ import com.lapcevichme.templates.domain.repository.ProductRepository
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
-class SparePartCreateUseCase @Inject constructor(
+class CreateProductUseCase @Inject constructor(
     private val productRepository: ProductRepository
 ) {
-    operator fun invoke(orgId: String,
-                        product: ProductCreate): Flow<Resource<ProductModel>> {
-        return productRepository.createProduct(orgId = orgId, product = product)
+    operator fun invoke(orgId: String, product: ProductCreate): Flow<Resource<ProductModel>> {
+        return productRepository.createProduct(orgId, product)
     }
 }
