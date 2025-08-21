@@ -14,7 +14,11 @@ class GetOrgIdUseCase @Inject constructor(
         return when (val result = repository.getProfile().first {
             it !is Resource.Loading
         }) {
-            is Resource.Success -> {result.data?.id }
+            is Resource.Success -> {
+                val id = result.data?.organization?.id
+                Log.d("GetOrgIdUseCase", "Fetched organization ID: $id, Data: ${result.data}")
+                id
+            }
             is Resource.Error -> null
             is Resource.Loading -> "loading"
         }
