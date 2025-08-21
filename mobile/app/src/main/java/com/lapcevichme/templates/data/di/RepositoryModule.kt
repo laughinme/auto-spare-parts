@@ -3,10 +3,12 @@ package com.lapcevichme.templates.data.di
 import com.lapcevichme.templates.data.repository.AppStripeRepositoryImpl
 import com.lapcevichme.templates.data.repository.AuthRepositoryImpl
 import com.lapcevichme.templates.data.repository.GeographyRepositoryImpl
+import com.lapcevichme.templates.data.repository.ProductRepositoryImpl
 import com.lapcevichme.templates.data.repository.UserRepositoryImpl
 import com.lapcevichme.templates.domain.repository.AppStripeRepository
 import com.lapcevichme.templates.domain.repository.AuthRepository
 import com.lapcevichme.templates.domain.repository.GeographyRepository
+import com.lapcevichme.templates.domain.repository.ProductRepository
 import com.lapcevichme.templates.domain.repository.UserRepository
 import dagger.Binds
 import dagger.Module
@@ -40,4 +42,10 @@ abstract class RepositoryModule {
     abstract fun bindAppStripeRepository(
         appStripeRepositoryImpl: AppStripeRepositoryImpl
     ): AppStripeRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindProductRepository(
+        productRepositoryImpl: ProductRepositoryImpl
+    ): ProductRepository
 }
