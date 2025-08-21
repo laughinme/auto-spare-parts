@@ -159,7 +159,7 @@ class ProductService:
             raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, f"Could not save file: {str(e)}")
         
         # Create media record
-        media_url = f"/media/products/{product.id}/{unique_filename}"
+        media_url = f"{settings.SITE_URL}/{settings.MEDIA_DIR}/products/{product.id}/{unique_filename}"
         media = ProductMedia(
             product_id=product.id,
             url=media_url,
