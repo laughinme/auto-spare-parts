@@ -17,3 +17,13 @@ export async function getProducts({ orgId, query, limit = 20, offset = 0 }) {
     });
     return response.data;
   }
+
+  export async function getDetailsProducts({ orgId, productId }) {
+    if (!orgId || !productId) {
+      throw new Error("Organization ID and Product ID are required");
+    }
+    
+    const response = await apiProtected.get(`/organizations/${orgId}/products/${productId}`);
+    return response.data;
+  }
+

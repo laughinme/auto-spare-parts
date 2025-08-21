@@ -13,6 +13,7 @@ export const MOCK_USERS = {
       role: "supplier", // явно указываем роль
       is_supplier: true,
       company_name: "ТестАвтоЗапчасти",
+
       created_at: "2024-01-01T00:00:00Z"
     }
   },
@@ -27,6 +28,7 @@ export const MOCK_USERS = {
       name: "Тестовый Покупатель",
       role: "buyer", // явно указываем роль
       is_supplier: false,
+
       created_at: "2024-01-01T00:00:00Z"
     }
   },
@@ -41,6 +43,7 @@ export const MOCK_USERS = {
       name: "Магазин Запчастей",
       // role не указана, должна определиться по email
       company_name: "АвтоМагазин",
+
       created_at: "2024-01-01T00:00:00Z"
     }
   }

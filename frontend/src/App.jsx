@@ -249,6 +249,8 @@ function App() {
         {route === "onboarding:supplier_stripe" && <SupplierStripeOnboarding />}
         {route === "product" && selectedProduct && (
           <ProductDetail
+            orgId={user?.organization?.id}
+            productId={selectedProduct.id}
             product={selectedProduct}
             onAdd={role !== "supplier" ? (product, quantity) => handleAddToCart(product, quantity) : null}
             onBack={navigateBack}
