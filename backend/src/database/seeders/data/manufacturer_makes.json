@@ -1,0 +1,608 @@
+[
+  {
+    "manufacturer_id": 956,
+    "make_id": 440,
+    "make_name": "ASTON MARTIN",
+    "manufacturer_name": "ASTON MARTIN LAGONDA LIMITED"
+  },
+  {
+    "manufacturer_id": 957,
+    "make_id": 448,
+    "make_name": "TOYOTA",
+    "manufacturer_name": "BMW OF NORTH AMERICA, LLC"
+  },
+  {
+    "manufacturer_id": 957,
+    "make_id": 452,
+    "make_name": "BMW",
+    "manufacturer_name": "BMW OF NORTH AMERICA, LLC"
+  },
+  {
+    "manufacturer_id": 958,
+    "make_id": 442,
+    "make_name": "JAGUAR",
+    "manufacturer_name": "JAGUAR LAND ROVER NA, LLC"
+  },
+  {
+    "manufacturer_id": 960,
+    "make_id": 445,
+    "make_name": "ROLLS-ROYCE",
+    "manufacturer_name": "ROLLS ROYCE MOTOR CARS"
+  },
+  {
+    "manufacturer_id": 962,
+    "make_id": 448,
+    "make_name": "TOYOTA",
+    "manufacturer_name": "TOYOTA MOTOR NORTH AMERICA, INC"
+  },
+  {
+    "manufacturer_id": 962,
+    "make_id": 515,
+    "make_name": "LEXUS",
+    "manufacturer_name": "TOYOTA MOTOR NORTH AMERICA, INC"
+  },
+  {
+    "manufacturer_id": 964,
+    "make_id": 449,
+    "make_name": "MERCEDES-BENZ",
+    "manufacturer_name": "MERCEDES-BENZ USA, LLC (SPRINTER)"
+  },
+  {
+    "manufacturer_id": 964,
+    "make_id": 450,
+    "make_name": "FREIGHTLINER",
+    "manufacturer_name": "MERCEDES-BENZ USA, LLC (SPRINTER)"
+  },
+  {
+    "manufacturer_id": 965,
+    "make_id": 451,
+    "make_name": "FULMER FABRICATIONS",
+    "manufacturer_name": "FULMER FABRICATIONS"
+  },
+  {
+    "manufacturer_id": 966,
+    "make_id": 448,
+    "make_name": "TOYOTA",
+    "manufacturer_name": "BMW AG"
+  },
+  {
+    "manufacturer_id": 966,
+    "make_id": 452,
+    "make_name": "BMW",
+    "manufacturer_name": "BMW AG"
+  },
+  {
+    "manufacturer_id": 966,
+    "make_id": 452,
+    "make_name": "BMW",
+    "manufacturer_name": "BMW AG"
+  },
+  {
+    "manufacturer_id": 966,
+    "make_id": 456,
+    "make_name": "MINI",
+    "manufacturer_name": "BMW AG"
+  },
+  {
+    "manufacturer_id": 967,
+    "make_id": 452,
+    "make_name": "BMW",
+    "manufacturer_name": "BMW M GMBH"
+  },
+  {
+    "manufacturer_id": 969,
+    "make_id": 453,
+    "make_name": "MOTORCYCLE MACHINE SHOP SERVICES",
+    "manufacturer_name": "MOTORCYCLE MACHINE SHOP SERVICES, LLC"
+  },
+  {
+    "manufacturer_id": 971,
+    "make_id": 455,
+    "make_name": "HOMBILT TRAILERS",
+    "manufacturer_name": "HOMBILT TRAILERS INC"
+  },
+  {
+    "manufacturer_id": 972,
+    "make_id": 452,
+    "make_name": "BMW",
+    "manufacturer_name": "BMW AG MOTORCYCLES"
+  },
+  {
+    "manufacturer_id": 973,
+    "make_id": 457,
+    "make_name": "ACG",
+    "manufacturer_name": "AMERICAN CUSTOM GOLF CARS, INC"
+  },
+  {
+    "manufacturer_id": 973,
+    "make_id": 1635,
+    "make_name": "AMERICAN CUSTOM GOLF CARS, INC.",
+    "manufacturer_name": "AMERICAN CUSTOM GOLF CARS, INC"
+  },
+  {
+    "manufacturer_id": 974,
+    "make_id": 458,
+    "make_name": "MOONLIGHT CHOPPERS",
+    "manufacturer_name": "MOONLIGHT AUTO"
+  },
+  {
+    "manufacturer_id": 975,
+    "make_id": 459,
+    "make_name": "COOPER CYCLES",
+    "manufacturer_name": "COOPER CYCLES"
+  },
+  {
+    "manufacturer_id": 976,
+    "make_id": 460,
+    "make_name": "FORD",
+    "manufacturer_name": "FORD MOTOR COMPANY"
+  },
+  {
+    "manufacturer_id": 976,
+    "make_id": 460,
+    "make_name": "FORD",
+    "manufacturer_name": "FORD MOTOR COMPANY"
+  },
+  {
+    "manufacturer_id": 976,
+    "make_id": 460,
+    "make_name": "FORD",
+    "manufacturer_name": "FORD MOTOR COMPANY"
+  },
+  {
+    "manufacturer_id": 976,
+    "make_id": 460,
+    "make_name": "FORD",
+    "manufacturer_name": "FORD MOTOR COMPANY"
+  },
+  {
+    "manufacturer_id": 976,
+    "make_id": 464,
+    "make_name": "LINCOLN",
+    "manufacturer_name": "FORD MOTOR COMPANY"
+  },
+  {
+    "manufacturer_id": 976,
+    "make_id": 464,
+    "make_name": "LINCOLN",
+    "manufacturer_name": "FORD MOTOR COMPANY"
+  },
+  {
+    "manufacturer_id": 976,
+    "make_id": 464,
+    "make_name": "LINCOLN",
+    "manufacturer_name": "FORD MOTOR COMPANY"
+  },
+  {
+    "manufacturer_id": 976,
+    "make_id": 465,
+    "make_name": "MERCURY",
+    "manufacturer_name": "FORD MOTOR COMPANY"
+  },
+  {
+    "manufacturer_id": 976,
+    "make_id": 465,
+    "make_name": "MERCURY",
+    "manufacturer_name": "FORD MOTOR COMPANY"
+  },
+  {
+    "manufacturer_id": 976,
+    "make_id": 465,
+    "make_name": "MERCURY",
+    "manufacturer_name": "FORD MOTOR COMPANY"
+  },
+  {
+    "manufacturer_id": 976,
+    "make_id": 473,
+    "make_name": "MAZDA",
+    "manufacturer_name": "FORD MOTOR COMPANY"
+  },
+  {
+    "manufacturer_id": 976,
+    "make_id": 478,
+    "make_name": "NISSAN",
+    "manufacturer_name": "FORD MOTOR COMPANY"
+  },
+  {
+    "manufacturer_id": 976,
+    "make_id": 1755,
+    "make_name": "TH!NK",
+    "manufacturer_name": "FORD MOTOR COMPANY"
+  },
+  {
+    "manufacturer_id": 976,
+    "make_id": 5807,
+    "make_name": "FORD MOTOR COMPANY OF NEW ZEALAND",
+    "manufacturer_name": "FORD MOTOR COMPANY"
+  },
+  {
+    "manufacturer_id": 978,
+    "make_id": 460,
+    "make_name": "FORD",
+    "manufacturer_name": "AUTO ALLIANCE INTERNATIONAL, USA"
+  },
+  {
+    "manufacturer_id": 978,
+    "make_id": 465,
+    "make_name": "MERCURY",
+    "manufacturer_name": "AUTO ALLIANCE INTERNATIONAL, USA"
+  },
+  {
+    "manufacturer_id": 978,
+    "make_id": 473,
+    "make_name": "MAZDA",
+    "manufacturer_name": "AUTO ALLIANCE INTERNATIONAL, USA"
+  },
+  {
+    "manufacturer_id": 979,
+    "make_id": 460,
+    "make_name": "FORD",
+    "manufacturer_name": "FORD MOTOR COMPANY, MEXICO"
+  },
+  {
+    "manufacturer_id": 979,
+    "make_id": 464,
+    "make_name": "LINCOLN",
+    "manufacturer_name": "FORD MOTOR COMPANY, MEXICO"
+  },
+  {
+    "manufacturer_id": 979,
+    "make_id": 465,
+    "make_name": "MERCURY",
+    "manufacturer_name": "FORD MOTOR COMPANY, MEXICO"
+  },
+  {
+    "manufacturer_id": 980,
+    "make_id": 461,
+    "make_name": "LATITUDE",
+    "manufacturer_name": "LATITUDE CAMPER COMPANY, LLC"
+  },
+  {
+    "manufacturer_id": 981,
+    "make_id": 462,
+    "make_name": "COUNTRY COACH",
+    "manufacturer_name": "COUNTRY COACH CORPORATION"
+  },
+  {
+    "manufacturer_id": 983,
+    "make_id": 466,
+    "make_name": "LOTUS",
+    "manufacturer_name": "LOTUS CARS LIMITED"
+  },
+  {
+    "manufacturer_id": 984,
+    "make_id": 467,
+    "make_name": "CHEVROLET",
+    "manufacturer_name": "GENERAL MOTORS LLC"
+  },
+  {
+    "manufacturer_id": 984,
+    "make_id": 468,
+    "make_name": "BUICK",
+    "manufacturer_name": "GENERAL MOTORS LLC"
+  },
+  {
+    "manufacturer_id": 984,
+    "make_id": 469,
+    "make_name": "CADILLAC",
+    "manufacturer_name": "GENERAL MOTORS LLC"
+  },
+  {
+    "manufacturer_id": 984,
+    "make_id": 470,
+    "make_name": "HOLDEN",
+    "manufacturer_name": "GENERAL MOTORS LLC"
+  },
+  {
+    "manufacturer_id": 984,
+    "make_id": 471,
+    "make_name": "OPEL",
+    "manufacturer_name": "GENERAL MOTORS LLC"
+  },
+  {
+    "manufacturer_id": 984,
+    "make_id": 472,
+    "make_name": "GMC",
+    "manufacturer_name": "GENERAL MOTORS LLC"
+  },
+  {
+    "manufacturer_id": 984,
+    "make_id": 474,
+    "make_name": "HONDA",
+    "manufacturer_name": "GENERAL MOTORS LLC"
+  },
+  {
+    "manufacturer_id": 984,
+    "make_id": 475,
+    "make_name": "ACURA",
+    "manufacturer_name": "GENERAL MOTORS LLC"
+  },
+  {
+    "manufacturer_id": 984,
+    "make_id": 509,
+    "make_name": "SUZUKI",
+    "manufacturer_name": "GENERAL MOTORS LLC"
+  },
+  {
+    "manufacturer_id": 984,
+    "make_id": 536,
+    "make_name": "PONTIAC",
+    "manufacturer_name": "GENERAL MOTORS LLC"
+  },
+  {
+    "manufacturer_id": 984,
+    "make_id": 542,
+    "make_name": "ISUZU",
+    "manufacturer_name": "GENERAL MOTORS LLC"
+  },
+  {
+    "manufacturer_id": 984,
+    "make_id": 572,
+    "make_name": "SAAB",
+    "manufacturer_name": "GENERAL MOTORS LLC"
+  },
+  {
+    "manufacturer_id": 984,
+    "make_id": 951,
+    "make_name": "HUMMER",
+    "manufacturer_name": "GENERAL MOTORS LLC"
+  },
+  {
+    "manufacturer_id": 984,
+    "make_id": 1056,
+    "make_name": "SATURN",
+    "manufacturer_name": "GENERAL MOTORS LLC"
+  },
+  {
+    "manufacturer_id": 984,
+    "make_id": 1077,
+    "make_name": "DAEWOO",
+    "manufacturer_name": "GENERAL MOTORS LLC"
+  },
+  {
+    "manufacturer_id": 984,
+    "make_id": 1124,
+    "make_name": "AMERICAN MOTORS",
+    "manufacturer_name": "GENERAL MOTORS LLC"
+  },
+  {
+    "manufacturer_id": 984,
+    "make_id": 1146,
+    "make_name": "GEO",
+    "manufacturer_name": "GENERAL MOTORS LLC"
+  },
+  {
+    "manufacturer_id": 984,
+    "make_id": 4162,
+    "make_name": "OLDSMOBILE",
+    "manufacturer_name": "GENERAL MOTORS LLC"
+  },
+  {
+    "manufacturer_id": 984,
+    "make_id": 10647,
+    "make_name": "CRUISE",
+    "manufacturer_name": "GENERAL MOTORS LLC"
+  },
+  {
+    "manufacturer_id": 984,
+    "make_id": 11949,
+    "make_name": "BRIGHTDROP",
+    "manufacturer_name": "GENERAL MOTORS LLC"
+  },
+  {
+    "manufacturer_id": 994,
+    "make_id": 476,
+    "make_name": "DODGE",
+    "manufacturer_name": "FCA US LLC"
+  },
+  {
+    "manufacturer_id": 994,
+    "make_id": 477,
+    "make_name": "CHRYSLER",
+    "manufacturer_name": "FCA US LLC"
+  },
+  {
+    "manufacturer_id": 994,
+    "make_id": 481,
+    "make_name": "MITSUBISHI",
+    "manufacturer_name": "FCA US LLC"
+  },
+  {
+    "manufacturer_id": 994,
+    "make_id": 482,
+    "make_name": "VOLKSWAGEN",
+    "manufacturer_name": "FCA US LLC"
+  },
+  {
+    "manufacturer_id": 994,
+    "make_id": 483,
+    "make_name": "JEEP",
+    "manufacturer_name": "FCA US LLC"
+  },
+  {
+    "manufacturer_id": 994,
+    "make_id": 492,
+    "make_name": "FIAT",
+    "manufacturer_name": "FCA US LLC"
+  },
+  {
+    "manufacturer_id": 994,
+    "make_id": 496,
+    "make_name": "RAM",
+    "manufacturer_name": "FCA US LLC"
+  },
+  {
+    "manufacturer_id": 994,
+    "make_id": 497,
+    "make_name": "LANCIA",
+    "manufacturer_name": "FCA US LLC"
+  },
+  {
+    "manufacturer_id": 994,
+    "make_id": 2408,
+    "make_name": "EAGLE",
+    "manufacturer_name": "FCA US LLC"
+  },
+  {
+    "manufacturer_id": 994,
+    "make_id": 2409,
+    "make_name": "PLYMOUTH",
+    "manufacturer_name": "FCA US LLC"
+  },
+  {
+    "manufacturer_id": 994,
+    "make_id": 5798,
+    "make_name": "IMPERIAL",
+    "manufacturer_name": "FCA US LLC"
+  },
+  {
+    "manufacturer_id": 994,
+    "make_id": 13647,
+    "make_name": "RENAULT",
+    "manufacturer_name": "FCA US LLC"
+  },
+  {
+    "manufacturer_id": 996,
+    "make_id": 467,
+    "make_name": "CHEVROLET",
+    "manufacturer_name": "NISSAN MOTOR COMPANY, LTD"
+  },
+  {
+    "manufacturer_id": 996,
+    "make_id": 478,
+    "make_name": "NISSAN",
+    "manufacturer_name": "NISSAN MOTOR COMPANY, LTD"
+  },
+  {
+    "manufacturer_id": 996,
+    "make_id": 480,
+    "make_name": "INFINITI",
+    "manufacturer_name": "NISSAN MOTOR COMPANY, LTD"
+  },
+  {
+    "manufacturer_id": 996,
+    "make_id": 5657,
+    "make_name": "DATSUN",
+    "manufacturer_name": "NISSAN MOTOR COMPANY, LTD"
+  },
+  {
+    "manufacturer_id": 998,
+    "make_id": 479,
+    "make_name": "QUEST MANUFACTURING",
+    "manufacturer_name": "QUEST MANUFACTURING"
+  },
+  {
+    "manufacturer_id": 998,
+    "make_id": 13512,
+    "make_name": "CONQUEST",
+    "manufacturer_name": "QUEST MANUFACTURING"
+  },
+  {
+    "manufacturer_id": 1001,
+    "make_id": 490,
+    "make_name": "MACK",
+    "manufacturer_name": "RENAULT GROUP"
+  },
+  {
+    "manufacturer_id": 1001,
+    "make_id": 2408,
+    "make_name": "EAGLE",
+    "manufacturer_name": "RENAULT GROUP"
+  },
+  {
+    "manufacturer_id": 1001,
+    "make_id": 13647,
+    "make_name": "RENAULT",
+    "manufacturer_name": "RENAULT GROUP"
+  },
+  {
+    "manufacturer_id": 1002,
+    "make_id": 476,
+    "make_name": "DODGE",
+    "manufacturer_name": "CHRYSLER DE MEXICO TOLUCA"
+  },
+  {
+    "manufacturer_id": 1002,
+    "make_id": 477,
+    "make_name": "CHRYSLER",
+    "manufacturer_name": "CHRYSLER DE MEXICO TOLUCA"
+  },
+  {
+    "manufacturer_id": 1002,
+    "make_id": 481,
+    "make_name": "MITSUBISHI",
+    "manufacturer_name": "CHRYSLER DE MEXICO TOLUCA"
+  },
+  {
+    "manufacturer_id": 1002,
+    "make_id": 482,
+    "make_name": "VOLKSWAGEN",
+    "manufacturer_name": "CHRYSLER DE MEXICO TOLUCA"
+  },
+  {
+    "manufacturer_id": 1002,
+    "make_id": 483,
+    "make_name": "JEEP",
+    "manufacturer_name": "CHRYSLER DE MEXICO TOLUCA"
+  },
+  {
+    "manufacturer_id": 1002,
+    "make_id": 492,
+    "make_name": "FIAT",
+    "manufacturer_name": "CHRYSLER DE MEXICO TOLUCA"
+  },
+  {
+    "manufacturer_id": 1002,
+    "make_id": 496,
+    "make_name": "RAM",
+    "manufacturer_name": "CHRYSLER DE MEXICO TOLUCA"
+  },
+  {
+    "manufacturer_id": 1002,
+    "make_id": 497,
+    "make_name": "LANCIA",
+    "manufacturer_name": "CHRYSLER DE MEXICO TOLUCA"
+  },
+  {
+    "manufacturer_id": 1002,
+    "make_id": 2408,
+    "make_name": "EAGLE",
+    "manufacturer_name": "CHRYSLER DE MEXICO TOLUCA"
+  },
+  {
+    "manufacturer_id": 1002,
+    "make_id": 2409,
+    "make_name": "PLYMOUTH",
+    "manufacturer_name": "CHRYSLER DE MEXICO TOLUCA"
+  },
+  {
+    "manufacturer_id": 1006,
+    "make_id": 485,
+    "make_name": "VOLVO",
+    "manufacturer_name": "VOLVO CAR USA, LLC"
+  },
+  {
+    "manufacturer_id": 1014,
+    "make_id": 486,
+    "make_name": "GOLF CARS OF ARIZONA",
+    "manufacturer_name": "GOLF CARS OF ARIZONA"
+  },
+  {
+    "manufacturer_id": 1015,
+    "make_id": 485,
+    "make_name": "VOLVO",
+    "manufacturer_name": "VOLVO GROUP NORTH AMERICA, LLC"
+  },
+  {
+    "manufacturer_id": 1015,
+    "make_id": 487,
+    "make_name": "VOLVO TRUCK",
+    "manufacturer_name": "VOLVO GROUP NORTH AMERICA, LLC"
+  },
+  {
+    "manufacturer_id": 1015,
+    "make_id": 5426,
+    "make_name": "WHITEGMC",
+    "manufacturer_name": "VOLVO GROUP NORTH AMERICA, LLC"
+  }
+]
