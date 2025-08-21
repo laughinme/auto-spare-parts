@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import AdvancedSearch from "./AdvancedSearch.jsx";
 import { QUICK_TAGS } from "../../data/constants.js";
+import ProductCard from "../product/ProductCard.jsx";
 
 export default function FYP({ role, buyerType, garage, onAddVehicle, onRemoveVehicle, products, setSelectedProduct, setRoute, onAddToCart }) {
 	const [query, setQuery] = useState("");
@@ -49,24 +50,13 @@ export default function FYP({ role, buyerType, garage, onAddVehicle, onRemoveVeh
 
 					<div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-5">
 						{filtered.map((p) => (
-							<div key={p.id} className="card">
-								<div className="aspect-[16/10] bg-slate-100">
-									<img src={p.img} alt="" className="w-full h-full object-cover" />
-								</div>
-								<div className="p-4">
-									<div className="text-sm text-slate-500">{p.vehicle}</div>
-									<div className="font-semibold mt-1 line-clamp-2">{p.title}</div>
-									<div className="text-sm text-slate-500 mt-1">{p.supplierName} • {p.condition === "new" ? "Новая" : "Б/у"}</div>
-									<div className="flex items-center justify-between mt-3">
-										<div className="text-lg font-semibold">{new Intl.NumberFormat("ru-RU").format(p.price)} ₽</div>
-										<div className="text-xs text-slate-500">Доставка ~{p.shipEtaDays} дн.</div>
-									</div>
-									<div className="flex gap-2 mt-4">
-										<button className="btn secondary" onClick={() => { setSelectedProduct(p); setRoute("product"); }}>Подробнее</button>
-										<button className="btn primary" onClick={() => onAddToCart(p)}>В корзину</button>
-									</div>
-								</div>
-							</div>
+							<ProductCard
+								key={p.id}
+								product={p}
+								variant="catalog"
+								onView={(product) => { setSelectedProduct(product); setRoute("product"); }}
+								onAddToCart={onAddToCart}
+							/>
 						))}
 					</div>
 				</div>

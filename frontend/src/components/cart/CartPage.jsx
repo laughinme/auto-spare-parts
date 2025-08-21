@@ -1,5 +1,6 @@
 import React from "react";
 import { formatPrice } from "../../utils/helpers.js";
+import ProductCard from "../product/ProductCard.jsx";
 
 export default function CartPage({ cart, productsById, setCart, onCheckout }) {
 	const total = cart.reduce((sum, line) => sum + productsById[line.productId].price * line.qty, 0);
@@ -25,18 +26,14 @@ export default function CartPage({ cart, productsById, setCart, onCheckout }) {
 					{cart.map((line) => {
 						const p = productsById[line.productId];
 						return (
-							<div key={line.productId} className="p-4 flex items-center gap-4 border-b last:border-0">
-								<img src={p.img} className="w-24 h-16 object-cover rounded-lg" />
-								<div className="flex-1">
-									<div className="font-medium line-clamp-1">{p.title}</div>
-									<div className="text-sm text-slate-500">{p.supplierName}</div>
-								</div>
-								<div className="flex items-center gap-2">
-									<input type="number" className="input w-20" value={line.qty} onChange={(e) => updateQty(p.id, parseInt(e.target.value || "1", 10))} />
-									<div className="w-24 text-right">{formatPrice(p.price * line.qty)} ₽</div>
-									<button className="btn ghost" onClick={() => remove(p.id)}>Удалить</button>
-								</div>
-							</div>
+							<ProductCard
+								key={line.productId}
+								product={p}
+								variant="cart"
+								quantity={line.qty}
+								onUpdateQuantity={updateQty}
+								onRemove={remove}
+							/>
 						);
 					})}
 				</div>

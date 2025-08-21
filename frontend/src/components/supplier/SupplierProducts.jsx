@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { getProducts } from '../../api/api.js';
 import { useDebounce } from '../../hooks/useDebounce'; 
 import { useQuery } from '@tanstack/react-query';
+import ProductCard from '../product/ProductCard.jsx';
 
 export default function SupplierProducts({ orgId, onCreateNavigate }) {
 	const [query, setQuery] = useState("");
@@ -74,26 +75,12 @@ export default function SupplierProducts({ orgId, onCreateNavigate }) {
             ) : (
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {products.map((p) => (
-                        <div key={p.id} className="card overflow-hidden">
-                            <div className="aspect-[4/3] bg-slate-100">
-                                <img 
-                                    src={p.media?.[0]?.url || "https://via.placeholder.com/400x300"} 
-                                    alt={p.brand} 
-                                    className="w-full h-full object-cover" 
-                                />
-                            </div>
-                            <div className="p-4 space-y-2">
-                                <div className="flex items-start justify-between gap-2">
-                                    <div className="font-medium line-clamp-2 min-h-[2.5rem]">{p.brand} ({p.part_number})</div>
-                                    <div className="text-sm font-semibold whitespace-nowrap">{new Intl.NumberFormat("ru-RU").format(p.price)} ₽</div>
-                                </div>
-                                <div className="text-xs text-slate-500 line-clamp-2">{p.description || "Нет описания"}</div>
-                                <div className="flex items-center justify-between pt-2">
-                                    <span className="chip">{p.condition === 'new' ? 'Новый' : 'Б/У'}</span>
-                                    <button className="btn ghost text-xs cursor-not-allowed opacity-50">Редактировать</button>
-                                </div>
-                            </div>
-                        </div>
+                        <ProductCard
+                            key={p.id}
+                            product={p}
+                            variant="supplier"
+                            onEdit={(product) => console.log('Edit product:', product)} // TODO: Implement edit functionality
+                        />
                     ))}
                 </div>
             )}
