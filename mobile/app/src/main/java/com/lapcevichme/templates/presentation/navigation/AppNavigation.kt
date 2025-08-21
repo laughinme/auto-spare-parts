@@ -1,20 +1,19 @@
 package com.lapcevichme.templates.presentation.navigation
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
+import com.example.partmarketplace.SparePartCreateScreen
 import com.lapcevichme.templates.presentation.screen.ConnectOnboardingScreen
 import com.lapcevichme.templates.presentation.screen.onboardingScreens.GreetingScreen
 import com.lapcevichme.templates.presentation.screen.onboardingScreens.RolePickerScreen
 import com.lapcevichme.templates.presentation.screen.onboardingScreens.SignInScreen
 import com.lapcevichme.templates.presentation.screen.onboardingScreens.SignUpScreen
+import com.lapcevichme.templates.presentation.screen.tabs.ChatTabScreen
+import com.lapcevichme.templates.presentation.screen.tabs.GarageTabScreen
+import com.lapcevichme.templates.presentation.screen.tabs.HomeTabScreen
 import com.lapcevichme.templates.presentation.screen.tabs.ProfileTabScreen
 
 /**
@@ -109,10 +108,10 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
         ) {
             // ... (остальной код без изменений)
             composable(Routes.HOME_TAB) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(text = "Home Screen (Placeholder)")
-                }
+                HomeTabScreen()
             }
+            composable(Routes.GARAGE_TAB) { GarageTabScreen() }
+            composable(Routes.CHAT_TAB) { ChatTabScreen() }
             composable(Routes.PROFILE_TAB) {
                 ProfileTabScreen(
                     onLogoutSuccess = {
@@ -122,6 +121,13 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
                             }
                         }
                     }
+                )
+            }
+            composable(Routes.ADD) {
+                SparePartCreateScreen(
+//                    onCreatedSuccessfully = {
+//                        navController.popBackStack()
+//                    }
                 )
             }
         }
