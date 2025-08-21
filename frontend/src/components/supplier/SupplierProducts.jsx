@@ -17,14 +17,6 @@ function EditProductModal({ product, onSave, onCancel, isLoading }) {
     
     const [errors, setErrors] = useState({});
 
-    // Блокируем прокрутку фона при открытии модального окна
-    React.useEffect(() => {
-        document.body.style.overflow = 'hidden';
-        return () => {
-            document.body.style.overflow = 'unset';
-        };
-    }, []);
-
     const validateForm = () => {
         const newErrors = {};
         
@@ -61,7 +53,7 @@ function EditProductModal({ product, onSave, onCancel, isLoading }) {
 
     return (
         <div 
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-300"
+            className="fixed inset-0 bg-opacity-20 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300"
             onClick={(e) => {
                 // Закрываем модальное окно при клике на backdrop
                 if (e.target === e.currentTarget) {
@@ -70,7 +62,7 @@ function EditProductModal({ product, onSave, onCancel, isLoading }) {
             }}
         >
             <div 
-                className="bg-white rounded-2xl shadow-2xl border border-gray-200 max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-300"
+                className="bg-white rounded-2xl shadow-2xl ring-1 ring-black ring-opacity-5 border border-gray-200 max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-300"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
@@ -242,17 +234,9 @@ function EditProductModal({ product, onSave, onCancel, isLoading }) {
 
 // Компонент модального окна подтверждения удаления
 function DeleteConfirmationModal({ deleteConfirmation, onConfirm, onCancel, isLoading }) {
-    // Блокируем прокрутку фона при открытии модального окна
-    React.useEffect(() => {
-        document.body.style.overflow = 'hidden';
-        return () => {
-            document.body.style.overflow = 'unset';
-        };
-    }, []);
-
     return (
         <div 
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-300"
+            className="fixed inset-0  bg-opacity-20 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300"
             onClick={(e) => {
                 // Закрываем модальное окно при клике на backdrop
                 if (e.target === e.currentTarget) {
@@ -261,7 +245,7 @@ function DeleteConfirmationModal({ deleteConfirmation, onConfirm, onCancel, isLo
             }}
         >
             <div 
-                className="bg-white rounded-2xl shadow-2xl border border-gray-200 max-w-md w-full p-6 transform animate-in zoom-in-95 duration-300"
+                className="bg-white rounded-2xl shadow-2xl ring-1 ring-black ring-opacity-5 border border-gray-200 max-w-md w-full p-6 transform animate-in zoom-in-95 duration-300"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="flex items-center gap-3 mb-4">
