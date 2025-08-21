@@ -23,7 +23,6 @@ async def get_org_product(
     _: Annotated[User, Depends(auth_user)],
     svc: Annotated[ProductService, Depends(get_product_service)],
 ):
-    """Get product details in organization context"""
     product = await svc.get_product(product_id)
     if product is None or product.org_id != org_id:
         raise HTTPException(404, 'Product not found')
@@ -42,7 +41,6 @@ async def patch_org_product(
     _: Annotated[User, Depends(auth_user)],
     svc: Annotated[ProductService, Depends(get_product_service)],
 ):
-    """Partially update product"""
     product = await svc.get_product(product_id)
     if product is None or product.org_id != org_id:
         raise HTTPException(404, 'Product not found')
@@ -61,7 +59,6 @@ async def delete_org_product(
     _: Annotated[User, Depends(auth_user)],
     svc: Annotated[ProductService, Depends(get_product_service)],
 ):
-    """Delete product"""
     product = await svc.get_product(product_id)
     if product is None or product.org_id != org_id:
         raise HTTPException(404, 'Product not found')
