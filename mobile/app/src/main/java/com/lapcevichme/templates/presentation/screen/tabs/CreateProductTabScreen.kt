@@ -1,4 +1,4 @@
-package com.lapcevichme.templates.presentation.screen
+package com.lapcevichme.templates.presentation.screen.tabs
 
 import android.content.res.Configuration
 import androidx.compose.foundation.border

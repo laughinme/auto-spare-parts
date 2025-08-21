@@ -6,7 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import com.lapcevichme.templates.presentation.screen.ConnectOnboardingScreen // Убедись, что импорт есть
-import com.lapcevichme.templates.presentation.screen.SparePartCreateScreen
+import com.lapcevichme.templates.presentation.screen.tabs.SparePartCreateScreen
 import com.lapcevichme.templates.presentation.screen.onboardingScreens.GreetingScreen
 import com.lapcevichme.templates.presentation.screen.onboardingScreens.RolePickerScreen
 import com.lapcevichme.templates.presentation.screen.onboardingScreens.SignInScreen
