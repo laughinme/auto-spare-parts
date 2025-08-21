@@ -61,8 +61,12 @@ export default function ProductCard({
   onAddToCart, // для добавления в корзину
   onEdit,     // для редактирования (поставщик)
   onDelete,   // для удаления товара (поставщик)
+  onPublish,  // для публикации товара (поставщик)
+  onUnpublish, // для снятия с публикации товара (поставщик)
   isDeleting = false, // состояние загрузки при удалении
   isEditing = false, // состояние загрузки при редактировании
+  isPublishing = false, // состояние загрузки при публикации
+  isUnpublishing = false, // состояние загрузки при снятии с публикации
   onUpdateQuantity, // для изменения количества в корзине
   onRemove,   // для удаления из корзины
   className = ""
@@ -188,6 +192,25 @@ export default function ProductCard({
             }`}>
               {product.condition === 'new' ? '✨ Новый' : '🔧 Б/У'}
             </span>
+            {/* Индикатор статуса публикации с анимацией */}
+            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border transition-all duration-500 transform ${
+              product.status === 'active' 
+                ? 'bg-emerald-100 text-emerald-800 border-emerald-200 shadow-emerald-200/50 shadow-lg' 
+                : product.status === 'draft'
+                  ? 'bg-gray-100 text-gray-800 border-gray-200'
+                  : 'bg-yellow-100 text-yellow-800 border-yellow-200'
+            } ${isPublishing || isUnpublishing ? 'animate-pulse scale-105' : ''}`}>
+              {isPublishing 
+                ? '🔄 Публикуется...' 
+                : isUnpublishing 
+                  ? '🔄 Скрывается...'
+                  : product.status === 'active' 
+                    ? '🌐 Опубликован' 
+                    : product.status === 'draft' 
+                      ? '📝 Черновик'
+                      : '⏸️ Не активен'
+              }
+            </span>
             {/* Delete button - appears on hover */}
             {onDelete && (
               <button 
@@ -218,10 +241,27 @@ export default function ProductCard({
               </button>
             )}
           </div>
-          <div className="absolute top-3 left-3">
+          <div className="absolute top-3 left-3 flex flex-col gap-2">
             <div className="bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg">
               <StarRating rating={product.rating || 0} totalReviews={product.reviewCount || 0} size="sm" />
             </div>
+            
+            {/* Быстрая публикация для черновиков */}
+            {product.status === 'draft' && onPublish && (
+              <button 
+                className="transition-all duration-300 transform text-white p-2 rounded-full shadow-lg hover:shadow-xl bg-emerald-500 hover:bg-emerald-600 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onPublish && onPublish(product);
+                }}
+                title="Быстрая публикация"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+                  <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"/>
+                </svg>
+              </button>
+            )}
           </div>
         </div>
         <div className="p-5">
@@ -241,77 +281,164 @@ export default function ProductCard({
             </p>
           )}
           
-          <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+          <div className="flex flex-col gap-3 pt-3 border-t border-gray-100">
+            {/* Статус наличия */}
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-green-400 rounded-full"></div>
               <span className="text-xs text-gray-600 font-medium">В наличии</span>
             </div>
-            <div className="flex items-center gap-2">
-              <button 
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-                  isEditing 
-                    ? 'text-gray-400 bg-gray-50 cursor-not-allowed' 
-                    : 'text-blue-600 hover:text-blue-700 hover:bg-blue-50'
-                }`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (!isEditing) {
-                    onEdit && onEdit(product);
-                  }
-                }}
-                disabled={isEditing}
-              >
-                {isEditing ? (
-                  <>
-                    <svg className="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Редактируется...
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
-                    </svg>
-                    Редактировать
-                  </>
-                )}
-              </button>
-              {onDelete && (
+            
+            {/* Кнопки управления */}
+            <div className="grid grid-cols-2 gap-2">
+              {/* Левый ряд кнопок - Редактировать и Удалить */}
+              <div className="flex flex-col gap-1">
                 <button 
                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-                    isDeleting 
+                    isEditing 
                       ? 'text-gray-400 bg-gray-50 cursor-not-allowed' 
-                      : 'text-red-600 hover:text-red-700 hover:bg-red-50'
+                      : 'text-blue-600 hover:text-blue-700 hover:bg-blue-50'
                   }`}
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (!isDeleting) {
-                      onDelete && onDelete(product);
+                    if (!isEditing) {
+                      onEdit && onEdit(product);
                     }
                   }}
-                  disabled={isDeleting}
-                  title={isDeleting ? "Удаление..." : "Удалить товар"}
+                  disabled={isEditing}
+                  title={isEditing ? "Редактируется..." : "Редактировать товар"}
                 >
-                  {isDeleting ? (
+                  {isEditing ? (
                     <>
                       <svg className="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
-                      Удаление...
+                      Редактируется...
                     </>
                   ) : (
                     <>
                       <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd"/>
+                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
                       </svg>
-                      Удалить
+                      Редактировать
                     </>
                   )}
                 </button>
-              )}
+                
+                {onDelete && (
+                  <button 
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                      isDeleting 
+                        ? 'text-gray-400 bg-gray-50 cursor-not-allowed' 
+                        : 'text-red-600 hover:text-red-700 hover:bg-red-50'
+                    }`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!isDeleting) {
+                        onDelete && onDelete(product);
+                      }
+                    }}
+                    disabled={isDeleting}
+                    title={isDeleting ? "Удаление..." : "Удалить товар"}
+                  >
+                    {isDeleting ? (
+                      <>
+                        <svg className="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Удаление...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd"/>
+                        </svg>
+                        Удалить
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+              
+              {/* Правый ряд кнопок - Публикация/Снятие с публикации */}
+              <div className="flex flex-col gap-1">
+                {product.status === 'active' ? (
+                  // Кнопка снятия с публикации (если товар опубликован)
+                  onUnpublish && (
+                    <button 
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                        isUnpublishing 
+                          ? 'text-gray-400 bg-gray-50 cursor-not-allowed' 
+                          : 'text-orange-600 hover:text-orange-700 hover:bg-orange-50'
+                      }`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!isUnpublishing) {
+                          onUnpublish && onUnpublish(product);
+                        }
+                      }}
+                      disabled={isUnpublishing}
+                      title={isUnpublishing ? "Снимается с публикации..." : "Снять с публикации"}
+                    >
+                      {isUnpublishing ? (
+                        <>
+                          <svg className="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Снимается...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clipRule="evenodd"/>
+                            <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z"/>
+                          </svg>
+                          Скрыть
+                        </>
+                      )}
+                    </button>
+                  )
+                ) : (
+                  // Кнопка публикации (если товар не опубликован)
+                  onPublish && (
+                    <button 
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                        isPublishing 
+                          ? 'text-gray-400 bg-gray-50 cursor-not-allowed' 
+                          : 'text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50'
+                      }`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!isPublishing) {
+                          onPublish && onPublish(product);
+                        }
+                      }}
+                      disabled={isPublishing}
+                      title={isPublishing ? "Публикуется..." : "Опубликовать в каталоге"}
+                    >
+                      {isPublishing ? (
+                        <>
+                          <svg className="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Публикуется...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+                            <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"/>
+                          </svg>
+                          Опубликовать
+                        </>
+                      )}
+                    </button>
+                  )
+                )}
+              </div>
             </div>
           </div>
         </div>

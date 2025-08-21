@@ -25,12 +25,16 @@ export default function AuthPage() {
         if (!canSubmit) return;
 
         const credentials = { email: email.trim(), password };
+        
+        // Добавляем роль при регистрации
+        if (mode === 'register' && selectedRole) {
+            credentials.role = selectedRole;
+        }
 
         try {
             if (mode === 'login') {
                 const loginResult = await login(credentials);
-                // После логина нужно подождать, пока загрузится профиль пользователя
-                // Перенаправление произойдет автоматически в App.jsx через useEffect с ролью
+                // После логина перенаправление произойдет автоматически в App.jsx через useEffect с ролью
                 console.log('Login successful:', loginResult);
             } else if (mode === 'register') {
                 const reg = await register(credentials);
@@ -38,11 +42,11 @@ export default function AuthPage() {
                 if (newAccessToken) {
                   setAxiosAccessToken(newAccessToken);
                 }
+                // При регистрации используем выбранную роль для перенаправления
                 if (selectedRole === 'buyer') {
                     window.__setRoute && window.__setRoute('fyp');
-                }
-                if (selectedRole === 'supplier') {
-                  window.__setRoute && window.__setRoute('onboarding:supplier_stripe');
+                } else if (selectedRole === 'supplier') {
+                    window.__setRoute && window.__setRoute('onboarding:supplier_stripe');
                 }
             }
         } catch (err) {

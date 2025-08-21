@@ -35,3 +35,15 @@ export async function updateProduct({ orgId, productId, productData }) {
 export async function deleteProduct({ orgId, productId }) {
   await apiProtected.delete(`/organizations/${orgId}/${productId}/`);
 }
+
+// Функция для публикации продукта (делает его видимым в публичном каталоге)
+export async function publishProduct({ orgId, productId }) {
+  const response = await apiProtected.post(`/organizations/${orgId}/${productId}/publish`);
+  return response.data;
+}
+
+// Функция для снятия продукта с публикации (скрывает из публичного каталога)
+export async function unpublishProduct({ orgId, productId }) {
+  const response = await apiProtected.post(`/organizations/${orgId}/${productId}/unpublish`);
+  return response.data;
+}
