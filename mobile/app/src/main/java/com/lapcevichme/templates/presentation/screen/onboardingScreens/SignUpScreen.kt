@@ -43,7 +43,6 @@ fun SignUpScreen(
     val username by viewModel.username.collectAsStateWithLifecycle()
     val email by viewModel.email.collectAsStateWithLifecycle()
     val password by viewModel.password.collectAsStateWithLifecycle()
-    val username by viewModel.username.collectAsStateWithLifecycle() // Добавлено
     val authState by viewModel.authState.collectAsStateWithLifecycle()
     val emailError by viewModel.emailError.collectAsStateWithLifecycle()
     val passwordError by viewModel.passwordError.collectAsStateWithLifecycle()

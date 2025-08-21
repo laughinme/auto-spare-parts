@@ -9,51 +9,35 @@ import javax.inject.Inject
 @HiltViewModel
 class SparePartCreateViewModel @Inject constructor() : ViewModel() {
 
-    //Название детали
-    private val _partName = MutableStateFlow<String?>(null)
-    val partName = _partName.asStateFlow()
+    //Марка (бренд) детали
+    private val _brand = MutableStateFlow<String?>(null)
+    val brand = _brand.asStateFlow()
 
-    fun onNameChanged(name: String){
-        _partName.value = name
+    fun onBrandChanged(brand: String) {
+        _brand.value = brand
+    }
+
+    //Номер детали
+    private val _partNumber = MutableStateFlow<String?>(null)
+    val partNumber = _partNumber.asStateFlow()
+
+    fun onPartNumberChanged(partNumber: String) {
+        _partNumber.value = partNumber
     }
 
     //Состояние детали
     private val _selectedCondition = MutableStateFlow<String?>(null)
     val selectedCondition = _selectedCondition.asStateFlow()
 
-    fun onConditionChanged(condition: String){
+    fun onConditionChanged(condition: String) {
         _selectedCondition.value = condition
-    }
-
-    //Марка машина для детали
-    private val _make = MutableStateFlow<String?>(null)
-    val make = _make.asStateFlow()
-
-    fun onMakeChanged(make: String){
-        _make.value = make
-    }
-
-    //Модель машины для детали
-    private val _model = MutableStateFlow<String?>(null)
-    val model = _model.asStateFlow()
-
-    fun onModelChanged(model: String){
-        _model.value = model
-    }
-
-    //Год выпуска машины для детали
-    private val _year = MutableStateFlow<String?>(null)
-    val year = _year.asStateFlow()
-
-    fun onYearChanged(year: String){
-        _year.value = year
     }
 
     //цена детали
     private val _price = MutableStateFlow<String?>(null)
     val price = _price.asStateFlow()
 
-    fun onPriceChanged(price: String){
+    fun onPriceChanged(price: String) {
         _price.value = price
     }
 
@@ -61,8 +45,24 @@ class SparePartCreateViewModel @Inject constructor() : ViewModel() {
     private val _description = MutableStateFlow<String?>(null)
     val description = _description.asStateFlow()
 
-    fun onDescriptionChanged(description: String){
+    fun onDescriptionChanged(description: String) {
         _description.value = description
+    }
+
+    //Статус детали
+    private val _status = MutableStateFlow<String?>("draft") // Default to "draft"
+    val status = _status.asStateFlow()
+
+    fun onStatusChanged(status: String) {
+        _status.value = status
+    }
+
+    fun onCancelClicked(){
+        //TODO Сделать закрытие экрана добавления детали и переход на HomeTabScreen
+    }
+
+    fun onCreateClicked() {
+        //TODO Сделать создание детали и переход на HomeTabScreen
     }
 
 }

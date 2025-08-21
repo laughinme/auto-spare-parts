@@ -19,13 +19,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowDropDown
+//import androidx.compose.material.icons.filled.ArrowDropDown // No longer used directly here, but SimpleDropdownMenu might use it if kept for other purposes
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenuItem
+//import androidx.compose.material3.DropdownMenuItem // No longer used directly here
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
+//import androidx.compose.material3.ExposedDropdownMenuBox // No longer used directly here
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -37,9 +37,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+//import androidx.compose.runtime.mutableStateOf // No longer used directly here
+//import androidx.compose.runtime.remember // No longer used directly here
+//import androidx.compose.runtime.setValue // No longer used directly here
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.PathEffect
@@ -59,16 +59,14 @@ import com.lapcevichme.templates.ui.theme.PreviewTheme
 fun SparePartCreateScreen(
     viewModel: SparePartCreateViewModel = hiltViewModel()
 ) {
-    val partName by viewModel.partName.collectAsStateWithLifecycle()
-    val conditionOptions = listOf("Новая", "Б/У")
+    val brand by viewModel.brand.collectAsStateWithLifecycle()
+    val partNumber by viewModel.partNumber.collectAsStateWithLifecycle()
+    val conditionOptions = listOf("new", "used")
     val selectedCondition by viewModel.selectedCondition.collectAsStateWithLifecycle()
-
-    val make by viewModel.make.collectAsStateWithLifecycle()
-    val model by viewModel.model.collectAsStateWithLifecycle()
-    val year by viewModel.year.collectAsStateWithLifecycle()
 
     val price by viewModel.price.collectAsStateWithLifecycle()
     val description by viewModel.description.collectAsStateWithLifecycle()
+    // val status by viewModel.status.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -88,9 +86,16 @@ fun SparePartCreateScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item { BasicInfoSection(partName,  { viewModel.onNameChanged(it!!) }, selectedCondition,{ viewModel.onConditionChanged(it!!) }, conditionOptions) }
-            item { PhotosSection() }
-            item { CompatibilitySection(make, { viewModel.onMakeChanged(it!!) }, model, { viewModel.onModelChanged(it!!) }, year, { viewModel.onYearChanged(it!!) }) }
+            item { BasicInfoSection(
+                brand = brand,
+                onBrandChange = { viewModel.onBrandChanged(it!!) },
+                partNumber = partNumber,
+                onPartNumberChange = { viewModel.onPartNumberChanged(it!!) },
+                selectedCondition = selectedCondition,
+                onConditionSelected = { viewModel.onConditionChanged(it!!) },
+                conditionOptions = conditionOptions
+            ) }
+            item { PhotosSection() } // Assuming photos are still needed
             item { PriceAndDescriptionSection(price, { viewModel.onPriceChanged(it!!) }, description, { viewModel.onDescriptionChanged(it!!) }) }
             item { ActionButtons() }
         }
@@ -99,18 +104,29 @@ fun SparePartCreateScreen(
 
 @Composable
 fun BasicInfoSection(
-    partName: String?,
-    onPartNameChange: (String?) -> Unit,
+    brand: String?,
+    onBrandChange: (String?) -> Unit,
+    partNumber: String?,
+    onPartNumberChange: (String?) -> Unit,
     selectedCondition: String?,
     onConditionSelected: (String?) -> Unit,
     conditionOptions: List<String>
 ) {
     SectionCard(title = "1. Основная информация") {
         OutlinedTextField(
-            value = partName ?: "",
-            onValueChange = onPartNameChange,
-            label = { Text("Название детали") },
-            placeholder = { Text("Например, Передний бампер") },
+            value = brand ?: "",
+            onValueChange = onBrandChange,
+            label = { Text("Бренд") },
+            placeholder = { Text("Например, Toyota") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        OutlinedTextField(
+            value = partNumber ?: "",
+            onValueChange = onPartNumberChange,
+            label = { Text("Номер детали") },
+            placeholder = { Text("Например, 12345-67890") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
         )
@@ -131,7 +147,7 @@ fun BasicInfoSection(
                         selected = (option == selectedCondition),
                         onClick = { onConditionSelected(option) }
                     )
-                    Text(text = option, modifier = Modifier.padding(start = 4.dp))
+                    Text(text = option, modifier = Modifier.padding(start = 4.dp)) // Displaying condition options like "new", "used"
                 }
             }
         }
@@ -139,7 +155,7 @@ fun BasicInfoSection(
 }
 
 @Composable
-fun PhotosSection() {
+fun PhotosSection() { // Assuming this section remains as is for now
     SectionCard(title = "2. Фотографии") {
         val stroke = Stroke(width = 4f,
             pathEffect = PathEffect.dashPathEffect(floatArrayOf(20f, 10f), 0f)
@@ -169,20 +185,6 @@ fun PhotosSection() {
     }
 }
 
-@Composable
-fun CompatibilitySection(
-    make: String?, onMakeChange: (String?) -> Unit,
-    model: String?, onModelChange: (String?) -> Unit,
-    year: String?, onYearChange: (String?) -> Unit
-) {
-    SectionCard(title = "3. Совместимость") {
-        SimpleDropdownMenu("Марка", listOf("Toyota", "Nissan", "Lexus"), make ?: "", onMakeChange)
-        Spacer(modifier = Modifier.height(8.dp))
-        SimpleDropdownMenu("Модель", listOf("Camry", "Corolla", "Land Cruiser"), model ?: "", onModelChange)
-        Spacer(modifier = Modifier.height(8.dp))
-        SimpleDropdownMenu("Год", listOf("2023", "2022", "2021"), year ?: "", onYearChange)
-    }
-}
 
 @Composable
 fun PriceAndDescriptionSection(
@@ -191,12 +193,12 @@ fun PriceAndDescriptionSection(
     description: String?,
     onDescriptionChange: (String?) -> Unit
 ) {
-    SectionCard(title = "4. Цена и описание") {
+    SectionCard(title = "3. Цена и описание") { // Updated section number
         OutlinedTextField(
             value = price ?: "",
             onValueChange = onPriceChange,
             label = { Text("Цена") },
-            leadingIcon = { Text("₽") },
+            leadingIcon = { Text("₽") }, // Consider if currency symbol is fixed or part of price
             trailingIcon = { Text("RUB") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier.fillMaxWidth(),
@@ -224,7 +226,7 @@ fun ActionButtons() {
         OutlinedButton(onClick = { /* TODO: Handle cancel */ }) {
             Text("Отмена")
         }
-        Button(onClick = { /* TODO: Handle publish */ }) {
+        Button(onClick = { /* TODO: Handle publish based on new schema (including status: 'draft') */ }) {
             Text("Опубликовать")
         }
     }
@@ -246,52 +248,15 @@ fun SectionCard(title: String, content: @Composable ColumnScope.() -> Unit) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SimpleDropdownMenu(label: String, items: List<String>, selectedItem: String, onItemSelected: (String) -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
 
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = !expanded }
-    ) {
-        OutlinedTextField(
-            value = selectedItem,
-            onValueChange = {},
-            readOnly = true,
-            label = { Text(label) },
-            trailingIcon = {
-                Icon(Icons.Default.ArrowDropDown, contentDescription = "Dropdown")
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .menuAnchor()
-        )
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            items.forEach { item ->
-                DropdownMenuItem(
-                    text = { Text(item) },
-                    onClick = {
-                        onItemSelected(item)
-                        expanded = false
-                    }
-                )
-            }
-        }
-    }
-}
-
-@Preview(showBackground = true, name = "Light Theme ChatCard")
+@Preview(showBackground = true, name = "Light Theme SparePartCreateScreen")
 @Preview(
     showBackground = true,
     uiMode = Configuration.UI_MODE_NIGHT_YES,
-    name = "Dark Theme ChatCard"
+    name = "Dark Theme SparePartCreateScreen"
 )
 @Composable
-fun ChatCardPreview() {
+fun SparePartCreateScreenPreview() { // Renamed preview function for clarity
     PreviewTheme {
         SparePartCreateScreen()
     }
