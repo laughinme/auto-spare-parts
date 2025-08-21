@@ -4,7 +4,7 @@ import { useDebounce } from '../../hooks/useDebounce';
 import { useQuery } from '@tanstack/react-query';
 import ProductCard from '../product/ProductCard.jsx';
 
-export default function SupplierProducts({ orgId, onCreateNavigate }) {
+export default function SupplierProducts({ orgId, onCreateNavigate, onProductView }) {
 	const [query, setQuery] = useState("");
 	const debouncedQuery = useDebounce(query, 500);
 
@@ -79,6 +79,10 @@ export default function SupplierProducts({ orgId, onCreateNavigate }) {
                             key={p.id}
                             product={p}
                             variant="supplier"
+                            onView={(product) => {
+                                console.log('SupplierProducts: Product clicked:', product);
+                                onProductView && onProductView(product);
+                            }}
                             onEdit={(product) => console.log('Edit product:', product)} // TODO: Implement edit functionality
                         />
                     ))}

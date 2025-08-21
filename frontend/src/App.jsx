@@ -16,13 +16,14 @@ import AuthPage from "./components/auth/AuthPage.jsx";
 import { MOCK_PRODUCTS } from "./data/mockProducts.js";
 import { SUPPLIER_SELF_ID } from "./data/constants.js";
 import { createOrdersFromCart } from "./utils/helpers.js";
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+// import reactLogo from './assets/react.svg'
+// import viteLogo from '/vite.svg'
 
 function App() {
   const { user, isUserLoading, logout } = useAuth();
   
   const [route, setRoute] = useState("fyp");
+  const [previousRoute, setPreviousRoute] = useState("fyp");
   const [role, setRole] = useState(null);
   const [hasInitializedRole, setHasInitializedRole] = useState(false);
   const [buyerType] = useState(null);
@@ -128,7 +129,7 @@ function App() {
       console.log('Supplier route protection activated for route:', route);
       
       // Роуты покупателя, с которых нужно перенаправить поставщика
-      const buyerOnlyRoutes = ["fyp", "product", "cart"];
+      const buyerOnlyRoutes = ["fyp", "cart"];
       
       if (buyerOnlyRoutes.includes(route)) {
         console.log('Redirecting supplier from buyer route:', route, 'to dashboard');
@@ -162,13 +163,24 @@ function App() {
   };
   const removeVehicle = (value) => setGarage((prev) => prev.filter((x) => x !== value));
 
-  const handleAddToCart = (product) => {
+  // Умная навигация с отслеживанием предыдущего роута
+  const navigateTo = (newRoute) => {
+    console.log('App: navigateTo called, current route:', route, '-> new route:', newRoute);
+    setPreviousRoute(route);
+    setRoute(newRoute);
+  };
+
+  const navigateBack = () => {
+    setRoute(previousRoute);
+  };
+
+  const handleAddToCart = (product, quantity = 1) => {
     setCart((prev) => {
       const existing = prev.find((i) => i.productId === product.id);
       if (existing) {
-        return prev.map((i) => (i.productId === product.id ? { ...i, qty: i.qty + 1 } : i));
+        return prev.map((i) => (i.productId === product.id ? { ...i, qty: i.qty + quantity } : i));
       }
-      return [...prev, { productId: product.id, qty: 1 }];
+      return [...prev, { productId: product.id, qty: quantity }];
     });
   };
 
@@ -264,9 +276,10 @@ function App() {
         {route === "product" && selectedProduct && (
           <ProductDetail
             product={selectedProduct}
-            onAdd={() => handleAddToCart(selectedProduct)}
-            onBack={() => setRoute("fyp")}
-            onChat={() => setRoute("cart")}
+            onAdd={role !== "supplier" ? (product, quantity) => handleAddToCart(product, quantity) : null}
+            onBack={navigateBack}
+            onChat={role !== "supplier" ? () => navigateTo("cart") : null}
+            isSupplierView={role === "supplier"}
           />
         )}
 
@@ -283,7 +296,7 @@ function App() {
         )}
 
         {route === "order" && activeOrder && (
-          <OrderPage order={activeOrder} onBack={() => setRoute("fyp")} onSend={(t) => sendChatMessage(activeOrder.id, role === "buyer" ? "buyer" : "seller", t)} />
+          <OrderPage order={activeOrder} onBack={() => navigateBack()} onSend={(t) => sendChatMessage(activeOrder.id, role === "buyer" ? "buyer" : "seller", t)} />
         )}
 
         {route === "supplier:dashboard" && (
@@ -300,7 +313,13 @@ function App() {
             products={products}
             setProducts={setProducts}
             supplierProfile={supplierProfile}
-            onCreateNavigate={() => setRoute("supplier:products:new")}
+            onCreateNavigate={() => navigateTo("supplier:products:new")}
+            onProductView={(product) => { 
+              console.log('App: onProductView called with product:', product);
+              setSelectedProduct(product); 
+              console.log('App: navigating to product detail');
+              navigateTo("product"); 
+            }}
           />
         )}
 
@@ -308,7 +327,7 @@ function App() {
           <SupplierProductCreate
             orgId={user?.organization?.id}
             supplierProfile={supplierProfile}
-            onCancel={() => setRoute("supplier:products")}
+            onCancel={() => navigateTo("supplier:products")}
             onCreate={(payload) => {
               const id = `p${Date.now()}`;
               const newProd = {
@@ -325,7 +344,7 @@ function App() {
                 img: payload.img, // object URL preview; in real app would be backend URL
               };
               setProducts((prev) => [newProd, ...prev]);
-              setRoute("supplier:products");
+              navigateTo("supplier:products");
             }}
           />
         )}

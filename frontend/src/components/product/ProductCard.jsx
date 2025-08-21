@@ -164,7 +164,13 @@ export default function ProductCard({
   // Рендер варианта для поставщика
   if (variant === "supplier") {
     return (
-      <div className={`bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:border-gray-200 transition-all duration-300 group ${className}`}>
+      <div 
+        className={`bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:border-gray-200 transition-all duration-300 group cursor-pointer ${className}`}
+        onClick={() => {
+          console.log('ProductCard: supplier variant clicked, onView:', !!onView, 'product:', product);
+          onView && onView(product);
+        }}
+      >
         <div className="relative aspect-[4/3] bg-gradient-to-br from-gray-50 to-gray-100">
           <img 
             src={getProductImage()} 
@@ -210,7 +216,10 @@ export default function ProductCard({
             </div>
             <button 
               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
-              onClick={() => onEdit && onEdit(product)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit && onEdit(product);
+              }}
             >
               <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
@@ -225,7 +234,10 @@ export default function ProductCard({
 
   // Рендер варианта для каталога (по умолчанию)
   return (
-    <div className={`bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden hover:shadow-xl hover:scale-[1.02] transition-all duration-300 group ${className}`}>
+    <div 
+      className={`bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden hover:shadow-xl hover:scale-[1.02] transition-all duration-300 group cursor-pointer ${className}`}
+      onClick={() => onView && onView(product)}
+    >
       <div className="relative aspect-[16/10] bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
         <img 
           src={getProductImage()} 
@@ -259,13 +271,19 @@ export default function ProductCard({
           <div className="flex gap-2">
             <button 
               className="bg-white/90 backdrop-blur-sm text-gray-700 px-4 py-2 rounded-xl font-medium hover:bg-white transition-colors shadow-lg"
-              onClick={() => onView && onView(product)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onView && onView(product);
+              }}
             >
               👁️ Подробнее
             </button>
             <button 
               className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-xl font-medium hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg"
-              onClick={() => onAddToCart && onAddToCart(product)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddToCart && onAddToCart(product);
+              }}
             >
               🛒 В корзину
             </button>
@@ -314,13 +332,19 @@ export default function ProductCard({
           <div className="flex gap-2">
             <button 
               className="px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
-              onClick={() => onView && onView(product)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onView && onView(product);
+              }}
             >
               Подробнее
             </button>
             <button 
               className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 rounded-xl transition-all shadow-sm hover:shadow-md"
-              onClick={() => onAddToCart && onAddToCart(product)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddToCart && onAddToCart(product);
+              }}
             >
               В корзину
             </button>
