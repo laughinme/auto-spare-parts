@@ -3,6 +3,7 @@ from fastapi import APIRouter
 
 def get_vehicles_router() -> APIRouter:
     from .makes import get_makes_router
+    from .models import get_models_router
     
     router = APIRouter(
         prefix='/vehicles',
@@ -11,5 +12,6 @@ def get_vehicles_router() -> APIRouter:
     )
 
     router.include_router(get_makes_router())
+    router.include_router(get_models_router())
     
     return router
