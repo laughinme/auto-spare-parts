@@ -2,12 +2,14 @@ package com.lapcevichme.templates.data.di
 
 import com.lapcevichme.templates.data.repository.AppStripeRepositoryImpl
 import com.lapcevichme.templates.data.repository.AuthRepositoryImpl
+import com.lapcevichme.templates.data.repository.GarageRepositoryImpl
 import com.lapcevichme.templates.data.repository.GeographyRepositoryImpl
 import com.lapcevichme.templates.data.repository.OrganizationRepositoryImpl
 import com.lapcevichme.templates.data.repository.ProductRepositoryImpl
 import com.lapcevichme.templates.data.repository.UserRepositoryImpl
 import com.lapcevichme.templates.domain.repository.AppStripeRepository
 import com.lapcevichme.templates.domain.repository.AuthRepository
+import com.lapcevichme.templates.domain.repository.GarageRepository
 import com.lapcevichme.templates.domain.repository.GeographyRepository
 import com.lapcevichme.templates.domain.repository.OrganizationRepository
 import com.lapcevichme.templates.domain.repository.ProductRepository
@@ -56,4 +58,11 @@ abstract class RepositoryModule {
     abstract fun bindOrganizationRepository(
         organizationRepositoryImpl: OrganizationRepositoryImpl
     ): OrganizationRepository
+
+
+    @Binds
+    @Singleton
+    abstract fun bindGarageRepository(
+        garageRepositoryImpl: GarageRepositoryImpl
+    ): GarageRepository
 }

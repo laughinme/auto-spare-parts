@@ -109,17 +109,23 @@ interface ApiService {
     ): Response<VehicleModelDto>
 
     /**
-     * Получение списка транспортных средств в гараже пользователя.
+     * Получение списка транспортных средств в гараже пользователя с курсорной пагинацией.
      * Требуется авторизация.
-     * @param search Опциональная строка для поиска.
-     * @param limit Опциональное ограничение количества возвращаемых элементов (по умолчанию 50).
-     * @return Список моделей транспортных средств.
+     * @param limit Максимальное количество элементов (по умолчанию 20).
+     * @param cursor Курсор для следующей страницы.
+     * @param search Опциональная строка для поиска (по марке, модели, типу ТС, комментарию).
+     * @param makeId Опциональный фильтр по ID марки.
+     * @param modelId Опциональный фильтр по ID модели.
+     * @return Страница моделей транспортных средств с курсором.
      */
     @GET("/api/v1/users/me/garage/vehicles")
     suspend fun listVehiclesInGarage(
+        @Query("limit") limit: Int? = 20,
+        @Query("cursor") cursor: String? = null,
         @Query("search") search: String? = null,
-        @Query("limit") limit: Int? = 50
-    ): Response<List<VehicleModelDto>>
+        @Query("make_id") makeId: Int? = null,
+        @Query("model_id") modelId: Int? = null
+    ): Response<CursorPageDto<VehicleModelDto>>
 
     @POST("/api/v1/organizations/account")
     suspend fun createStripeAccount(): Response<StripeAccountResponseDto>

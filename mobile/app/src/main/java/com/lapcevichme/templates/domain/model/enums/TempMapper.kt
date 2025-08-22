@@ -27,21 +27,6 @@ fun ProductCreate.toDto(): ProductCreateDto {
 }
 
 // Простое присваивание. Gson сделает всю работу.
-fun ProductDto.toDomain(): ProductModel {
-    return ProductModel(
-        id = this.id,
-        organization = this.organization?.toDomain(), // <-- ИЗМЕНЕНО НА SAFE CALL
-        createdAt = this.createdAt,
-        updatedAt = this.updatedAt,
-        brand = this.brand,
-        partNumber = this.partNumber,
-        price = this.price,
-        condition = this.condition, // <-- Просто присваиваем enum
-        description = this.description,
-        status = this.status, // <-- Просто присваиваем enum
-        media = this.media.map { it.toDomain() }
-    )
-}
 
 fun MediaDto.toDomain(): MediaModel {
     return MediaModel(

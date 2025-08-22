@@ -1,6 +1,7 @@
 package com.lapcevichme.templates.data.remote.dto
 
 import com.google.gson.annotations.SerializedName
+import com.lapcevichme.templates.domain.model.CursorPage // Added import
 import com.lapcevichme.templates.domain.model.garage.MakeModel
 import com.lapcevichme.templates.domain.model.garage.VehicleCreate
 import com.lapcevichme.templates.domain.model.garage.VehicleModel
@@ -45,6 +46,12 @@ data class VehicleCreateDto( // Corresponds to VehicleCreate in OpenAPI
     @SerializedName("comment") val comment: String?
 )
 
+// Generic DTO for cursor-based pagination responses
+data class CursorPageDto<T>(
+    @SerializedName("items") val items: List<T>,
+    @SerializedName("next_cursor") val nextCursor: String?
+)
+
 // Mappers to Domain Models
 
 fun MakeModelDto.toDomain(): MakeModel = MakeModel(
@@ -74,6 +81,12 @@ fun VehicleModelDto.toDomain(): VehicleModel = VehicleModel(
     vehicleType = this.vehicleType?.toDomain(),
     vin = this.vin,
     comment = this.comment
+)
+
+// Mapper for CursorPageDto to domain model CursorPage
+fun CursorPageDto<VehicleModelDto>.toDomain(): CursorPage<VehicleModel> = CursorPage(
+    items = this.items.map { it.toDomain() }, // Uses existing VehicleModelDto.toDomain()
+    nextCursor = this.nextCursor
 )
 
 // Mapper from Domain Model to DTO (for request bodies)

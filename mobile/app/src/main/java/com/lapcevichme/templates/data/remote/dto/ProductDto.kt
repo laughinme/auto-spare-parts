@@ -7,7 +7,9 @@ import com.lapcevichme.templates.domain.model.enums.ProductCondition
 import com.lapcevichme.templates.domain.model.enums.ProductStatus
 import com.lapcevichme.templates.domain.model.CursorPage
 import com.lapcevichme.templates.domain.model.ProductModel
-import com.lapcevichme.templates.domain.model.enums.toDomain
+import com.lapcevichme.templates.domain.model.MediaModel
+import com.lapcevichme.templates.domain.model.OrganizationModel
+// Removed: import com.lapcevichme.templates.domain.model.enums.toDomain // Not used directly here, and was causing an error if it was for a specific enum not present.
 
 data class ProductCreateDto(
     @SerializedName("brand")
@@ -17,18 +19,18 @@ data class ProductCreateDto(
     @SerializedName("price")
     val price: Double,
     @SerializedName("condition")
-    val condition: ProductCondition, // <-- Тип изменен
+    val condition: ProductCondition,
     @SerializedName("description")
     val description: String? = null,
     @SerializedName("status")
-    val status: ProductStatus = ProductStatus.DRAFT // <-- Тип изменен
+    val status: ProductStatus = ProductStatus.DRAFT
 )
 
 data class ProductDto(
     @SerializedName("id")
     val id: String,
     @SerializedName("organization")
-    val organization: OrganizationDto?, // <-- ИЗМЕНЕНО НА NULLABLE
+    val organization: OrganizationDto?,
     @SerializedName("created_at")
     val createdAt: String,
     @SerializedName("updated_at")
@@ -40,11 +42,11 @@ data class ProductDto(
     @SerializedName("price")
     val price: Double,
     @SerializedName("condition")
-    val condition: ProductCondition, // <-- Тип изменен
+    val condition: ProductCondition,
     @SerializedName("description")
     val description: String? = null,
     @SerializedName("status")
-    val status: ProductStatus, // <-- Тип изменен
+    val status: ProductStatus,
     @SerializedName("media")
     val media: List<MediaDto>
 )
@@ -66,14 +68,14 @@ data class ProductPatchDto(
     @SerializedName("price")
     val price: Double? = null,
     @SerializedName("condition")
-    val condition: ProductCondition? = null, // <-- Тип изменен
+    val condition: ProductCondition? = null,
     @SerializedName("description")
     val description: String? = null,
     @SerializedName("status")
-    val status: ProductStatus? = null // <-- Тип изменен
+    val status: ProductStatus? = null
 )
 
-data class PageDto<T>( // Используем Generic T вместо ProductDto
+data class PageDto<T>( // Used for non-cursor pagination if needed elsewhere
     @SerializedName("items")
     val items: List<T>,
     @SerializedName("offset")
@@ -84,16 +86,36 @@ data class PageDto<T>( // Используем Generic T вместо ProductDto
     val total: Int
 )
 
-data class CursorPageDto<ProductDto>(
-    @SerializedName("items")
-    val items: List<ProductDto>,
-    @SerializedName("next_cursor")
-    val next: String? = null,
-)
+fun MediaDto.toDomain(): MediaModel {
+    return MediaModel(
+        id = this.id,
+        url = this.url,
+        alt = this.alt
+    )
+}
+
+fun ProductDto.toDomain(): ProductModel {
+    return ProductModel(
+        id = this.id,
+        organization = this.organization?.toDomain(), // Assuming OrganizationDto has a toDomain()
+        createdAt = this.createdAt,
+        updatedAt = this.updatedAt,
+        brand = this.brand,
+        partNumber = this.partNumber,
+        price = this.price,
+        condition = this.condition, // Direct mapping as enum types match
+        description = this.description,
+        status = this.status, // Direct mapping as enum types match
+        media = this.media.map { it.toDomain() }
+    )
+}
+
+// Ensure CursorPageDto is imported if not in the same file (it's in GarageDtos.kt)
+// import com.lapcevichme.templates.data.remote.dto.CursorPageDto 
 
 fun CursorPageDto<ProductDto>.toDomain(): CursorPage<ProductModel> {
     return CursorPage(
         items = this.items.map { it.toDomain() },
-        nextCursor = this.next
+        nextCursor = this.nextCursor // Assumes 'nextCursor' is the field in the generic CursorPageDto
     )
 }
