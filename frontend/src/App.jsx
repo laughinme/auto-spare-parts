@@ -281,7 +281,7 @@ function App() {
             productId={selectedProduct.id}
             product={selectedProduct}
             onAdd={role !== "supplier" ? (product, quantity) => handleAddToCart(product, quantity) : null}
-            onBack={navigateToFYP}
+            onBack={navigateBack}
             onChat={role !== "supplier" ? () => navigateTo("cart") : null}
             isSupplierView={role === "supplier"}
           />
