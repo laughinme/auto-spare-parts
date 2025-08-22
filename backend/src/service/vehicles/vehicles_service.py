@@ -9,6 +9,8 @@ from database.relational_db import (
     Make,
     ModelsInterface,
     Model,
+    YearsInterface,
+    ModelYear,
 )
 
 settings = Settings() # type: ignore
@@ -19,10 +21,12 @@ class VehicleService:
         uow: UoW,
         make_repo: MakesInterface,
         model_repo: ModelsInterface,
+        year_repo: YearsInterface,
     ):
         self.uow = uow
         self.make_repo = make_repo
         self.model_repo = model_repo
+        self.year_repo = year_repo
         
     async def get_make(self, make_id: int) -> Make | None:
         return await self.make_repo.get_by_id(make_id)
@@ -41,3 +45,10 @@ class VehicleService:
         search: str | None,
     ) -> list[Model]:
         return await self.model_repo.list(limit, make_id, search)
+
+
+    async def list_years(
+        self,
+        model_id: int,
+    ) -> list[int]:
+        return await self.year_repo.list(model_id)

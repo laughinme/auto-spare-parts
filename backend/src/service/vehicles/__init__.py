@@ -5,6 +5,7 @@ from database.relational_db import (
     UoW,
     MakesInterface,
     ModelsInterface,
+    YearsInterface,
 )
 from .vehicles_service import VehicleService
 
@@ -14,4 +15,5 @@ async def get_vehicle_service(
 ) -> VehicleService:
     make_repo = MakesInterface(uow.session)
     model_repo = ModelsInterface(uow.session)
-    return VehicleService(uow, make_repo, model_repo)
+    year_repo = YearsInterface(uow.session)
+    return VehicleService(uow, make_repo, model_repo, year_repo)
