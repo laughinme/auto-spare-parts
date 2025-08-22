@@ -153,7 +153,7 @@ interface ApiService {
      * @param request Тело запроса с данными для создания продукта.
      * @param idempotencyKey Ключ идемпотентности (опционально).
      */
-    @POST("/api/v1/organizations/{org_id}/products")
+    @POST("/api/v1/organizations/{org_id}/products/")
     suspend fun createProduct(
         @Path("org_id") orgId: String,
         @Body request: ProductCreateDto,
@@ -182,7 +182,7 @@ interface ApiService {
      * @param orgId ID организации.
      * @param productId ID продукта.
      */
-    @GET("/api/v1/organizations/{org_id}/{product_id}/")
+    @GET("/api/v1/organizations/{org_id}/products/{product_id}/")
     suspend fun getOrganizationProductDetails(
         @Path("org_id") orgId: String,
         @Path("product_id") productId: String
@@ -194,7 +194,7 @@ interface ApiService {
      * @param productId ID продукта.
      * @param request Тело запроса с полями для обновления.
      */
-    @PATCH("/api/v1/organizations/{org_id}/{product_id}/")
+    @PATCH("/api/v1/organizations/{org_id}/products/{product_id}/")
     suspend fun patchOrganizationProduct(
         @Path("org_id") orgId: String,
         @Path("product_id") productId: String,
@@ -206,7 +206,7 @@ interface ApiService {
      * @param orgId ID организации.
      * @param productId ID продукта.
      */
-    @DELETE("/api/v1/organizations/{org_id}/{product_id}/")
+    @DELETE("/api/v1/organizations/{org_id}/products/{product_id}/")
     suspend fun deleteOrganizationProduct(
         @Path("org_id") orgId: String,
         @Path("product_id") productId: String
@@ -219,11 +219,11 @@ interface ApiService {
      * @param file Файл изображения в формате MultipartBody.Part.
      */
     @Multipart
-    @PUT("/api/v1/organizations/{org_id}/{product_id}/media")
-    suspend fun uploadProductPhoto(
+    @PUT("/api/v1/organizations/{org_id}/products/{product_id}/media")
+    suspend fun uploadProductPhotos(
         @Path("org_id") orgId: String,
         @Path("product_id") productId: String,
-        @Part file: MultipartBody.Part
+        @Part files: List<MultipartBody.Part>
     ): Response<ProductDto>
 
     /**
@@ -232,7 +232,7 @@ interface ApiService {
      * @param productId ID продукта.
      * @param mediaId ID медиафайла.
      */
-    @DELETE("/api/v1/organizations/{org_id}/{product_id}/media/{media_id}")
+    @DELETE("/api/v1/organizations/{org_id}/products/{product_id}/media/{media_id}")
     suspend fun deleteProductMediaFile(
         @Path("org_id") orgId: String,
         @Path("product_id") productId: String,
@@ -244,7 +244,7 @@ interface ApiService {
      * @param orgId ID организации.
      * @param productId ID продукта.
      */
-    @POST("/api/v1/organizations/{org_id}/{product_id}/publish")
+    @POST("/api/v1/organizations/{org_id}/products/{product_id}/publish")
     suspend fun publishProduct(
         @Path("org_id") orgId: String,
         @Path("product_id") productId: String
@@ -255,7 +255,7 @@ interface ApiService {
      * @param orgId ID организации.
      * @param productId ID продукта.
      */
-    @POST("/api/v1/organizations/{org_id}/{product_id}/unpublish")
+    @POST("/api/v1/organizations/{org_id}/products/{product_id}/unpublish")
     suspend fun unpublishProduct(
         @Path("org_id") orgId: String,
         @Path("product_id") productId: String

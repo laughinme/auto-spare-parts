@@ -105,42 +105,65 @@ class ProductRepositoryImpl @Inject constructor(
     override fun createProduct(
         orgId: String,
         product: ProductCreate,
-        photoBytes: ByteArray?,
-        mimeType: String?
+        photos: List<Pair<ByteArray, String>>? // Изменено для списка фото
     ): Flow<Resource<ProductModel>> = flow {
-        Log.d(TAG, "createProduct called for orgId: $orgId, product brand: ${product.brand}, with photo: ${photoBytes != null}")
+        Log.d(TAG, "createProduct called for orgId: $orgId, product brand: ${product.brand}, with ${photos?.size ?: 0} photo(s)")
         emit(Resource.Loading())
         try {
             val productCreateDto = product.toDto() 
             val createProductResponse = apiService.createProduct(orgId, productCreateDto)
 
             if (createProductResponse.isSuccessful && createProductResponse.body() != null) {
-                val createdProductDto = createProductResponse.body()!!
-                Log.d(TAG, "Product created successfully with ID: ${createdProductDto.id}")
+                var currentProductModel = createProductResponse.body()!!.toDomain()
+                val createdProductId = createProductResponse.body()!!.id // Используем ID из ответа
+                Log.d(TAG, "Product created successfully with ID: $createdProductId")
 
-                if (photoBytes != null && mimeType != null) {
-                    Log.d(TAG, "Attempting to upload photo for product ID: ${createdProductDto.id}")
-                    val requestFile = photoBytes.toRequestBody(mimeType.toMediaTypeOrNull())
-                    val photoPart = MultipartBody.Part.createFormData("file", "photo.jpg", requestFile) // Changed "photo" to "photo.jpg" for potentially better server handling
+                if (!photos.isNullOrEmpty()) {
+                    Log.d(TAG, "Preparing to upload ${photos.size} photo(s) for product ID: $createdProductId")
 
-                    val uploadPhotoResponse = apiService.uploadProductPhoto(orgId, createdProductDto.id, photoPart)
+                    // 1. Создаем список для всех частей Multipart
+                    val photoParts = mutableListOf<MultipartBody.Part>()
 
-                    if (uploadPhotoResponse.isSuccessful && uploadPhotoResponse.body() != null) {
-                        Log.d(TAG, "Photo uploaded successfully for product ID: ${createdProductDto.id}")
-                        emit(Resource.Success(uploadPhotoResponse.body()!!.toDomain())) 
-                    } else {
-                        val errorBody = uploadPhotoResponse.errorBody()?.stringSafely()
-                        Log.e(TAG, "Photo upload failed for product ID: ${createdProductDto.id}. Code: ${uploadPhotoResponse.code()}, Message: ${uploadPhotoResponse.message()}, ErrorBody: $errorBody")
-                        // Product created, but photo upload failed.
-                        // Emitting success with product data without updated photo.
-                        // Consider if this should be a Resource.Error if photo is critical.
-                        Log.w(TAG, "Product (ID: ${createdProductDto.id}) created, but photo upload failed. Returning product data with potentially outdated/missing media.")
-                        emit(Resource.Success(createdProductDto.toDomain())) // Return product data from create call
+                    photos.forEachIndexed { index, photoPair ->
+                        val photoBytes = photoPair.first
+                        val mimeType = photoPair.second
+                        val requestFile = photoBytes.toRequestBody(mimeType.toMediaTypeOrNull())
+
+                        // 2. ВАЖНО: используем ключ "files", как ожидает бэкенд
+                        val photoPart = MultipartBody.Part.createFormData(
+                            "files", // <-- Ключ должен быть "files"!
+                            "photo_${index + 1}.jpg",
+                            requestFile
+                        )
+                        photoParts.add(photoPart)
                     }
+
+                    try {
+                        // 3. Отправляем все файлы ОДНИМ запросом
+                        val uploadPhotosResponse = apiService.uploadProductPhotos(orgId, createdProductId, photoParts)
+
+                        if (uploadPhotosResponse.isSuccessful && uploadPhotosResponse.body() != null) {
+                            currentProductModel = uploadPhotosResponse.body()!!.toDomain()
+                            Log.d(TAG, "All ${photos.size} photos uploaded successfully for product ID: $createdProductId.")
+                        } else {
+                            val errorBody = uploadPhotosResponse.errorBody()?.stringSafely()
+                            Log.e(TAG, "Photos upload failed for product ID: $createdProductId. Code: ${uploadPhotosResponse.code()}, ErrorBody: $errorBody")
+                        }
+
+                        emit(Resource.Success(currentProductModel))
+
+                    } catch (e: HttpException) {
+                        Log.e(TAG, "HttpException during photos upload for product ID: $createdProductId.", e)
+                        emit(Resource.Error(e.localizedMessage ?: "Network error during photo upload."))
+                    } catch (e: IOException) {
+                        Log.e(TAG, "IOException during photos upload for product ID: $createdProductId.", e)
+                        emit(Resource.Error("Connection error during photo upload."))
+                    }
+
                 } else {
-                    // No photo was provided, return the successfully created product
-                    Log.d(TAG, "No photo provided. Returning created product data for ID: ${createdProductDto.id}")
-                    emit(Resource.Success(createdProductDto.toDomain()))
+                    // Фотографии не были предоставлены
+                    Log.d(TAG, "No photos provided. Returning created product data for ID: $createdProductId")
+                    emit(Resource.Success(currentProductModel))
                 }
             } else {
                 val errorBody = createProductResponse.errorBody()?.stringSafely()
@@ -274,31 +297,31 @@ class ProductRepositoryImpl @Inject constructor(
         photoBytes: ByteArray,
         mimeType: String
     ): Flow<Resource<ProductModel>> = flow {
-        Log.d(TAG, "uploadProductPhoto called for orgId: $orgId, productId: $productId, mimeType: $mimeType, photoBytes length: ${photoBytes.size}")
-        emit(Resource.Loading())
-        try {
-            val requestBody = photoBytes.toRequestBody(mimeType.toMediaTypeOrNull())
-            val body = MultipartBody.Part.createFormData("file", "photo.jpg", requestBody) // Changed "photo" to "photo.jpg"
-            val response = apiService.uploadProductPhoto(orgId, productId, body)
-            if (response.isSuccessful && response.body() != null) {
-                Log.d(TAG, "uploadProductPhoto successful for orgId: $orgId, productId: $productId.")
-                emit(Resource.Success(response.body()!!.toDomain()))
-            } else {
-                val errorBody = response.errorBody()?.stringSafely()
-                Log.e(TAG, "uploadProductPhoto failed for orgId: $orgId, productId: $productId. Code: ${response.code()}, Message: ${response.message()}, ErrorBody: $errorBody")
-                emit(
-                    Resource.Error(
-                        errorBody ?: "Failed to upload product photo: ${response.code()}"
-                    )
-                )
-            }
-        } catch (e: HttpException) {
-            Log.e(TAG, "uploadProductPhoto HttpException for orgId: $orgId, productId: $productId. Message: ${e.localizedMessage}", e)
-            emit(Resource.Error(e.localizedMessage ?: "Network error occurred."))
-        } catch (e: IOException) {
-            Log.e(TAG, "uploadProductPhoto IOException for orgId: $orgId, productId: $productId. Message: ${e.message}", e)
-            emit(Resource.Error("Failed to connect to the server."))
-        }
+//        Log.d(TAG, "uploadProductPhoto called for orgId: $orgId, productId: $productId, mimeType: $mimeType, photoBytes length: ${photoBytes.size}")
+//        emit(Resource.Loading())
+//        try {
+//            val requestBody = photoBytes.toRequestBody(mimeType.toMediaTypeOrNull())
+//            val body = MultipartBody.Part.createFormData("file", "photo.jpg", requestBody) // Changed "photo" to "photo.jpg"
+//            val response = apiService.uploadProductPhotos(orgId, productId, body)
+//            if (response.isSuccessful && response.body() != null) {
+//                Log.d(TAG, "uploadProductPhoto successful for orgId: $orgId, productId: $productId.")
+//                emit(Resource.Success(response.body()!!.toDomain()))
+//            } else {
+//                val errorBody = response.errorBody()?.stringSafely()
+//                Log.e(TAG, "uploadProductPhoto failed for orgId: $orgId, productId: $productId. Code: ${response.code()}, Message: ${response.message()}, ErrorBody: $errorBody")
+//                emit(
+//                    Resource.Error(
+//                        errorBody ?: "Failed to upload product photo: ${response.code()}"
+//                    )
+//                )
+//            }
+//        } catch (e: HttpException) {
+//            Log.e(TAG, "uploadProductPhoto HttpException for orgId: $orgId, productId: $productId. Message: ${e.localizedMessage}", e)
+//            emit(Resource.Error(e.localizedMessage ?: "Network error occurred."))
+//        } catch (e: IOException) {
+//            Log.e(TAG, "uploadProductPhoto IOException for orgId: $orgId, productId: $productId. Message: ${e.message}", e)
+//            emit(Resource.Error("Failed to connect to the server."))
+//        }
     }
 
     override fun deleteProductPhoto(
