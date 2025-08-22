@@ -48,10 +48,12 @@ export default function AuthPage() {
                 if (newAccessToken) {
                   setAxiosAccessToken(newAccessToken);
                 }
-                // При регистрации используем выбранную роль для перенаправления
+                // При регистрации сохраняем роль в localStorage и используем для перенаправления
                 if (selectedRole === 'buyer') {
+                    localStorage.setItem('userRole', 'buyer');
                     window.__setRoute && window.__setRoute('fyp');
                 } else if (selectedRole === 'supplier') {
+                    localStorage.setItem('userRole', 'supplier');
                     window.__setRoute && window.__setRoute('onboarding:supplier_stripe');
                 }
             }
