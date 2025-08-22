@@ -6,7 +6,7 @@ import com.lapcevichme.templates.domain.model.enums.ProductStatus
 
 data class ProductModel(
     val id: String,
-    val orgId: String,
+    val organization: OrganizationModel?, // <-- ИЗМЕНЕНО НА NULLABLE
     val createdAt: String,
     val updatedAt: String?,
     val brand: String,

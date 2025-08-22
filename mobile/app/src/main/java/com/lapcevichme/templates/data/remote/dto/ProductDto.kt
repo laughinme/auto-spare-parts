@@ -27,8 +27,8 @@ data class ProductCreateDto(
 data class ProductDto(
     @SerializedName("id")
     val id: String,
-    @SerializedName("org_id")
-    val orgId: String,
+    @SerializedName("organization")
+    val organization: OrganizationDto?, // <-- ИЗМЕНЕНО НА NULLABLE
     @SerializedName("created_at")
     val createdAt: String,
     @SerializedName("updated_at")

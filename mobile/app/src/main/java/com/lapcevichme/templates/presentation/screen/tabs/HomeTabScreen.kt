@@ -89,8 +89,8 @@ fun HomeTabScreen(
                         SparePartCard(
                             brand = product.brand,
                             price = product.price.toString(),
-                            //productName
-                            //imageUrl = product.media.firstOrNull()?.url ?: "https://via.placeholder.com/150",
+                            productName = product.organization!!.name,
+                            imageUrl = product.media.firstOrNull()?.url ?: "https://via.placeholder.com/150",
                             shopName = "Магазин Авто-Мир" // Placeholder for shop name
                         )
                     }

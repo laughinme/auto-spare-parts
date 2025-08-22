@@ -7,6 +7,7 @@ import com.lapcevichme.templates.data.remote.dto.PageDto
 import com.lapcevichme.templates.data.remote.dto.ProductCreateDto
 import com.lapcevichme.templates.data.remote.dto.ProductDto
 import com.lapcevichme.templates.data.remote.dto.ProductPatchDto
+import com.lapcevichme.templates.data.remote.dto.toDomain
 import com.lapcevichme.templates.domain.model.MediaModel
 import com.lapcevichme.templates.domain.model.Page
 import com.lapcevichme.templates.domain.model.ProductCreate
@@ -29,7 +30,7 @@ fun ProductCreate.toDto(): ProductCreateDto {
 fun ProductDto.toDomain(): ProductModel {
     return ProductModel(
         id = this.id,
-        orgId = this.orgId,
+        organization = this.organization?.toDomain(), // <-- ИЗМЕНЕНО НА SAFE CALL
         createdAt = this.createdAt,
         updatedAt = this.updatedAt,
         brand = this.brand,
