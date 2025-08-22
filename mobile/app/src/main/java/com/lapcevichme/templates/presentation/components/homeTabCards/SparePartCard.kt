@@ -43,10 +43,9 @@ import com.lapcevichme.templates.ui.theme.PreviewTheme
 fun SparePartCard(
     imageUrl: String = "https://images.unsplash.com/photo-1581381394474-b7a9f845077a?q=80&w=800",
     brand: String = "BMW",
-    rating: Float = 4.0f,
     productName: String = "Тормозной диск передний вентилируемый",
     shopName: String = "Магазин Авто-Мир",
-    price: String = "3 500 ₽"
+    price: String = "3 500 ₽",
 ) {
     Card(
         modifier = Modifier
@@ -100,19 +99,7 @@ fun SparePartCard(
                             letterSpacing = 0.5.sp // tracking-wide
                         )
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Filled.Star,
-                                contentDescription = "Rating",
-                                tint = Color(0xFFFFC107), // text-yellow-400
-                                modifier = Modifier.size(16.dp)
-                            )
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = rating.toString(),
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant // gray-500
-                                ),
-                            )
                         }
                     }
 

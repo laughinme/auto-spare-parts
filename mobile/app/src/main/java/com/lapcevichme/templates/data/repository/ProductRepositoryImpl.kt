@@ -2,6 +2,8 @@ package com.lapcevichme.templates.data.repository
 
 import android.util.Log
 import com.lapcevichme.templates.data.remote.ApiService
+import com.lapcevichme.templates.data.remote.dto.toDomain
+import com.lapcevichme.templates.domain.model.CursorPage
 import com.lapcevichme.templates.domain.model.enums.toDto // Предполагается, что ProductCreate имеет метод toDto()
 import com.lapcevichme.templates.domain.model.enums.toDomain // Предполагается, что ProductDto имеет метод toDomain()
 import com.lapcevichme.templates.domain.model.Page
@@ -325,6 +327,106 @@ class ProductRepositoryImpl @Inject constructor(
             emit(Resource.Error(e.localizedMessage ?: "Network error occurred."))
         } catch (e: IOException) {
             Log.e(TAG, "deleteProductPhoto IOException for orgId: $orgId, productId: $productId, mediaId: $mediaId. Message: ${e.message}", e)
+            emit(Resource.Error("Failed to connect to the server."))
+        }
+    }
+
+    override fun searchProductsCatalog(
+        limit: Int,
+        cursor: String?,
+        query: String?,
+        brand: String?,
+        condition: String?,
+        priceMin: Double?,
+        priceMax: Double?
+    ): Flow<Resource<CursorPage<ProductModel>>> = flow {
+        Log.d(TAG, "searchProductsCatalog called with limit: $limit, cursor: $cursor, query: $query, brand: $brand, condition: $condition, priceMin: $priceMin, priceMax: $priceMax")
+        emit(Resource.Loading())
+        try {
+            val response = apiService.searchProductsCatalog(
+                limit = limit,
+                cursor = cursor,
+                q = query,
+                brand = brand,
+                condition = condition,
+                priceMin = priceMin,
+                priceMax = priceMax
+            )
+            if (response.isSuccessful && response.body() != null) {
+                Log.d(TAG, "searchProductsCatalog successful. Items count: ${response.body()!!.items.size}")
+                emit(Resource.Success(response.body()!!.toDomain()))
+            } else {
+                val errorBody = response.errorBody()?.stringSafely()
+                Log.e(TAG, "searchProductsCatalog failed. Code: ${response.code()}, Message: ${response.message()}, ErrorBody: $errorBody")
+                emit(
+                    Resource.Error(
+                        errorBody ?: "Failed to search products catalog: ${response.code()}"
+                    )
+                )
+            }
+        } catch (e: HttpException) {
+            Log.e(TAG, "searchProductsCatalog HttpException. Message: ${e.localizedMessage}", e)
+            emit(Resource.Error(e.localizedMessage ?: "Network error occurred."))
+        } catch (e: IOException) {
+            Log.e(TAG, "searchProductsCatalog IOException. Message: ${e.message}", e)
+            emit(Resource.Error("Failed to connect to the server."))
+        }
+    }
+
+    override fun getProductsFeed(
+        limit: Int,
+        cursor: String?
+    ): Flow<Resource<CursorPage<ProductModel>>> = flow {
+        Log.d(TAG, "getProductsFeed called with limit: $limit, cursor: $cursor")
+        emit(Resource.Loading())
+        try {
+            val response = apiService.getProductsFeed(
+                limit = limit,
+                cursor = cursor
+            )
+            if (response.isSuccessful && response.body() != null) {
+                Log.d(TAG, "getProductsFeed successful. Items count: ${response.body()!!.items.size}")
+                emit(Resource.Success(response.body()!!.toDomain()))
+            } else {
+                val errorBody = response.errorBody()?.stringSafely()
+                Log.e(TAG, "getProductsFeed failed. Code: ${response.code()}, Message: ${response.message()}, ErrorBody: $errorBody")
+                emit(
+                    Resource.Error(
+                        errorBody ?: "Failed to get products feed: ${response.code()}"
+                    )
+                )
+            }
+        } catch (e: HttpException) {
+            Log.e(TAG, "getProductsFeed HttpException. Message: ${e.localizedMessage}", e)
+            emit(Resource.Error(e.localizedMessage ?: "Network error occurred."))
+        } catch (e: IOException) {
+            Log.e(TAG, "getProductsFeed IOException. Message: ${e.message}", e)
+            emit(Resource.Error("Failed to connect to the server."))
+        }
+    }
+
+    override fun getProductDetails(productId: String): Flow<Resource<ProductModel>> = flow {
+        Log.d(TAG, "getProductDetails called with productId: $productId")
+        emit(Resource.Loading())
+        try {
+            val response = apiService.getProductDetails(productId = productId)
+            if (response.isSuccessful && response.body() != null) {
+                Log.d(TAG, "getProductDetails successful for productId: $productId.")
+                emit(Resource.Success(response.body()!!.toDomain()))
+            } else {
+                val errorBody = response.errorBody()?.stringSafely()
+                Log.e(TAG, "getProductDetails failed for productId: $productId. Code: ${response.code()}, Message: ${response.message()}, ErrorBody: $errorBody")
+                emit(
+                    Resource.Error(
+                        errorBody ?: "Failed to get product details: ${response.code()}"
+                    )
+                )
+            }
+        } catch (e: HttpException) {
+            Log.e(TAG, "getProductDetails HttpException for productId: $productId. Message: ${e.localizedMessage}", e)
+            emit(Resource.Error(e.localizedMessage ?: "Network error occurred."))
+        } catch (e: IOException) {
+            Log.e(TAG, "getProductDetails IOException for productId: $productId. Message: ${e.message}", e)
             emit(Resource.Error("Failed to connect to the server."))
         }
     }

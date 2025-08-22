@@ -6,4 +6,5 @@ import kotlinx.coroutines.flow.Flow
 
 interface OrganizationRepository {
     suspend fun getMyOrganizations(): Flow<Resource<List<OrganizationModel>>>
+    suspend fun getOrganizationById(id: String): Flow<Resource<OrganizationModel>>
 }

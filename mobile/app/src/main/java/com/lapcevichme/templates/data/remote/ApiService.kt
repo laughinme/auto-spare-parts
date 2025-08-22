@@ -101,6 +101,17 @@ interface ApiService {
     ): Response<StripeAccountSessionResponseDto>
 
     /**
+     * Получение информации об организации по ее ID.
+     * Для этого эндпоинта требуется токен доступа.
+     * @param orgId ID организации, информацию о которой нужно получить.
+     * @return Модель организации OrganizationDto.
+     */
+    @GET("/api/v1/organizations/{org_id}/")
+    suspend fun getOrganizationById(
+        @Path("org_id") orgId: String
+    ): Response<OrganizationDto>
+
+    /**
      * Создание нового продукта в организации.
      * @param orgId ID организации.
      * @param request Тело запроса с данными для создания продукта.

@@ -39,6 +39,9 @@ fun HomeTabScreen(
 ) {
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val keyboardController = LocalSoftwareKeyboardController.current
+    val loadingStatus by viewModel.loadingStatus.collectAsStateWithLifecycle()
+    val errorMessage by viewModel.errorMessage.collectAsStateWithLifecycle()
+    val productFeed by viewModel.productFeed.collectAsStateWithLifecycle()
 
     Column(modifier = Modifier.fillMaxSize()) {
         OutlinedTextField(
@@ -71,10 +74,34 @@ fun HomeTabScreen(
             item {
                 QuickSearchCard()
             }
-
-            items(20) {
-                SparePartCard()
+            if (loadingStatus){
+                item {
+                Text("Загрузка")
+                }
+            } else {
+                if (errorMessage != null) {
+                    item {
+                        Text("Ошибка: $errorMessage")
+                    }
+                } else if (productFeed != null) {
+                    items(productFeed!!.items.size) { index ->
+                        val product = productFeed!!.items[index]
+                        SparePartCard(
+                            brand = product.brand,
+                            price = product.price.toString(),
+                            //productName
+                            //imageUrl = product.media.firstOrNull()?.url ?: "https://via.placeholder.com/150",
+                            shopName = "Магазин Авто-Мир" // Placeholder for shop name
+                        )
+                    }
+                } else {
+                    item {
+                        Text("Нет данных для отображения")
+                    }
+                }
             }
+
+
         }
     }
 }
