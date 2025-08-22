@@ -1,4 +1,5 @@
 from uuid import UUID
+from datetime import datetime
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 
@@ -33,5 +34,42 @@ class GarageService:
     async def get_by_id(self, vehicle_id: UUID | str) -> GarageVehicle | None:
         return await self.gv_repo.get_by_id(vehicle_id)
 
-    async def search_vehicles(self, search: str, limit: int, user_id: UUID | None = None) -> list[GarageVehicle]:
-        return await self.gv_repo.search(search, limit, user_id)
+    async def search(
+        self,
+        user_id: UUID,
+        *,
+        limit: int = 20,
+        search: str | None = None,
+        make_id: int | None = None,
+        model_id: int | None = None,
+        cursor: str | None = None,
+    ) -> tuple[list[GarageVehicle], str | None]:
+        cursor_created_at = None
+        cursor_id = None
+        if cursor:
+            try:
+                ts_str, id_str = cursor.split("_", 1)
+                cursor_created_at = datetime.fromisoformat(ts_str)
+                cursor_id = UUID(id_str)
+            except Exception:
+                raise HTTPException(400, detail='Invalid cursor')
+
+        vehicles = await self.gv_repo.search(
+            user_id=user_id,
+            limit=limit,
+            search=search,
+            make_id=make_id,
+            model_id=model_id,
+            cursor_created_at=cursor_created_at,
+            cursor_id=cursor_id,
+        )
+
+        next_cursor = None
+        if len(vehicles) == limit:
+            last = vehicles[-1]
+            if last.created_at is None:
+                next_cursor = None
+            else:
+                next_cursor = f"{last.created_at.isoformat()}_{last.id}"
+
+        return vehicles, next_cursor
