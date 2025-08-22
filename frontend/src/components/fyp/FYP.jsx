@@ -4,7 +4,7 @@ import { QUICK_TAGS } from "../../data/constants.js";
 import ProductCard from "../product/ProductCard.jsx";
 import { searchProducts, getProductsFeed } from "../../api/api.js";
 
-export default function FYP({ role, buyerType, garage, onAddVehicle, onRemoveVehicle, setSelectedProduct, setRoute, onAddToCart }) {
+export default function FYP({ role, buyerType, garage, onAddVehicle, onRemoveVehicle, setSelectedProduct, navigateTo, onAddToCart }) {
 	// Filter states
 	const [filters, setFilters] = useState({});
 	const [tag, setTag] = useState(null);
@@ -146,7 +146,7 @@ export default function FYP({ role, buyerType, garage, onAddVehicle, onRemoveVeh
 								key={p.id}
 								product={p}
 								variant="catalog"
-								onView={(product) => { setSelectedProduct(product); setRoute("product"); }}
+								onView={(product) => { setSelectedProduct(product); navigateTo("product"); }}
 								onAddToCart={onAddToCart}
 							/>
 						))}
