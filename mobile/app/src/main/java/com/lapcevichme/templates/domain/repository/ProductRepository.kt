@@ -1,5 +1,6 @@
 package com.lapcevichme.templates.domain.repository
 
+import com.lapcevichme.templates.domain.model.CursorPage
 import com.lapcevichme.templates.domain.model.Page
 import com.lapcevichme.templates.domain.model.ProductCreate
 import com.lapcevichme.templates.domain.model.ProductModel
@@ -48,4 +49,23 @@ interface ProductRepository {
         productId: String,
         mediaId: String
     ): Flow<Resource<Unit>>
+
+    fun searchProductsCatalog(
+        limit: Int = 20,
+        cursor: String? = null,
+        query: String? = null,
+        brand: String? = null,
+        condition: String? = null,
+        priceMin: Double? = null,
+        priceMax: Double? = null
+    ): Flow<Resource<CursorPage<ProductModel>>>
+
+    fun getProductsFeed(
+        limit: Int = 20,
+        cursor: String? = null
+    ): Flow<Resource<CursorPage<ProductModel>>>
+
+    fun getProductDetails(
+        productId: String
+    ): Flow<Resource<ProductModel>>
 }

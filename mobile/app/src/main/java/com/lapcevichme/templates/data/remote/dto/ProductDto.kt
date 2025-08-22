@@ -5,6 +5,9 @@ package com.lapcevichme.templates.data.remote.dto
 import com.google.gson.annotations.SerializedName
 import com.lapcevichme.templates.domain.model.enums.ProductCondition
 import com.lapcevichme.templates.domain.model.enums.ProductStatus
+import com.lapcevichme.templates.domain.model.CursorPage
+import com.lapcevichme.templates.domain.model.ProductModel
+import com.lapcevichme.templates.domain.model.enums.toDomain
 
 data class ProductCreateDto(
     @SerializedName("brand")
@@ -80,3 +83,17 @@ data class PageDto<T>( // Используем Generic T вместо ProductDto
     @SerializedName("total")
     val total: Int
 )
+
+data class CursorPageDto<ProductDto>(
+    @SerializedName("items")
+    val items: List<ProductDto>,
+    @SerializedName("next_cursor")
+    val next: String? = null,
+)
+
+fun CursorPageDto<ProductDto>.toDomain(): CursorPage<ProductModel> {
+    return CursorPage(
+        items = this.items.map { it.toDomain() },
+        nextCursor = this.next
+    )
+}

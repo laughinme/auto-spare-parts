@@ -1,6 +1,7 @@
 package com.lapcevichme.templates.data.remote
 
 import com.lapcevichme.templates.data.remote.dto.CityModelDto
+import com.lapcevichme.templates.data.remote.dto.CursorPageDto
 import com.lapcevichme.templates.data.remote.dto.OrganizationDto
 import com.lapcevichme.templates.data.remote.dto.PageDto
 import com.lapcevichme.templates.data.remote.dto.StripeAccountResponseDto
@@ -214,4 +215,45 @@ interface ApiService {
 
     @GET("api/v1/organizations/my")
     suspend fun getMyOrganizations(): List<OrganizationDto>
+
+    /**
+     * Поиск по публичному каталогу продуктов с курсорной пагинацией.
+     * @param limit Максимальное количество элементов.
+     * @param cursor Курсор для следующей страницы.
+     * @param q Поисковый запрос.
+     * @param brand Фильтр по бренду.
+     * @param condition Фильтр по состоянию ('new' или 'used').
+     * @param priceMin Минимальная цена.
+     * @param priceMax Максимальная цена.
+     */
+    @GET("/api/v1/products/catalog")
+    suspend fun searchProductsCatalog(
+        @Query("limit") limit: Int = 20,
+        @Query("cursor") cursor: String? = null,
+        @Query("q") q: String? = null,
+        @Query("brand") brand: String? = null,
+        @Query("condition") condition: String? = null, // "new" or "used"
+        @Query("price_min") priceMin: Double? = null,
+        @Query("price_max") priceMax: Double? = null
+    ): Response<CursorPageDto<ProductDto>>
+
+    /**
+     * Получение ленты продуктов с курсорной пагинацией.
+     * @param limit Максимальное количество элементов.
+     * @param cursor Курсор для следующей страницы.
+     */
+    @GET("/api/v1/products/feed")
+    suspend fun getProductsFeed(
+        @Query("limit") limit: Int = 20,
+        @Query("cursor") cursor: String? = null
+    ): Response<CursorPageDto<ProductDto>>
+
+    /**
+     * Получение детальной информации о публичном продукте.
+     * @param productId ID продукта.
+     */
+    @GET("/api/v1/products/{product_id}")
+    suspend fun getProductDetails(
+        @Path("product_id") productId: String
+    ): Response<ProductDto>
 }
