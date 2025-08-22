@@ -1,0 +1,1 @@
+from .schemas import VehilceModel, VehicleCreate, VehiclePatch

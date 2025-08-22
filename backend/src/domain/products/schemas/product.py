@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 from ...common.timestamps import TimestampModel
 from ..enums.status import ProductStatus
 from ..enums.condition import ProductCondition
+from ...organizations import OrganizationModel
 
 
 class MediaModel(BaseModel):
@@ -22,10 +23,9 @@ class MediaCreate(BaseModel):
 
 class ProductModel(TimestampModel):
     """Product model for API responses"""
-    # model_config = {"from_attributes": True}
     
     id: UUID = Field(..., description="Unique product ID")
-    org_id: UUID = Field(..., description="Seller organization ID")
+    organization: OrganizationModel = Field(..., description="Seller organization ID")
     
     # Main part information
     brand: str = Field(..., description="Part brand/manufacturer (e.g., BMW, Bosch)")

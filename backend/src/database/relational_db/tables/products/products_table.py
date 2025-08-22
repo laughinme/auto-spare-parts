@@ -5,8 +5,8 @@ from sqlalchemy.dialects.postgresql import ENUM
 
 from ..table_base import Base
 from ..mixins import TimestampMixin, CreatedAtMixin
-from domain.products.enums.status import ProductStatus
-from domain.products.enums.condition import ProductCondition
+from domain.products import ProductStatus
+from domain.products import ProductCondition
 
 
 class Product(TimestampMixin, Base):
@@ -29,6 +29,8 @@ class Product(TimestampMixin, Base):
 
     # Related data
     media: Mapped[list["ProductMedia"]] = relationship(back_populates="product", cascade="all, delete-orphan", lazy="selectin")
+    
+    organization: Mapped["Organization"] = relationship(lazy="selectin") # type: ignore
 
 
 class ProductMedia(CreatedAtMixin, Base):
