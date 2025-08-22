@@ -1,5 +1,6 @@
 package com.lapcevichme.templates.data.remote
 
+import com.lapcevichme.templates.data.remote.dto.CityModelDto
 import com.lapcevichme.templates.data.remote.dto.CursorPageDto
 import com.lapcevichme.templates.data.remote.dto.OrganizationDto
 import com.lapcevichme.templates.data.remote.dto.PageDto
@@ -300,4 +301,13 @@ interface ApiService {
     suspend fun getProductDetails(
         @Path("product_id") productId: String
     ): Response<ProductDto>
+
+    /**
+     * Получение списка всех поддерживаемых городов.
+     * @return Список моделей городов.
+     */
+    // Imlpement ts so app works, ts pmo btw
+    @GET("/api/v1/geo/cities/")
+    suspend fun listCities(): Response<List<CityModelDto>>
+
 }
