@@ -148,12 +148,25 @@ function App() {
   const removeVehicle = (value) => setGarage((prev) => prev.filter((x) => x !== value));
 
   const navigateTo = (newRoute) => {
+    console.log("navigateTo called:", route, "->", newRoute);
     setPreviousRoute(route);
     setRoute(newRoute);
   };
 
   const navigateBack = () => {
+    // Clear selected product when navigating back from product detail page
+    if (route === "product") {
+      setSelectedProduct(null);
+    }
     setRoute(previousRoute);
+  };
+
+  const navigateToFYP = () => {
+    // Always navigate to FYP and clear selected product
+    console.log("navigateToFYP called - current route:", route, "clearing selectedProduct");
+    setSelectedProduct(null);
+    setPreviousRoute(route);
+    setRoute("fyp");
   };
 
   const handleAddToCart = (product, quantity = 1) => {
@@ -242,9 +255,8 @@ function App() {
             garage={garage}
             onAddVehicle={handleAddVehicle}
             onRemoveVehicle={removeVehicle}
-            products={products}
             setSelectedProduct={setSelectedProduct}
-            setRoute={setRoute}
+            navigateTo={navigateTo}
             onAddToCart={handleAddToCart}
           />
         )}
@@ -255,7 +267,7 @@ function App() {
             productId={selectedProduct.id}
             product={selectedProduct}
             onAdd={role !== "supplier" ? (product, quantity) => handleAddToCart(product, quantity) : null}
-            onBack={navigateBack}
+            onBack={navigateToFYP}
             onChat={role !== "supplier" ? () => navigateTo("cart") : null}
             isSupplierView={role === "supplier"}
           />
@@ -331,6 +343,71 @@ const styles = `
 .segmented { @apply inline-flex rounded-xl overflow-hidden border border-slate-200; }
 .seg { @apply px-3 py-1.5 text-sm bg-white hover:bg-slate-50; }
 .seg--active { @apply bg-slate-900 text-white; }
+
+/* Modern Authentication Page Animations */
+@keyframes blob {
+  0% { transform: translate(0px, 0px) scale(1); }
+  33% { transform: translate(30px, -50px) scale(1.1); }
+  66% { transform: translate(-20px, 20px) scale(0.9); }
+  100% { transform: translate(0px, 0px) scale(1); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes float-delayed {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-15px); }
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float-delayed 8s ease-in-out infinite;
+  animation-delay: 1s;
+}
+
+.animate-gradient {
+  background-size: 400% 400%;
+  animation: gradient-shift 3s ease infinite;
+}
+
+/* Glassmorphism backdrop support */
+.backdrop-blur-sm { backdrop-filter: blur(4px); }
+.backdrop-blur { backdrop-filter: blur(8px); }
+.backdrop-blur-md { backdrop-filter: blur(12px); }
+.backdrop-blur-lg { backdrop-filter: blur(16px); }
+.backdrop-blur-xl { backdrop-filter: blur(24px); }
+
+/* Custom scrollbar for test accounts */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
 `;
 
 const StyleInjector = () => <style dangerouslySetInnerHTML={{ __html: styles }} />;
