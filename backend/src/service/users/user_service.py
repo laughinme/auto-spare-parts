@@ -58,7 +58,7 @@ class UserService:
             )
 
         ext  = ".jpg" if file.content_type == "image/jpeg" else ".png"
-        name = f"{uuid4()}{ext}"
+        name = f"{uuid4().hex}{ext}"
 
         file_path = folder / name
         limit_bytes = settings.MAX_PHOTO_SIZE * 1024 * 1024

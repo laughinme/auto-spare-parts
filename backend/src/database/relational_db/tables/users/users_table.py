@@ -49,3 +49,4 @@ class User(TimestampMixin, Base):
     )
     
     organization: Mapped["Organization"] = relationship(back_populates="owner", lazy="selectin") # type: ignore
+    

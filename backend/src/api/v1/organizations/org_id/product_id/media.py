@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Path, HTTPException, UploadFile, File
 
 from core.security import auth_user
 from database.relational_db import User
-from domain.products import ProductModel
+from domain.products import ProductModel, MediaCreate
 from core.config import Settings
 from service.products import ProductService, get_product_service
 
@@ -15,20 +15,26 @@ config = Settings() # pyright: ignore[reportCallIssue]
 @router.put(
     path='/media',
     response_model=ProductModel,
-    summary='Upload product photo'
+    summary='Upload product photo(s)'
 )
-async def upload_product_photo(
-    file: Annotated[UploadFile, File(..., description=f"JPEG or PNG files (max {config.MAX_PHOTO_SIZE} MB)")],
+async def upload_product_photos(
+    files: Annotated[list[UploadFile], File(..., description=f"JPEG or PNG files (max {config.MAX_PHOTO_SIZE} MB each). Can upload multiple files.")],
     org_id: Annotated[UUID, Path(..., description="Organization ID")],
     product_id: Annotated[UUID, Path(..., description="Product ID")],
     _: Annotated[User, Depends(auth_user)],
     svc: Annotated[ProductService, Depends(get_product_service)],
 ):
-    """Upload photo for product"""
+    """Upload one or more photos for product"""
     product = await svc.get_product(product_id)
     if product is None or product.org_id != org_id:
         raise HTTPException(404, 'Product not found')
-    await svc.add_product_photo(file, product)
+    
+    # Support both single file and multiple files
+    if len(files) == 1:
+        await svc.add_product_photo(files[0], product)
+    else:
+        await svc.add_product_photos(files, product)
+    
     return product
 
 
