@@ -1,14 +1,13 @@
+// AppNavigation.kt
 package com.lapcevichme.templates.presentation.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.lapcevichme.templates.presentation.screen.ConnectOnboardingScreen
-import com.lapcevichme.templates.presentation.screen.SearchResultScreen // <-- ДОБАВЛЕН ИМПОРТ
+import com.lapcevichme.templates.presentation.screen.SearchResultScreen
 import com.lapcevichme.templates.presentation.screen.tabs.SparePartCreateScreen
 import com.lapcevichme.templates.presentation.screen.onboardingScreens.GreetingScreen
 import com.lapcevichme.templates.presentation.screen.onboardingScreens.RolePickerScreen
@@ -92,10 +91,8 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
         ) {
             composable(Routes.HOME_TAB) {
                 HomeTabScreen(
-                    onNavigateToSearch = { searchText ->
-                        // Кодируем текст, чтобы он безопасно передался в качестве аргумента
-                        val encodedQuery = java.net.URLEncoder.encode(searchText, "UTF-8")
-                        navController.navigate("${Routes.SEARCH_RESULT_BASE}/$encodedQuery")
+                    onNavigateToSearch = {
+                        navController.navigate(Routes.SEARCH_RESULT)
                     }
                 )
             }
@@ -135,14 +132,8 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
             }
 
             // Новый экран результатов поиска
-            composable(
-                route = Routes.SEARCH_RESULT,
-                arguments = listOf(navArgument("query") { type = NavType.StringType })
-            ) { backStackEntry ->
-                // Достаем аргумент из маршрута
-                val query = backStackEntry.arguments?.getString("query") ?: ""
-                // Передаем его в наш экран
-                SearchResultScreen(query = query)
+            composable(route = Routes.SEARCH_RESULT) {
+                SearchResultScreen()
             }
         }
     }

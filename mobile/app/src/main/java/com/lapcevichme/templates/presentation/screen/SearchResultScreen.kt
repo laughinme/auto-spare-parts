@@ -13,7 +13,7 @@ import androidx.compose.ui.Modifier
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchResultScreen(query: String) { // Экран принимает поисковый запрос
+fun SearchResultScreen() { // Экран принимает поисковый запрос
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("Результаты поиска") })
@@ -27,7 +27,7 @@ fun SearchResultScreen(query: String) { // Экран принимает пои�
         ) {
             // Тут будет твоя логика для отображения результатов поиска
             // А пока просто покажем, что запрос до нас дошел.
-            Text(text = "Вы искали: '$query'")
+            Text(text = "Вы искали: ''")
         }
     }
 }

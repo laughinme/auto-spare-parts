@@ -1,3 +1,4 @@
+// Routes.kt
 package com.lapcevichme.templates.presentation.navigation
 
 /**
@@ -32,6 +33,5 @@ object Routes {
     const val ADD = "add"
 
     // Маршрут для экрана результатов поиска
-    const val SEARCH_RESULT = "search_result/{query}"
-    const val SEARCH_RESULT_BASE = "search_result"
+    const val SEARCH_RESULT = "search_result"
 }

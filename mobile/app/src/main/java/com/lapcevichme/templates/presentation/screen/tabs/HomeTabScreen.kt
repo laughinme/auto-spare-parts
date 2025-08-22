@@ -34,16 +34,18 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.lapcevichme.templates.presentation.components.homeTabCards.QuickSearchCard
 import com.lapcevichme.templates.presentation.components.homeTabCards.SparePartCard
 import com.lapcevichme.templates.presentation.viewmodel.HomeTabViewModel
+import com.lapcevichme.templates.presentation.viewmodel.SearchViewModel
 import com.lapcevichme.templates.ui.theme.PreviewTheme
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeTabScreen(
-    onNavigateToSearch: (String) -> Unit,
-    viewModel: HomeTabViewModel = hiltViewModel()
+    onNavigateToSearch: () -> Unit,
+    viewModel: HomeTabViewModel = hiltViewModel(),
+    searchViewModel: SearchViewModel = hiltViewModel()
 ) {
-    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
+    val searchQuery by searchViewModel.searchQuery.collectAsStateWithLifecycle()
     val keyboardController = LocalSoftwareKeyboardController.current
     val loadingStatus by viewModel.loadingStatus.collectAsStateWithLifecycle()
     val errorMessage by viewModel.errorMessage.collectAsStateWithLifecycle()
@@ -67,7 +69,7 @@ fun HomeTabScreen(
     Column(modifier = Modifier.fillMaxSize()) {
         OutlinedTextField(
             value = searchQuery ?: "",
-            onValueChange = { viewModel.onSearchQueryChanged(query = it) },
+            onValueChange = { searchViewModel.onSearchQueryChanged(query = it) },
             label = { Text("Search") },
             leadingIcon = {
                 Icon(
@@ -76,7 +78,7 @@ fun HomeTabScreen(
                     modifier = Modifier.clickable {
                         keyboardController?.hide()
                         if (searchQuery != null) {
-                            onNavigateToSearch(searchQuery!!)
+                            onNavigateToSearch
                         }
                     }
                 )
@@ -89,7 +91,7 @@ fun HomeTabScreen(
                 onSearch = {
                     keyboardController?.hide()
                     if (searchQuery != null) {
-                        onNavigateToSearch(searchQuery!!)
+                        onNavigateToSearch
                     }
                 }
             )
