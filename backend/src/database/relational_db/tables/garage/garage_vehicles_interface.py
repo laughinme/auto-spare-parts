@@ -1,6 +1,5 @@
 from uuid import UUID
-from datetime import datetime
-from sqlalchemy import select, or_, func, and_
+from sqlalchemy import select, or_, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .garage_table import GarageVehicle
