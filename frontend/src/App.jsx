@@ -242,7 +242,6 @@ function App() {
             garage={garage}
             onAddVehicle={handleAddVehicle}
             onRemoveVehicle={removeVehicle}
-            products={products}
             setSelectedProduct={setSelectedProduct}
             setRoute={setRoute}
             onAddToCart={handleAddToCart}

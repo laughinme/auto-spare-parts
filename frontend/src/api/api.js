@@ -7,6 +7,7 @@ export async function createProduct({ productData, orgId }) {
 
   return response.data;
 }
+
 export async function getProducts({ orgId, query, limit = 20, offset = 0 }) {
     const response = await apiProtected.get(`/organizations/${orgId}/products`, {
       params: {
@@ -47,3 +48,65 @@ export async function unpublishProduct({ orgId, productId }) {
   const response = await apiProtected.post(`/organizations/${orgId}/${productId}/unpublish`);
   return response.data;
 }
+
+// === PUBLIC PRODUCT CATALOG ===
+
+/**
+ * Search products in public catalog with advanced filters
+ * @param {Object} params - Search parameters
+ * @param {string} [params.q] - Search query (brand, part number, description)
+ * @param {string} [params.brand] - Filter by brand
+ * @param {string} [params.condition] - Filter by condition (NEW, USED, REFURBISHED)
+ * @param {number} [params.price_min] - Minimum price filter
+ * @param {number} [params.price_max] - Maximum price filter
+ * @param {number} [params.limit=20] - Maximum number of items
+ * @param {string} [params.cursor] - Cursor for pagination
+ */
+export async function searchProducts({
+  q,
+  brand,
+  condition,
+  price_min,
+  price_max,
+  limit = 20,
+  cursor
+} = {}) {
+  const response = await apiProtected.get('/products/catalog', {
+    params: {
+      q,
+      brand,
+      condition,
+      price_min,
+      price_max,
+      limit,
+      cursor
+    }
+  });
+  return response.data;
+}
+
+/**
+ * Get products feed (For You Page) with cursor pagination
+ * @param {Object} params - Feed parameters
+ * @param {number} [params.limit=20] - Maximum number of items
+ * @param {string} [params.cursor] - Cursor for pagination
+ */
+export async function getProductsFeed({ limit = 20, cursor } = {}) {
+  const response = await apiProtected.get('/products/feed', {
+    params: {
+      limit,
+      cursor
+    }
+  });
+  return response.data;
+}
+
+/**
+ * Get public product details by ID
+ * @param {string} productId - Product ID
+ */
+export async function getPublicProductDetails(productId) {
+  const response = await apiProtected.get(`/products/${productId}`);
+  return response.data;
+}
+
