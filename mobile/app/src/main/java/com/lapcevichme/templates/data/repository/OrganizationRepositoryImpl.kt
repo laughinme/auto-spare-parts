@@ -21,10 +21,16 @@ class OrganizationRepositoryImpl @Inject constructor(
 
         try {
             // 2. Выполняем сетевой запрос
-            val organizationsDto = apiService.getMyOrganizations()
+            val response = apiService.getMyOrganizations() // Get the Response object
 
-            // 3. Преобразуем DTO в доменные модели и отправляем в UI
-            emit(Resource.Success(organizationsDto.map { it.toDomain() }))
+            if (response.isSuccessful) {
+                response.body()?.let { dtoList -> // Safely access the body (List<OrganizationDto>)
+                    emit(Resource.Success(dtoList.map { it.toDomain() }))
+                } ?: emit(Resource.Error("Ответ от сервера пустой.")) // Handle null body
+            } else {
+                // Handle unsuccessful response (e.g., using response.message() or response.code())
+                emit(Resource.Error("Ошибка при загрузке: ${response.message()}"))
+            }
 
         } catch (e: HttpException) {
             // Ошибка HTTP (например, 404 Not Found, 500 Server Error)
