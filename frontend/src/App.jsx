@@ -3,6 +3,7 @@ import { useAuth } from "./context/useAuth.js";
 import Topbar from "./components/Topbar.jsx";
 import SupplierTopbar from "./components/supplier/SupplierTopbar.jsx";
 import FYP from "./components/fyp/FYP.jsx";
+import GarageWidget from "./components/fyp/garage/GarageWidget.jsx";
 import ProductDetail from "./components/product/ProductDetail.jsx";
 import CartPage from "./components/cart/CartPage.jsx";
 import OrderPage from "./components/order/OrderPage.jsx";
@@ -175,13 +176,7 @@ function App() {
     setRoute(previousRoute);
   };
 
-  const navigateToFYP = () => {
-    // Always navigate to FYP and clear selected product
-    console.log("navigateToFYP called - current route:", route, "clearing selectedProduct");
-    setSelectedProduct(null);
-    setPreviousRoute(route);
-    setRoute("fyp");
-  };
+  // Removed unused navigateToFYP helper to avoid linter warning
 
   const handleAddToCart = (product, quantity = 1) => {
     setCart((prev) => {
@@ -273,6 +268,11 @@ function App() {
             navigateTo={navigateTo}
             onAddToCart={handleAddToCart}
           />
+        )}
+        {route === "garage" && role === "buyer" && (
+          <div className="max-w-xl mx-auto">
+            <GarageWidget onVehicleAdded={handleAddVehicle} onVehicleRemoved={removeVehicle} />
+          </div>
         )}
         {route === "onboarding:supplier_stripe" && <SupplierStripeOnboarding />}
         {route === "product" && selectedProduct && (

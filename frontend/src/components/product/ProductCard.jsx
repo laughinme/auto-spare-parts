@@ -110,6 +110,15 @@ export default function ProductCard({
     return null;
   };
 
+  // Функция для отображения цены с резервным текстом
+  const getDisplayPrice = () => {
+    const priceValue = typeof product.price === 'string' ? parseFloat(product.price) : product.price;
+    if (Number.isFinite(priceValue)) {
+      return `${formatPrice(priceValue)} ₽`;
+    }
+    return 'Цена по запросу';
+  };
+
   // Рендер варианта для корзины
   if (variant === "cart") {
     return (
@@ -449,7 +458,7 @@ export default function ProductCard({
   // Рендер варианта для каталога (по умолчанию)
   return (
     <div 
-      className={`bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden hover:shadow-xl hover:scale-[1.02] transition-all duration-300 group cursor-pointer ${className}`}
+      className={`bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow duration-300 group cursor-pointer h-full ${className}`}
       onClick={() => onView && onView(product)}
     >
       <div className="relative aspect-[16/10] bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
@@ -505,7 +514,7 @@ export default function ProductCard({
         </div>
       </div>
       
-      <div className="p-5">
+      <div className="p-5 flex flex-col h-full">
         {/* Информация об автомобиле */}
         {product.vehicle && (
           <div className="inline-flex items-center gap-1.5 bg-gray-100 text-gray-700 px-2.5 py-1 rounded-lg text-xs font-medium mb-3">
@@ -542,27 +551,15 @@ export default function ProductCard({
             <div className="text-2xl font-bold text-gray-900">{formatPrice(product.price)} ₽</div>
             <div className="text-xs text-gray-500">включая НДС</div>
           </div>
-          
-          <div className="flex gap-2">
-            <button 
-              className="px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
-              onClick={(e) => {
-                e.stopPropagation();
-                onView && onView(product);
-              }}
-            >
-              Подробнее
-            </button>
-            <button 
-              className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 rounded-xl transition-all shadow-sm hover:shadow-md"
-              onClick={(e) => {
-                e.stopPropagation();
-                onAddToCart && onAddToCart(product);
-              }}
-            >
-              В корзину
-            </button>
-          </div>
+          <button 
+            className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 rounded-xl transition-all shadow-sm hover:shadow-md"
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddToCart && onAddToCart(product);
+            }}
+          >
+            В корзину
+          </button>
         </div>
       </div>
     </div>

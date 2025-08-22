@@ -15,6 +15,9 @@ export default function Topbar({ route, setRoute, role, cartCount, isWorkshop, s
 					<button className={navBtnCls(route === "fyp")} onClick={() => setRoute("fyp")}>Главная</button>
 					<button className={navBtnCls(route === "cart")} onClick={() => setRoute("cart")}>Корзина{cartCount ? ` (${cartCount})` : ""}</button>
 					<button className={navBtnCls(route === "chat")} onClick={() => setRoute("chat")}>Чат</button>
+					{role === "buyer" && (
+						<button className={navBtnCls(route === "garage")} onClick={() => setRoute("garage")}>Гараж</button>
+					)}
 					{showSupplierTab && (
 						<div className="flex items-center gap-2">
 							<button className={navBtnCls(route === "supplier:dashboard")} onClick={() => setRoute("supplier:dashboard")}>Панель</button>
