@@ -2,10 +2,13 @@ package com.lapcevichme.templates.presentation.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import androidx.navigation.navigation
-import com.lapcevichme.templates.presentation.screen.ConnectOnboardingScreen // Убедись, что импорт есть
+import com.lapcevichme.templates.presentation.screen.ConnectOnboardingScreen
+import com.lapcevichme.templates.presentation.screen.SearchResultScreen // <-- ДОБАВЛЕН ИМПОРТ
 import com.lapcevichme.templates.presentation.screen.tabs.SparePartCreateScreen
 import com.lapcevichme.templates.presentation.screen.onboardingScreens.GreetingScreen
 import com.lapcevichme.templates.presentation.screen.onboardingScreens.RolePickerScreen
@@ -15,7 +18,7 @@ import com.lapcevichme.templates.presentation.screen.tabs.ChatTabScreen
 import com.lapcevichme.templates.presentation.screen.tabs.GarageTabScreen
 import com.lapcevichme.templates.presentation.screen.tabs.HomeTabScreen
 import com.lapcevichme.templates.presentation.screen.tabs.ProfileTabScreen
-import com.lapcevichme.templates.presentation.viewmodel.OnboardingViewModel // <-- ДОБАВЛЕН ИМПОРТ
+import com.lapcevichme.templates.presentation.viewmodel.OnboardingViewModel
 
 /**
  * Главный навигационный компонент приложения.
@@ -63,16 +66,11 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
             composable(Routes.SIGN_UP) {
                 SignUpScreen(
                     onSignUpSuccess = { selectedRole ->
-                        android.util.Log.d("AppNavigation_RoleDebug", "Role received in AppNavigation: '$selectedRole'")
-                        android.util.Log.d("AppNavigation_RoleDebug", "Comparing with OnboardingViewModel.ROLE_SELLER ('${OnboardingViewModel.ROLE_SELLER}')")
-
                         if (selectedRole == OnboardingViewModel.ROLE_SELLER) {
-                            android.util.Log.d("AppNavigation_RoleDebug", "Condition MET: Navigating to STRIPE_ONBOARDING")
                             navController.navigate(Routes.STRIPE_ONBOARDING) {
                                 popUpTo(Routes.AUTH_GRAPH) { inclusive = true }
                             }
                         } else {
-                            android.util.Log.d("AppNavigation_RoleDebug", "Condition NOT MET: Navigating to MAIN_GRAPH. Actual role was: '$selectedRole'")
                             navController.navigate(Routes.MAIN_GRAPH) {
                                 popUpTo(Routes.AUTH_GRAPH) { inclusive = true }
                             }
@@ -93,7 +91,13 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
             route = Routes.MAIN_GRAPH
         ) {
             composable(Routes.HOME_TAB) {
-                HomeTabScreen()
+                HomeTabScreen(
+                    onNavigateToSearch = { searchText ->
+                        // Кодируем текст, чтобы он безопасно передался в качестве аргумента
+                        val encodedQuery = java.net.URLEncoder.encode(searchText, "UTF-8")
+                        navController.navigate("${Routes.SEARCH_RESULT_BASE}/$encodedQuery")
+                    }
+                )
             }
             composable(Routes.GARAGE_TAB) { GarageTabScreen() }
             composable(Routes.CHAT_TAB) { ChatTabScreen() }
@@ -112,7 +116,6 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
                 )
             }
             composable(Routes.ADD) {
-                // 5. ПЕРЕДАЕМ navController.popBackStack() В КАЧЕСТВЕ ДЕЙСТВИЯ
                 SparePartCreateScreen(
                     onNavigateBack = {
                         navController.popBackStack()
@@ -129,6 +132,17 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
                         }
                     }
                 )
+            }
+
+            // Новый экран результатов поиска
+            composable(
+                route = Routes.SEARCH_RESULT,
+                arguments = listOf(navArgument("query") { type = NavType.StringType })
+            ) { backStackEntry ->
+                // Достаем аргумент из маршрута
+                val query = backStackEntry.arguments?.getString("query") ?: ""
+                // Передаем его в наш экран
+                SearchResultScreen(query = query)
             }
         }
     }

@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.lapcevichme.templates.R
 import com.lapcevichme.templates.ui.theme.PreviewTheme
 
 // It's good practice to have actual drawable resources for placeholders and errors
@@ -41,7 +42,7 @@ import com.lapcevichme.templates.ui.theme.PreviewTheme
 
 @Composable
 fun SparePartCard(
-    imageUrl: String = "https://images.unsplash.com/photo-1581381394474-b7a9f845077a?q=80&w=800",
+    imageUrl: String = "https://www.google.com/imgres?q=%D1%8F%D0%B4%D0%B5%D1%80%D0%BD%D1%8B%D0%B9%20%D0%B2%D0%B7%D1%80%D1%8B%D0%B2&imgurl=https%3A%2F%2Fupload.wikimedia.org%2Fwikipedia%2Fcommons%2F7%2F79%2FOperation_Upshot-Knothole_-_Badger_001.jpg&imgrefurl=https%3A%2F%2Fru.wikipedia.org%2Fwiki%2F%25D0%25AF%25D0%25B4%25D0%25B5%25D1%2580%25D0%25BD%25D0%25BE%25D0%25B5_%25D0%25BE%25D1%2580%25D1%2583%25D0%25B6%25D0%25B8%25D0%25B5&docid=SNmwVVPlXS33RM&tbnid=tlbjR2Iqbdpb4M&vet=12ahUKEwj1v6fBk56PAxXJFhAIHbmGOjwQM3oECBAQAA..i&w=1140&h=969&hcb=2&ved=2ahUKEwj1v6fBk56PAxXJFhAIHbmGOjwQM3oECBAQAA",
     brand: String = "BMW",
     productName: String = "Тормозной диск передний вентилируемый",
     shopName: String = "Магазин Авто-Мир",
@@ -64,8 +65,8 @@ fun SparePartCard(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(imageUrl)
                     .crossfade(true)
-                    // .placeholder(R.drawable.placeholder_image) // Replace with your placeholder
-                    // .error(R.drawable.error_image) // Replace with your error image
+                    .placeholder(R.drawable.ic_launcher_background) // TODO Замени на свой плейсхолдер
+                    .error(R.drawable.ic_launcher_foreground) // TODO Замени на свою картинку ошибки
                     .build(),
                 contentDescription = productName,
                 contentScale = ContentScale.Crop,
