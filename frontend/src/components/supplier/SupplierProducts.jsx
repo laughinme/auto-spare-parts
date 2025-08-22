@@ -174,8 +174,8 @@ function EditProductModal({ product, onSave, onCancel, isLoading }) {
                                 disabled={isLoading}
                             >
                                 <option value="draft">📝 Черновик</option>
-                                <option value="active">✅ Активный</option>
-                                <option value="inactive">⏸️ Неактивный</option>
+                                <option value="published">✅ Опубликован</option>
+                                <option value="archived">⏸️ Архивирован</option>
                             </select>
                         </div>
                     </div>

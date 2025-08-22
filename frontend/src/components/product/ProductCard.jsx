@@ -194,7 +194,7 @@ export default function ProductCard({
             </span>
             {/* Индикатор статуса публикации с анимацией */}
             <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border transition-all duration-500 transform ${
-              product.status === 'active' 
+              product.status === 'published' 
                 ? 'bg-emerald-100 text-emerald-800 border-emerald-200 shadow-emerald-200/50 shadow-lg' 
                 : product.status === 'draft'
                   ? 'bg-gray-100 text-gray-800 border-gray-200'
@@ -204,7 +204,7 @@ export default function ProductCard({
                 ? '🔄 Публикуется...' 
                 : isUnpublishing 
                   ? '🔄 Скрывается...'
-                  : product.status === 'active' 
+                  : product.status === 'published' 
                     ? '🌐 Опубликован' 
                     : product.status === 'draft' 
                       ? '📝 Черновик'
@@ -363,7 +363,7 @@ export default function ProductCard({
               
               {/* Правый ряд кнопок - Публикация/Снятие с публикации */}
               <div className="flex flex-col gap-1">
-                {product.status === 'active' ? (
+                {product.status === 'published' ? (
                   // Кнопка снятия с публикации (если товар опубликован)
                   onUnpublish && (
                     <button 

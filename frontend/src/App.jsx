@@ -21,6 +21,12 @@ function App() {
   // Получаем новое состояние isRestoringSession из контекста
   const { user, isUserLoading, logout, isRestoringSession } = useAuth();
   
+  // Wrapper для logout с очисткой localStorage
+  const handleLogout = () => {
+    localStorage.removeItem('userRole');
+    logout();
+  };
+  
   const [route, setRoute] = useState("fyp");
   const [previousRoute, setPreviousRoute] = useState("fyp");
   const [role, setRole] = useState(null);
@@ -57,6 +63,7 @@ function App() {
     if (!user) {
       setHasInitializedRole(false);
       setRole(null);
+      localStorage.removeItem('userRole'); // Очищаем роль при logout
       console.log('User logged out, resetting role and initialization flag');
     }
   }, [user]);
@@ -65,8 +72,10 @@ function App() {
     if (user) {
       console.log('Processing user data:', user);
       
-      let apiRole = user.role || user.type || user.user_type;
-      console.log('Found explicit role:', apiRole);
+      // Сначала проверяем сохраненную роль в localStorage
+      const savedRole = localStorage.getItem('userRole');
+      let apiRole = savedRole || user.role || user.type || user.user_type;
+      console.log('Found role - saved:', savedRole, ', from API:', user.role || user.type || user.user_type);
       
       if (!apiRole) {
         console.log('No explicit role found, trying to determine from other data');
@@ -91,8 +100,13 @@ function App() {
           console.log('First time role initialization, current route:', route);
           setHasInitializedRole(true);
           if (apiRole === "supplier") {
-            console.log('Redirecting supplier to dashboard');
-            setRoute("supplier:dashboard");
+            console.log('Redirecting supplier - savedRole:', savedRole);
+            // Если роль была сохранена из регистрации, направляем на onboarding
+            if (savedRole === 'supplier') {
+              setRoute("onboarding:supplier_stripe");
+            } else {
+              setRoute("supplier:dashboard"); 
+            }
           } else {
             console.log('Redirecting buyer to fyp');
             setRoute("fyp");
@@ -232,7 +246,7 @@ function App() {
           <SupplierTopbar
             route={route}
             setRoute={setRoute}
-            onLogout={logout}
+            onLogout={handleLogout}
           />
         ) : (
           <Topbar
@@ -242,7 +256,7 @@ function App() {
             cartCount={cart.reduce((a, b) => a + b.qty, 0)}
             isWorkshop={buyerType === "workshop"}
             showSupplierTab={role === "supplier"}
-            onLogout={logout}
+            onLogout={handleLogout}
           />
         )
       )}
@@ -267,7 +281,7 @@ function App() {
             productId={selectedProduct.id}
             product={selectedProduct}
             onAdd={role !== "supplier" ? (product, quantity) => handleAddToCart(product, quantity) : null}
-            onBack={navigateToFYP}
+            onBack={navigateBack}
             onChat={role !== "supplier" ? () => navigateTo("cart") : null}
             isSupplierView={role === "supplier"}
           />
