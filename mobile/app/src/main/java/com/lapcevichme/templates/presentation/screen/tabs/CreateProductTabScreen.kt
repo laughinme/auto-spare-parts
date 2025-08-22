@@ -5,6 +5,7 @@ import android.net.Uri // ADDED
 import androidx.activity.compose.rememberLauncherForActivityResult // ADDED
 import androidx.activity.result.PickVisualMediaRequest // ADDED
 import androidx.activity.result.contract.ActivityResultContracts // ADDED
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable // ADDED
 import androidx.compose.foundation.layout.Arrangement
@@ -19,11 +20,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit // ADDED
 import androidx.compose.material.icons.filled.Delete // ADDED
 import androidx.compose.material3.Button
@@ -90,15 +95,16 @@ fun SparePartCreateScreen(
 
     val price by viewModel.price.collectAsStateWithLifecycle()
     val description by viewModel.description.collectAsStateWithLifecycle()
-    val selectedImageUri by viewModel.selectedImageUri.collectAsStateWithLifecycle() // ADDED
-
+    val selectedImageUris by viewModel.selectedImageUris.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
     // ADDED: Launcher for picking an image
     val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia(),
-        onResult = { uri: Uri? ->
-            viewModel.onEvent(SparePartCreateEvent.OnImageSelected(uri))
+        contract = ActivityResultContracts.PickMultipleVisualMedia(), // Для выбора нескольких изображений
+        onResult = { uris: List<Uri> -> // Результат - список Uri
+            uris.forEach { uri ->
+                viewModel.onEvent(SparePartCreateEvent.OnImageSelected(uri))
+            }
         }
     )
 
@@ -153,14 +159,24 @@ fun SparePartCreateScreen(
             // MODIFIED: Pass selectedImageUri and launcher to PhotosSection
             item {
                 PhotosSection(
-                    selectedImageUri = selectedImageUri,
-                    onImageClick = {
+                    // ЗАМЕНИТЕ selectedImageUri = selectedImageUri,
+                    // НА ЭТО:
+                    selectedImageUris = selectedImageUris,
+
+                    // ЗАМЕНИТЕ onImageClick = { ... }
+                    // НА ЭТО (переименуем для ясности и обновим вызов):
+                    onAddImageClick = {
+                        // Для PickMultipleVisualMedia достаточно просто запустить
+                        // Можно указать тип медиа, если нужно (по умолчанию фото и видео)
                         imagePickerLauncher.launch(
                             PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                         )
                     },
-                    onRemoveImageClick = {
-                        viewModel.onEvent(SparePartCreateEvent.OnImageSelected(null))
+
+                    // ЗАМЕНИТЕ onRemoveImageClick = { viewModel.onEvent(SparePartCreateEvent.OnImageSelected(null)) }
+                    // НА ЭТО (теперь передаем конкретный Uri для удаления):
+                    onRemoveImageClick = { uriToRemove ->
+                        viewModel.onEvent(SparePartCreateEvent.OnImageRemoved(uriToRemove))
                     }
                 )
             }
@@ -244,64 +260,88 @@ fun BasicInfoSection(
 // MODIFIED: PhotosSection to handle image selection and display
 @Composable
 fun PhotosSection(
-    selectedImageUri: Uri?,
-    onImageClick: () -> Unit,
-    onRemoveImageClick: () -> Unit
+    selectedImageUris: List<Uri>,
+    onAddImageClick: () -> Unit,
+    onRemoveImageClick: (Uri) -> Unit
 ) {
     SectionCard(title = "3. Фотографии") {
-        if (selectedImageUri == null) {
-            // The 'stroke' variable with PathEffect for dashed border is removed
-            // as Modifier.border() doesn't directly use it for a dashed effect.
-            // A custom Canvas would be needed for a true dashed border.
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .height(150.dp)
-                    .border( // CORRECTED: Solid border
-                        width = 2.dp, // Defined width
-                        brush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.outline), // Using brush
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                    .clickable { onImageClick() }, // Make the whole box clickable
-                contentAlignment = Alignment.Center
-            ) {
-                // The inner Box with a redundant border has been removed.
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Upload Icon",
-                        modifier = Modifier.size(48.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text("Нажмите для загрузки", color = MaterialTheme.colorScheme.primary)
-                    Text("PNG, JPG до 10MB", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
-        } else {
-            Box(
+        // Отображение выбранных изображений
+        if (selectedImageUris.isNotEmpty()) {
+            LazyRow(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp) // Increased height for selected image
-                    .clip(RoundedCornerShape(12.dp)) // Clip image to rounded corners
+                    .padding(bottom = 16.dp), // Отступ перед кнопкой добавления
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                AsyncImage(
-                    model = selectedImageUri,
-                    contentDescription = "Выбранное изображение",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop // Crop to fill bounds
+                items(selectedImageUris) { uri ->
+                    Box(
+                        modifier = Modifier
+                            .size(100.dp) // Размер превью
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant) // Фон на случай долгой загрузки
+                    ) {
+                        AsyncImage(
+                            model = uri,
+                            contentDescription = "Выбранное изображение",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop // Обрезать для заполнения
+                        )
+                        IconButton(
+                            onClick = { onRemoveImageClick(uri) },
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(4.dp)
+                                .background(
+                                    color = MaterialTheme.colorScheme.scrim.copy(alpha = 0.7f),
+                                    shape = CircleShape
+                                )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Close,
+                                contentDescription = "Удалить фото",
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer // Или другой контрастный цвет
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // Область для добавления изображений
+        // Отображается всегда, но может менять вид/текст
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(if (selectedImageUris.isEmpty()) 150.dp else 80.dp) // Выше, если пусто
+                .border(
+                    width = 2.dp,
+                    brush = SolidColor(MaterialTheme.colorScheme.outline), // Используем SolidColor для кисти
+                    shape = RoundedCornerShape(12.dp)
                 )
-                Row( // Buttons to change or remove image
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    IconButton(onClick = onImageClick) { // Edit button
-                        Icon(Icons.Filled.Edit, contentDescription = "Изменить фото", tint = MaterialTheme.colorScheme.surface)
-                    }
-                    IconButton(onClick = onRemoveImageClick) { // Delete button
-                        Icon(Icons.Filled.Delete, contentDescription = "Удалить фото", tint = MaterialTheme.colorScheme.surface)
-                    }
+                .clickable { onAddImageClick() }
+                .padding(16.dp), // Внутренний отступ для контента
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Добавить фото",
+                    modifier = Modifier.size(if (selectedImageUris.isEmpty()) 40.dp else 28.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = if (selectedImageUris.isEmpty()) "Нажмите для загрузки фото" else "Добавить еще фото",
+                    color = MaterialTheme.colorScheme.primary,
+                    style = if (selectedImageUris.isEmpty()) MaterialTheme.typography.bodyLarge else MaterialTheme.typography.bodyMedium
+                )
+                if (selectedImageUris.isEmpty()) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        "PNG, JPG до 10MB",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
         }

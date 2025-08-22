@@ -2,14 +2,14 @@
 import apiProtected from './axiosInstance.js';
 
 export async function createProduct({ productData, orgId }) {
-  const url = `/organizations/${orgId}/products`;
+  const url = `/organizations/${orgId}/products/`;
   const response = await apiProtected.post(url, productData);
 
   return response.data;
 }
 
 export async function getProducts({ orgId, query, limit = 20, offset = 0 }) {
-    const response = await apiProtected.get(`/organizations/${orgId}/products`, {
+    const response = await apiProtected.get(`/organizations/${orgId}/products/`, {
       params: {
         q: query,
         limit,
@@ -107,6 +107,36 @@ export async function getProductsFeed({ limit = 20, cursor } = {}) {
  */
 export async function getPublicProductDetails(productId) {
   const response = await apiProtected.get(`/products/${productId}`);
+  return response.data;
+}
+
+// === GARAGE API ===
+
+/**
+ * Add a vehicle to user's garage
+ * @param {Object} vehicleData - Vehicle data
+ * @param {number} vehicleData.make_id - Vehicle make ID
+ * @param {number} vehicleData.model_id - Vehicle model ID  
+ * @param {number} vehicleData.year - Vehicle year
+ * @param {number} [vehicleData.vehicle_type_id] - Vehicle type ID
+ * @param {string} [vehicleData.vin] - Vehicle VIN
+ * @param {string} [vehicleData.comment] - User comment
+ */
+export async function addVehicleToGarage(vehicleData) {
+  const response = await apiProtected.post('/users/me/garage/add-vehicle', vehicleData);
+  return response.data;
+}
+
+/**
+ * Get all vehicles in user's garage
+ * @param {Object} params - Search parameters
+ * @param {string} [params.search] - Search query
+ * @param {number} [params.limit=50] - Maximum number of vehicles
+ */
+export async function getGarageVehicles({ search = "", limit = 50 } = {}) {
+  const response = await apiProtected.get('/users/me/garage/vehicles', {
+    params: { search, limit }
+  });
   return response.data;
 }
 

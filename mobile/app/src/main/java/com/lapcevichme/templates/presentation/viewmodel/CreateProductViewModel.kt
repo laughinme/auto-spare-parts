@@ -1,7 +1,7 @@
 package com.lapcevichme.templates.presentation.viewmodel
 
-import android.content.Context // ADDED
-import android.net.Uri // ADDED
+import android.content.Context
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,23 +9,22 @@ import com.lapcevichme.templates.domain.model.OrganizationModel
 import com.lapcevichme.templates.domain.model.enums.ProductCondition
 import com.lapcevichme.templates.domain.model.ProductCreate
 import com.lapcevichme.templates.domain.model.enums.ProductStatus
-import com.lapcevichme.templates.domain.model.ProductModel // ADDED (хотя Resource<Unit> используется для creationState)
+import com.lapcevichme.templates.domain.model.ProductModel 
 import com.lapcevichme.templates.domain.model.Resource
 import com.lapcevichme.templates.domain.usecase.user.GetMyOrganizationsUseCase
 import com.lapcevichme.templates.domain.usecase.product.CreateProductUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext // ADDED
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.io.IOException // ADDED
+import java.io.IOException
 import javax.inject.Inject
 
 const val SPARE_PART_CREATE_VIEWMODEL_TAG = "SparePartCreateViewModel"
 
-// --- СОБЫТИЯ ЭКРАНА ---
 sealed interface SparePartCreateEvent {
     data class OnPartNumberChanged(val partNumber: String) : SparePartCreateEvent
     data class OnBrandChanged(val brand: String) : SparePartCreateEvent
@@ -34,11 +33,11 @@ sealed interface SparePartCreateEvent {
     data class OnConditionChanged(val condition: String) : SparePartCreateEvent
     data class OnStatusChanged(val status: String) : SparePartCreateEvent
     data class OnOrganizationSelected(val orgId: String) : SparePartCreateEvent
-    data class OnImageSelected(val uri: Uri?) : SparePartCreateEvent // ADDED
+    data class OnImageSelected(val uri: Uri) : SparePartCreateEvent // Принимаем один Uri для добавления в список
+    data class OnImageRemoved(val uri: Uri) : SparePartCreateEvent // Событие для удаления Uri
     object OnCreateClick : SparePartCreateEvent
 }
 
-// --- СОБЫТИЯ UI (ДЛЯ ОДНОРАЗОВЫХ ДЕЙСТВИЙ) ---
 sealed interface UiEvent {
     data class ShowSnackbar(val message: String) : UiEvent
     object NavigateToHome : UiEvent
@@ -46,7 +45,7 @@ sealed interface UiEvent {
 
 @HiltViewModel
 class SparePartCreateViewModel @Inject constructor(
-    @ApplicationContext private val applicationContext: Context, // ADDED
+    @ApplicationContext private val applicationContext: Context,
     private val createProductUseCase: CreateProductUseCase,
     private val getMyOrganizationsUseCase: GetMyOrganizationsUseCase
 ) : ViewModel() {
@@ -54,8 +53,7 @@ class SparePartCreateViewModel @Inject constructor(
     private val _uiEvent = MutableSharedFlow<UiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
 
-    // Если хотите хранить ProductModel, измените Resource<Unit> на Resource<ProductModel>
-    private val _creationState = MutableStateFlow<Resource<Unit>?>(null)
+    private val _creationState = MutableStateFlow<Resource<ProductModel>?>(null) // Изменено на ProductModel, если нужно отслеживать созданный продукт
     val creationState = _creationState.asStateFlow()
 
     private val _organizations = MutableStateFlow<Resource<List<OrganizationModel>>?>(null)
@@ -82,8 +80,8 @@ class SparePartCreateViewModel @Inject constructor(
     private val _status = MutableStateFlow(ProductStatus.DRAFT)
     val status = _status.asStateFlow()
 
-    private val _selectedImageUri = MutableStateFlow<Uri?>(null) // ADDED
-    val selectedImageUri = _selectedImageUri.asStateFlow() // ADDED
+    private val _selectedImageUris = MutableStateFlow<List<Uri>>(emptyList()) // Храним список Uri
+    val selectedImageUris = _selectedImageUris.asStateFlow()
 
     init {
         Log.d(SPARE_PART_CREATE_VIEWMODEL_TAG, "Initialized ViewModel@${hashCode()}")
@@ -136,9 +134,13 @@ class SparePartCreateViewModel @Inject constructor(
             is SparePartCreateEvent.OnOrganizationSelected -> {
                 _selectedOrganizationId.value = event.orgId
             }
-            is SparePartCreateEvent.OnImageSelected -> { // ADDED
-                _selectedImageUri.value = event.uri
-                Log.d(SPARE_PART_CREATE_VIEWMODEL_TAG, "Image selected: ${event.uri}")
+            is SparePartCreateEvent.OnImageSelected -> { 
+                _selectedImageUris.value = _selectedImageUris.value + event.uri // Добавляем Uri в список
+                Log.d(SPARE_PART_CREATE_VIEWMODEL_TAG, "Image selected: ${event.uri}, current list size: ${_selectedImageUris.value.size}")
+            }
+            is SparePartCreateEvent.OnImageRemoved -> { // Обработка удаления Uri
+                _selectedImageUris.value = _selectedImageUris.value - event.uri
+                Log.d(SPARE_PART_CREATE_VIEWMODEL_TAG, "Image removed: ${event.uri}, current list size: ${_selectedImageUris.value.size}")
             }
             SparePartCreateEvent.OnCreateClick -> createSparePartInternal()
         }
@@ -152,7 +154,7 @@ class SparePartCreateViewModel @Inject constructor(
             val currentPriceString = _price.value
             val currentCondition = _condition.value
             val currentStatus = _status.value
-            val currentImageUri = _selectedImageUri.value // ADDED
+            val currentImageUris = _selectedImageUris.value
 
             var isValid = true
             var errorMessage = ""
@@ -182,32 +184,40 @@ class SparePartCreateViewModel @Inject constructor(
 
             _creationState.value = Resource.Loading()
 
-            var photoBytes: ByteArray? = null // ADDED
-            var mimeType: String? = null // ADDED
+            val photosList = mutableListOf<Pair<ByteArray, String>>() // Список для фото
 
-            if (currentImageUri != null) { // ADDED BLOCK
-                try {
-                    applicationContext.contentResolver.openInputStream(currentImageUri)?.use { inputStream ->
-                        photoBytes = inputStream.readBytes()
-                    }
-                    mimeType = applicationContext.contentResolver.getType(currentImageUri)
+            if (currentImageUris.isNotEmpty()) {
+                currentImageUris.forEach { uri ->
+                    try {
+                        var photoBytes: ByteArray? = null
+                        var mimeType: String? = null
+                        applicationContext.contentResolver.openInputStream(uri)?.use { inputStream ->
+                            photoBytes = inputStream.readBytes()
+                        }
+                        mimeType = applicationContext.contentResolver.getType(uri)
 
-                    if (photoBytes == null || mimeType == null) {
-                        _uiEvent.emit(UiEvent.ShowSnackbar("Не удалось обработать изображение."))
-                        _creationState.value = Resource.Error("Не удалось обработать изображение")
-                        Log.e(SPARE_PART_CREATE_VIEWMODEL_TAG, "Failed to read image bytes or get mimeType for URI: $currentImageUri")
-                        return@launch
+                        if (photoBytes != null && mimeType != null) {
+                            photosList.add(Pair(photoBytes!!, mimeType!!))
+                            Log.d(SPARE_PART_CREATE_VIEWMODEL_TAG, "Image processed: ${photoBytes?.size} bytes, mimeType: $mimeType for URI: $uri")
+                        } else {
+                            val errorMsg = "Не удалось обработать изображение: $uri"
+                            Log.e(SPARE_PART_CREATE_VIEWMODEL_TAG, errorMsg)
+                            // Можно добавить обработку ошибки для конкретного фото, например, пропустить его или прервать операцию
+                        }
+                    } catch (e: IOException) {
+                        Log.e(SPARE_PART_CREATE_VIEWMODEL_TAG, "Error processing image URI: $uri", e)
+                        // Аналогично, обработка ошибки
+                    } catch (e: SecurityException) {
+                        Log.e(SPARE_PART_CREATE_VIEWMODEL_TAG, "Security exception for image URI: $uri", e)
+                         // Аналогично, обработка ошибки
                     }
-                    Log.d(SPARE_PART_CREATE_VIEWMODEL_TAG, "Image processed: ${photoBytes?.size} bytes, mimeType: $mimeType")
-                } catch (e: IOException) {
-                    Log.e(SPARE_PART_CREATE_VIEWMODEL_TAG, "Error processing image URI: $currentImageUri", e)
-                    _uiEvent.emit(UiEvent.ShowSnackbar("Ошибка при обработке изображения: ${e.message}"))
-                    _creationState.value = Resource.Error("Ошибка при обработке изображения: ${e.message}")
-                    return@launch
-                }  catch (e: SecurityException) {
-                    Log.e(SPARE_PART_CREATE_VIEWMODEL_TAG, "Security exception for image URI: $currentImageUri", e)
-                    _uiEvent.emit(UiEvent.ShowSnackbar("Нет разрешений на доступ к изображению: ${e.message}"))
-                    _creationState.value = Resource.Error("Нет разрешений на доступ к изображению: ${e.message}")
+                }
+                 // Если после обработки всех URI список photosList пуст, а currentImageUris не был пуст,
+                 // это означает, что ни одно изображение не удалось обработать.
+                if (photosList.isEmpty() && currentImageUris.isNotEmpty()) {
+                    val errorMsg = "Не удалось обработать ни одно из выбранных изображений."
+                     _uiEvent.emit(UiEvent.ShowSnackbar(errorMsg))
+                    _creationState.value = Resource.Error(errorMsg)
                     return@launch
                 }
             }
@@ -216,19 +226,16 @@ class SparePartCreateViewModel @Inject constructor(
                 val productCreateRequest = ProductCreate(
                     brand = currentBrand,
                     partNumber = currentPartNumber,
-                    price = currentPriceString!!.toDouble(), // Already validated by this point
-                    condition = currentCondition!!, // Already validated
+                    price = currentPriceString!!.toDouble(),
+                    condition = currentCondition!!, 
                     description = _description.value.takeIf { it.isNotBlank() },
                     status = currentStatus
                 )
 
-                // MODIFIED: Pass photoBytes and mimeType to use case
-                createProductUseCase(orgId!!, productCreateRequest, photoBytes, mimeType).collect { result ->
+                createProductUseCase(orgId!!, productCreateRequest, if (photosList.isNotEmpty()) photosList else null).collect { result ->
+                    _creationState.value = result // Обновляем состояние напрямую
                     when (result) {
                         is Resource.Success -> {
-                            // Если вам нужен ProductModel, вы можете использовать result.data здесь
-                            // Сейчас _creationState это Resource<Unit>, поэтому мы просто передаем Unit
-                            _creationState.value = Resource.Success(Unit)
                             _uiEvent.emit(UiEvent.ShowSnackbar("Запчасть успешно создана! ID: ${result.data?.id ?: ""}"))
                             _uiEvent.emit(UiEvent.NavigateToHome)
                             clearInputFields()
@@ -236,16 +243,15 @@ class SparePartCreateViewModel @Inject constructor(
                         }
                         is Resource.Error -> {
                             val errorMsg = result.message ?: "Неизвестная ошибка при создании"
-                            _creationState.value = Resource.Error(errorMsg)
                             _uiEvent.emit(UiEvent.ShowSnackbar(errorMsg))
                             Log.e(SPARE_PART_CREATE_VIEWMODEL_TAG, "Error creating product: $errorMsg")
                         }
                         is Resource.Loading -> {
-                            _creationState.value = Resource.Loading()
+                            // Уже установлено через _creationState.value = result
                         }
                     }
                 }
-            } catch (e: Exception) { // Catching general exceptions from use case invocation or flow collection
+            } catch (e: Exception) { 
                 val errorMsg = e.message ?: "Ошибка при вызове CreateProductUseCase"
                 _creationState.value = Resource.Error(errorMsg)
                 _uiEvent.emit(UiEvent.ShowSnackbar(errorMsg))
@@ -261,8 +267,7 @@ class SparePartCreateViewModel @Inject constructor(
         _price.value = null
         _condition.value = null
         _status.value = ProductStatus.DRAFT
-        _selectedOrganizationId.value = null
-        _selectedImageUri.value = null // ADDED
+        // _selectedOrganizationId.value = null // Не очищаем, если пользователь захочет создать еще один товар в той же организации
+        _selectedImageUris.value = emptyList() // Очищаем список Uri
     }
 }
-

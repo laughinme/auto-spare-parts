@@ -21,8 +21,7 @@ interface ProductRepository {
     fun createProduct(
         orgId: String,
         product: ProductCreate,
-        photoBytes: ByteArray?, // Изменено
-        mimeType: String?     // Изменено
+        photos: List<Pair<ByteArray, String>>? // Изменено
     ): Flow<Resource<ProductModel>>
 
     fun updateProduct(

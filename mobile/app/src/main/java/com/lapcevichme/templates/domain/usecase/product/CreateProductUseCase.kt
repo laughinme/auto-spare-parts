@@ -13,11 +13,9 @@ class CreateProductUseCase @Inject constructor(
     operator fun invoke(
         orgId: String,
         product: ProductCreate,
-        photoBytes: ByteArray?, // Добавляем nullable ByteArray
-        mimeType: String?      // Добавляем nullable String
+        photos: List<Pair<ByteArray, String>>? // Изменено
     ): Flow<Resource<ProductModel>> {
         // Передаем новые параметры в репозиторий
-        return productRepository.createProduct(orgId, product, photoBytes, mimeType)
+        return productRepository.createProduct(orgId, product, photos) // Изменено
     }
 }
-
