@@ -28,7 +28,6 @@ export const AuthProvider = ({ children }) => {
                         console.log('Returning cached mock user data:', existingData);
                         return existingData;
                     }
-                    console.error('Mock token found but no user data cached!');
                     throw new Error('No user data available for mock token');
                 }
                 throw error;
@@ -93,7 +92,6 @@ export const AuthProvider = ({ children }) => {
     });
 
     useEffect(() => {
-        console.log("--- [Auth] Запускаем useEffect для восстановления сессии ---");
         (async () => {
             try {
                 const csrfCookie = document.cookie
@@ -108,21 +106,18 @@ export const AuthProvider = ({ children }) => {
                     return;
                 }
 
-                console.log("[Auth] CSRF-токен найден, отправляем запрос на /auth/refresh...");
                 const { data } = await apiPublic.post('/auth/refresh', {}, {
                     headers: { 'X-CSRF-Token': csrfToken },
                     withCredentials: true,
                 });
 
                 if (data?.access_token) {
-                    console.log("[Auth] Успех! Устанавливаем новый access_token.");
                     setAccessToken(data.access_token);
                 }
             } catch (err) {
                 console.error("[Auth] ОШИБКА при запросе на /auth/refresh:", err);
             } finally {
                 // Этот блок выполнится всегда, сообщая App.jsx, что проверка завершена
-                console.log("[Auth] --- Попытка восстановления сессии завершена ---");
                 setIsRestoringSession(false);
             }
         })();
