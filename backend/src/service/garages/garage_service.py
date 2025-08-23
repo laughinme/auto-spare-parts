@@ -73,3 +73,11 @@ class GarageService:
                 next_cursor = f"{last.created_at.isoformat()}_{last.id}"
 
         return vehicles, next_cursor
+
+    async def delete_vehicle(self, vehicle_id: UUID | str, user: User) -> None:
+        vehicle = await self.gv_repo.delete(vehicle_id)
+        if vehicle is None:
+            raise HTTPException(404, detail='Vehicle with this id not found')
+        if vehicle.user_id != user.id:
+            await self.uow.session.rollback()
+            raise HTTPException(403, detail='You are not allowed to delete this vehicle')

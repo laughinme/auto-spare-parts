@@ -1,6 +1,6 @@
 from uuid import UUID
 from datetime import datetime
-from sqlalchemy import select, or_, func, and_
+from sqlalchemy import select, or_, func, and_, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .garage_table import GarageVehicle
@@ -72,3 +72,12 @@ class GarageVehiclesInterface:
     
     async def get_by_id(self, id: UUID | str) -> GarageVehicle | None:
         return await self.session.get(GarageVehicle, id)
+
+    async def delete(self, vehicle_id: UUID | str) -> GarageVehicle | None:
+        result = await self.session.execute(
+            delete(GarageVehicle)
+            .where(GarageVehicle.id == vehicle_id)
+            .returning(GarageVehicle)
+        )
+        
+        return result.scalar()
