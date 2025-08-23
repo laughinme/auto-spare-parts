@@ -182,7 +182,7 @@ class VPICDownloader:
         
         # Year range for downloading
         current_year = datetime.now().year
-        years = list(range(1995, current_year + 1))
+        years = list(range(2000, current_year + 1))
         
         all_models = []
         all_model_years = []

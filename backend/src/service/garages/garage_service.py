@@ -9,8 +9,7 @@ from database.relational_db import (
     GarageVehicle,
     GarageVehiclesInterface
 )
-from domain.garage import VehicleCreate
-
+from domain.garage import VehicleCreate, VehiclePatch
 
 class GarageService:
     def __init__(
@@ -29,10 +28,32 @@ class GarageService:
             await self.uow.session.refresh(new_vehicle)
             return new_vehicle
         except IntegrityError as e:
-            raise HTTPException(status_code=400, detail=str(e))
+            raise HTTPException(400, detail=str(e))
 
-    async def get_by_id(self, vehicle_id: UUID | str) -> GarageVehicle | None:
-        return await self.gv_repo.get_by_id(vehicle_id)
+    async def get_vehicle(self, vehicle_id: UUID | str, user: User) -> GarageVehicle:
+        vehicle = await self.gv_repo.get_by_id(vehicle_id)
+        if vehicle is None:
+            raise HTTPException(404, detail='Vehicle with this id not found')
+        if vehicle.user_id != user.id:
+            raise HTTPException(403, detail='You are not allowed to access this vehicle')
+        return vehicle
+    
+    async def patch_vehicle(
+        self, 
+        payload: VehiclePatch, 
+        vehicle_id: UUID | str, 
+        user: User
+    ) -> GarageVehicle:
+        vehicle = await self.gv_repo.patch(vehicle_id, payload.model_dump(exclude_unset=True))
+        if vehicle is None:
+            raise HTTPException(404, detail='Vehicle with this id not found')
+        if vehicle.user_id != user.id:
+            await self.uow.session.rollback()
+            raise HTTPException(403, detail='You are not allowed to access this vehicle')
+        
+        await self.uow.commit()
+        await self.uow.session.refresh(vehicle)
+        return vehicle
 
     async def search(
         self,
