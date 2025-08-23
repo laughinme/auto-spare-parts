@@ -1,3 +1,4 @@
+// Routes.kt
 package com.lapcevichme.templates.presentation.navigation
 
 /**
@@ -19,18 +20,18 @@ object Routes {
 
     // --- ЭКРАНЫ ГРАФА СОЗДАНИЯ ПРОФИЛЯ (PROFILE_CREATION_GRAPH) ---
     const val AGE_PICKER = "age_picker"
-    const val GENDER_PICKER = "gender_picker"
-    const val CITY_PICKER = "city_picker"
     const val STRIPE_ONBOARDING = "stripe_onboarding"
 
     // --- ЭКРАНЫ ОСНОВНОГО ГРАФА (MAIN_GRAPH) ---
     // Маршруты для вкладок Bottom Navigation Bar
     const val HOME_TAB = "home_tab"
-    const val FRIENDS_TAB = "friends_tab"
+    const val GARAGE_TAB = "garage_tab"
     const val CHAT_TAB = "chat_tab"
     const val PROFILE_TAB = "profile_tab"
 
     // Маршрут для экрана добавления
     const val ADD = "add"
-}
 
+    // Маршрут для экрана результатов поиска
+    const val SEARCH_RESULT = "search_result"
+}

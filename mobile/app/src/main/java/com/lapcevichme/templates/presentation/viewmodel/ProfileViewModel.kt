@@ -8,10 +8,10 @@ import com.lapcevichme.templates.domain.model.Resource
 import com.lapcevichme.templates.domain.model.UserProfile
 import com.lapcevichme.templates.domain.model.UserProfileUpdate
 import com.lapcevichme.templates.domain.repository.UserRepository
-// Removed: import com.lapcevichme.templates.domain.usecase.GetCitiesUseCase // No longer used
-// Removed: import com.lapcevichme.templates.domain.usecase.GetUserLocationUseCase // No longer used
-import com.lapcevichme.templates.domain.usecase.LogoutUseCase
-import com.lapcevichme.templates.domain.usecase.UpdateProfilePictureUseCase
+// Removed: import com.lapcevichme.templates.domain.usecase.location.GetCitiesUseCase // No longer used
+// Removed: import com.lapcevichme.templates.domain.usecase.location.GetUserLocationUseCase // No longer used
+import com.lapcevichme.templates.domain.usecase.user.LogoutUseCase
+import com.lapcevichme.templates.domain.usecase.user.UpdateProfilePictureUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow

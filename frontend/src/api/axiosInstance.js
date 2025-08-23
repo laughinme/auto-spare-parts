@@ -1,6 +1,8 @@
+// axiosInstance.js
+
 import axios from 'axios';
 
-const BASE_URL = 'https://backend-auto-spare-parts.fly.dev/api/v1';
+const BASE_URL = '/api/v1';
 
 export const apiPublic = axios.create({
     baseURL: BASE_URL,
@@ -48,23 +50,31 @@ apiProtected.interceptors.response.use(
         ) {
             originalRequest._retry = true;
             try {
+                console.log('[Interceptor] Перехвачена ошибка 401. Пытаемся обновить токен...');
                 const csrfCookie = document.cookie
                     .split(';')
                     .map((c) => c.trim())
                     .find((c) => c.startsWith('csrf_token='));
                 const csrfToken = csrfCookie ? decodeURIComponent(csrfCookie.split('=')[1]) : null;
 
+                if (!csrfToken) {
+                    console.error('[Interceptor] Не найден CSRF-токен для обновления. Выход из системы.');
+                    setAccessToken(null); 
+                    return Promise.reject(error);
+                }
+
                 const { data } = await apiPublic.post(
                     '/auth/refresh',
                     {},
                     {
-                        headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {},
+                        headers: { 'X-CSRF-Token': csrfToken },
                         withCredentials: true,
                     }
                 );
 
                 const newAccessToken = data?.access_token;
                 if (newAccessToken) {
+                    console.log('[Interceptor] Токен успешно обновлен. Повторяем исходный запрос.');
                     setAccessToken(newAccessToken);
                     originalRequest.headers = {
                         ...(originalRequest.headers || {}),
@@ -72,7 +82,9 @@ apiProtected.interceptors.response.use(
                     };
                     return apiProtected(originalRequest);
                 }
-            } catch {
+            } catch (refreshError) {
+                // ДОБАВЛЕНО ЛОГИРОВАНИЕ
+                console.error('[Interceptor] КРИТИЧЕСКАЯ ОШИБКА: Не удалось обновить токен. Выход из системы.', refreshError);
                 setAccessToken(null);
             }
         }

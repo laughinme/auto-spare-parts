@@ -4,11 +4,17 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lapcevichme.templates.data.remote.TokenManager
+import com.lapcevichme.templates.domain.model.Resource
+import com.lapcevichme.templates.domain.model.UserProfile
+import com.lapcevichme.templates.domain.repository.UserRepository
 import com.lapcevichme.templates.presentation.navigation.Routes
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.collectLatest // Используем collectLatest для автоматической отмены предыдущей загрузки профиля
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -16,95 +22,71 @@ const val MAIN_VIEWMODEL_TAG = "MainViewModel"
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val tokenManager: TokenManager
+    private val tokenManager: TokenManager,
+    private val userRepository: UserRepository
 ) : ViewModel() {
 
     private val _startDestination = MutableStateFlow(Routes.AUTH_GRAPH)
     val startDestination = _startDestination.asStateFlow()
 
+    private val _userProfile = MutableStateFlow<UserProfile?>(null)
+
+    val isUserInOrganization = _userProfile.map { currentUserProfile ->
+        currentUserProfile?.organization != null
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000L),
+        initialValue = false
+    )
+
     init {
         Log.d(MAIN_VIEWMODEL_TAG, "Initialized ViewModel@${hashCode()}")
-        checkUserStatus()
-        Log.d("Nya~!", """                                                                                                                                                                           
-          ``````````````````````````````````````````````````````````````````````````````````          
-          ``````````````````````````````````````````````````````üÅÆÆÆÆÆÆÆ```````````````````          
-          ``````````````````````````````````````3ÆÆÆÆÞ``````*ÆÆÆÞÇÆü*ÆÆGÅ```````````````````          
-          `````````````````````````````````gÆÆÆÆÆg6¯gÆÆÆÆÆÆÆÅl‹3Æ````‹*Æg```````````````````          
-          ``````````````‡l`lÞÆÆÆÆÆ3*‹```ÇÆÆÆ6‹``‹6````‹*¯`6ÇÇÆÆÅ``‹`````````````````````````          
-          ```````````````ÆÆÆ```````ÇgÆÆÆ3`3l‹‹6ÅÆÆÆGÅÆg3‡**gÆ``üÆ‡```6‡ÆÅ```````````````````          
-          ````````````````ÆÆÆgÆÆÆÅÞÇÇü¯¯g``*ÆÞ‹Ç``Þ‡3¯`gÆ```‡````ÆÆÆ¯`ÅÆ‡```````````````````          
-          `````````````````ÆÅ¯````gÅü``‹``ÆÆ``‡Å‹``¯`ü```gÆ‹````Ç*‡gÆÆÆ¯````````````````````          
-          `````````````````*```````*g``‹‹Æ*``¯l*¯`*`‡‹3````ÆÆ``l`6G`‡*ÇÆü```````````````````          
-          `````````````````‹`6l`Ç‡ÆÆ```‹g¯¯¯‹‹¯`‡`l``l‹Ç````üÆ```¯3Æ`¯lÞg```````````````````          
-          ```````````````````gÆÆÆÆÆ``*‹Å‡``‹‹*¯`6``Æ`Æ`üÆ`‹*`*Æ``3**Æ``lgG``````````````````          
-          `````````````````````ÆÆ33```Þg``‡*`¯``6``Å`ÆÆ`ÇÆ````6Å¯3‡*`Æ`¯ÞGÆ`````````````````          
-          `````````````````````GgÞ¯‹6`ÇÆ*````Æ`‡Å``Ç`Æü`ÆgÆg`¯lÞ‡l33`gÅ`lÇÆl````‹```````````          
-          ``````````````````‹```GG‹36üÞ```‹`‹Æ`GÆ``ÆÆÆÆ`GÅ`ÆÆ3`ÞÞl3Þ`‹Æ`¯lGÆ````````````````          
-          ````````````````‹‹```ÞÅÅ`3**ÆÞ3Çg‡ÆÆ`Ægl`ÆÆg``Æ```````¯‹3G``Æ3*‹3Æ3```````````````          
-          `````````````````‹``‡ÆÞÅ‹‡l*ÆÆ¯‡*‹Æ‡ÆÆ‡‹`Æ‡3````ÆÆÆÆÞ‡Ç`l*``Æ3**l‡Æ```````````````          
-          `````````````````‹``GGGÇ‹‡*¯Ç¯``````````3Æü``gÆÆÆÞ3ÆÆ`Æü‡`3lÇÅ‡*‡*Æ*‹````‹````````          
-          ``````````¯¯‹¯‹````‡ÆlÆ‡*ll`lÅÆÆÆÆÆÆÆ`¯l3````*``ÆÆÆÆÆ`*`l*3lÇÅÞ‹ü`Æ6`l````````````          
-          `````¯‹``¯````````lÞÆlÆl‡ll`ÅÆ3``ÆÆÆÆ```````````Æ``Ç``‹```l‡Ælg`ü`ÆÆ`¯l```````````          
-          `````````````````Ç`‡Ç6ÆÅÇ`¯``Æ```ÆÆÆÅ¯````````‹````````Æ*`*¯Æ*Æ¯3lÆÆÆ`¯```````````          
-          ````````````````l``Æ36ÆÆ6`‡`*````````````````````‹````‡Æ`**lÆ*G¯l3ÆlÆl````````````          
-          ````````````````‡`ÆÅlÅÆÅÆÇ``GÆÆ``*¯‹*``````````````¯*üÆÆ`‡‹3Æ‡ÞllüÆ*ÆÆ¯*``````````          
-          `````````````````ÆÆ6*ÇÆGÆÆÆlGÆÆü``6```````ÆÆÆ`````3```GÆÞÆÆÆÆÆÆÞlÆ33Æ*`Æ‹`````````          
-          ``````````‹‹```*ÆÞ`66ÆÆÆl¯3`````ÆÆ````````Å‹Ç*`````‹ÆÆ````````ÆÆÆÆÆÆÆÆ``Æ`````````          
-          `````````‹```3ÞlÇ`ÆÆÆÞ``````3``lÆÅÆÆ`````````````ÆÆÆ‹‡ÆÆ```````````gÆÆü`‡g````````          
-          ```````````````3`üG`````33``¯ü```Ç3ÆÆÆÆÆ``````ÅÆÆÆÅÆÆü````````¯‡`````‹‹`‹6ü```‹```          
-          ``````````‹‹``Ç3G````‹¯``‡Þ‹``G``Æ3````ÞÆÆÆÆÆÆÆ636``‹ÅÆ`¯``Æ‡‹¯``l````Æg¯`Æ```````          
-          `````````‹````Æ`*``‹‹`‹¯‹`‹Å``ü`ÆÞÆÆÆÆÅÞÆü‡3333üg‡3‹`3GÆÆÆ``GÆÇ```*Ç*`¯`66Æ`‹‹````          
-          ````````````‡‹ÆÆ```````````6`ÞÆÆÆÆü`````¯ÆÆÆÆÆÆÆü‡*`ÆG*lÆÆÆÆÆ‡ÆÆÆÆ`6`‹‹```*```````          
-          ```````````‡‡`ÆÆ`¯‹`‹`üÆl``ÆÆg‡¯Þ*gÆÆÞ````````````Ç`Æ6‡ÞÆ¯ÇÆ3l¯ÆÆ`‡```````‡l``````          
-          ``````````¯6``Æ‹`¯*‹¯``Þl``ÆÆÆÆÆÆGÅüüÆÆ````````````gÆ36ÆÆ‹ÆÆÆÆÆÆ````‹`¯**``Å``````          
-          ``````````‡ü`‹‡``‹***``````ÆÆÆü`Çü‹GgÇGÆ```l‹¯`````3Ç`‹`G`````Æ‹``¯``¯‹‹‹`*Æ``````          
-          ``````````‡‹*G¯`‹‹`*¯``‡¯`3Æg```g````‡ÇÆ6Æ`````Ç6¯Æ*``Þ`Æ````ÆÆ``¯``‹**l‹`ÆÆ``````          
-          ``````````¯ÆG`¯`‹`‹l*`¯‡ÆÆÆ`¯Æ3`Æ```3*``l`¯‹``‡```Å``¯gG`ÆÆÆÆüÇ6````¯*```3`ÆÆ‡````          
-          ```````````ü``¯¯‹¯‹¯¯`¯ÆÆ``````ÆGlüÆG‹``Æ‹GGGÆG3ü‡Æ`¯6ÇgÆ````3ÆÆÞ66*‹```¯`Æ`*Æ````          
-          ``````````Þ`‹¯`‡`‹‹¯``ÇGG`````Æ¯````ü‹‹`Ç`Þ````¯¯üÆ```l¯`¯``ÆÆ¯¯G‹``‹¯`l‹`Æ``6l```          
-          `````¯ÆÆÆÆ`‹‹*`l¯`‹```ÆlÆ``l‡l````ÆÆ3`‹`Å``Ç`l‹``üÆ````ü¯`Æ``Æl‡g`‡`‹``‡`üÅ``üÆ```          
-          ``````````‹¯‹‹‹`G````lÆ‹Æ`````‹ÆÆ```````Æ``Æ``¯¯`*`Æ```¯``l‹`66ÅÆ`Æ```3*``Ç*`ü3```          
-          ````````Æ‹`¯**‹`‡G`‡Þ*ü`ÆÞ`*l‹`````¯ÅÆÆÆ``l``‹‹‹`ü`````ÞÅgG`‡lÅÆ¯‹```63‹¯`üG`ÆÆ```          
-          ````````Þg`‹‹¯‹‹`ü6l``‡ÆÆÆ``**¯¯¯`l6Çg*`*l*¯¯l33`Þ````¯l3G6`lgÆg````*3``‹`l6gÆ````          
-          `````````ÆÇ‹¯l*‹`*üÆÆÞÆÆÆÆ‹`*l¯`¯`ÆÞ`````````````ÆgÆÆÆÆ6Æl``‡Æ6````6g‹‹¯¯`3l``````          
-          `````````Æg``‹`````GÆÆÆÆÆü6``¯**``ÅÆ`¯**¯¯**‡‡3l`Å``````````3ÆÆ‹`3G6``¯¯¯`Å```````          
-          ``````````ÆÆÞ‡GÆÆÆÆÆgÇG`Æ`6‡`*l‡3¯Æü````¯l‡‡‡‡‡*‹ÅÆ3gÆ```*``ÆÆÆÆÆ`6l`¯¯‹`ÇÆ``l‡```          
-          ```````````¯gÆÆ````l‡6``Æ`3G‹‹***‹‹¯l‡l‹`````````Æ¯````lÅ‡¯ÆÆÆÆ`GÆg¯```‡ÆÆ‡ÆÞ`````          
-          ``````````‹Ç``````ÆGgÞgÆÆ``*6`‹‡ll**l*¯¯*l‡3üÇÇü‹‹`*3ÞgG‡`‹ÆÅÆ‹`‹ÞÆ‹ÇGÆÆ3`````````          
-          ```````````GÅ``ÆÆÆÆ``‹36¯`*‹*l¯‹¯‡‡ll‡3ll‡‡3ll¯`¯`3Çl``l``ÆÆüg¯```ÆÆÆg‹```````````          
-          ```````````````````gÆÆÞ¯‡`*¯*l*¯¯‹*‡lll‡3‡*¯‹‹‹¯33``‹¯3¯`ÆÆÇ*üÇ``‡l```````````````          
-          `````````ü‹```lÆÆÆÆlÇ¯``Å`***l‡l¯*¯¯l‡‡*``‹‹¯lül‹*‹¯‹lü`ÆÞg*¯‡GÆ¯`````````````````          
-          ```````````gÆgÞÇ‡l36Ç¯``Æ`*ll*‡3‡*ll*¯‹¯`¯l‡ül¯‹**¯¯‹‹¯`ÆÅ`‹*ü``ÅÆÇ6**````````````          
-          ````````ÆÆGGGGGÅÅg333`¯ÇÆl‹*lll*3**l*l*l6663*¯***¯l*‹`*ÆÆ``¯l*````````````````````          
-          ``````gÆÞÆÅü¯``````lÇÞÆ¯¯*Þ‡****3l*l*l*lÇü‹¯¯***¯¯¯‹``Å```ÆÆÆ``````````*‡lÞ```````          
-          ``````gÇgl`‹¯l33‡‡¯ÇÞÅ6‹lül‡66‡¯¯‡3`*ll¯¯63¯¯**l¯‹```Æ‹`Æ‡``Å``````````‹‡`*l``````          
-          `````ÆÅ6Þ‹*‡3‡3l*¯lÆÆÆ¯*ll‡‡l3üÇÇGgÞl‹‹l*¯‡ü‹‹‹```¯gÆÆ6`````````````````¯*¯*l`````          
-          ````gÆü3‡`*l‡‡ll‡ÆÇ¯`‹¯‡‡33‡l‡l‡33‡‡ÇÆ6‹¯¯‹üGG‡6ÞÆÆÇÞ3`Þ`````````````````‡‹¯ü`````          
-          ```ÆÅÅl3gg6ll*3Æ3**ll‡ll*‡l‡‡l‡ll‡‡‡l‡üGÞüÇÞ‡‹*Þ‡¯ÆÆÞ`lüü‹````````¯``````l‹*‡`````          
-          ``ÆÞ¯Ç‡3ü6g*`ÞÞl‡33‡3ÞÞÞü6l‡3333‡‡llll¯¯```¯ü3‡¯``3Æ‡`ÇgÆ`l`````````````***‡``````          
-          ``g``*``````l`````````````````````````````````````‡G``````````````````````````````                                                                                                                                                                                                  
-            """)
-    }
-
-    private fun checkUserStatus() {
+        
         viewModelScope.launch {
-            // Проверяем наличие токена. first() возьмет первое значение из Flow
-            val accessToken = tokenManager.getAccessToken().first()
-            val userIsLoggedIn = accessToken != null
-
-            // Логика для проверки профиля (оставим пока как есть)
-            val profileIsComplete = checkProfileStatus()
-
-            _startDestination.value = when {
-                userIsLoggedIn && profileIsComplete -> Routes.MAIN_GRAPH
-                userIsLoggedIn && !profileIsComplete -> Routes.PROFILE_CREATION_GRAPH
-                else -> Routes.AUTH_GRAPH
+            tokenManager.getAccessToken().collectLatest { accessToken -> // collectLatest здесь важен
+                Log.d(MAIN_VIEWMODEL_TAG, "Observed access token in ViewModel: $accessToken") // Лог в ViewModel
+                if (accessToken == null) {
+                    // Пользователь вышел или токен отсутствует/истек
+                    Log.d(MAIN_VIEWMODEL_TAG, "Access token is null. Clearing user profile and navigating to Auth.")
+                    _userProfile.value = null // <-- Ключевой сброс профиля
+                    _startDestination.value = Routes.AUTH_GRAPH
+                } else {
+                    // Пользователь залогинен, токен есть. Загружаем профиль.
+                    Log.d(MAIN_VIEWMODEL_TAG, "Access token present. Fetching user profile.")
+                    fetchUserProfile() 
+                    // startDestination будет обновлен внутри fetchUserProfile после получения данных о isOnboarded
+                }
             }
         }
+        Log.d("Nya~!","'''...'''") // Котик следит за порядком!
     }
 
-    private fun checkProfileStatus(): Boolean {
-        // Здесь будет твоя логика проверки, завершен ли онбординг
-        return true
+    private fun fetchUserProfile() {
+        viewModelScope.launch {
+            Log.d(MAIN_VIEWMODEL_TAG, "Starting to fetch user profile...")
+            userRepository.getProfile().collect { resource ->
+                when (resource) {
+                    is Resource.Success -> {
+                        _userProfile.value = resource.data
+                        Log.d(MAIN_VIEWMODEL_TAG, "User profile fetched successfully. Onboarded: ${resource.data?.isOnboarded}")
+                        // Пользователь залогинен и профиль (даже если частично) загружен, всегда идем в MAIN_GRAPH
+                        _startDestination.value = Routes.MAIN_GRAPH
+                        Log.d(MAIN_VIEWMODEL_TAG, "User profile fetched (success), navigating to MAIN_GRAPH.")
+                    }
+                    is Resource.Error -> {
+                        _userProfile.value = null // Сбрасываем профиль при ошибке
+                        Log.e(MAIN_VIEWMODEL_TAG, "Error fetching user profile: ${resource.message}")
+                        // Даже если ошибка загрузки профиля, но токен есть, идем в MAIN_GRAPH.
+                        // MAIN_GRAPH должен быть устойчив к отсутствию полного профиля или предлагать пути решения.
+                        _startDestination.value = Routes.MAIN_GRAPH
+                        Log.d(MAIN_VIEWMODEL_TAG, "Error fetching profile, but token exists, navigating to MAIN_GRAPH.")
+                    }
+                    is Resource.Loading -> {
+                        Log.d(MAIN_VIEWMODEL_TAG, "Loading user profile...")
+                        // Здесь _startDestination не меняем, ждем Success или Error.
+                    }
+                }
+            }
+        }
     }
 }

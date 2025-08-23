@@ -9,7 +9,11 @@ export default function SupplierStripeOnboarding() {
         <p className="text-slate-600">Заполните безопасную форму Stripe, чтобы получать выплаты за заказы.</p>
       </div>
       <div className="card p-4">
-        <StripeOnboarding onComplete={() => window.__setRoute && window.__setRoute("supplier:dashboard")} />
+        <StripeOnboarding onComplete={() => {
+          // Очищаем сохраненную роль после завершения onboarding
+          localStorage.removeItem('userRole');
+          window.__setRoute && window.__setRoute("supplier:dashboard");
+        }} />
       </div>
     </div>
   );

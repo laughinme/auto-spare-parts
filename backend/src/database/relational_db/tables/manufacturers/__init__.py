@@ -1,0 +1,2 @@
+from .manufacturers_table import Manufacturer
+from .manufacturer_make_table import ManufacturerMake

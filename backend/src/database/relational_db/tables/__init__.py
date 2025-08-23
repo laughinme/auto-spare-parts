@@ -3,3 +3,8 @@ from .users import *
 from .languages import *
 from .organizations import *
 from .products import *
+from .vehicles import *
+from .makes import *
+from .manufacturers import *
+from .models import *
+from .garage import *

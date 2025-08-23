@@ -10,6 +10,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -50,6 +51,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.hackathon.domain.util.uriToFile
 import com.lapcevichme.templates.domain.model.Resource
+import com.lapcevichme.templates.domain.model.UserProfile
+import com.lapcevichme.templates.domain.model.enums.KycStatus
 import com.lapcevichme.templates.presentation.viewmodel.ProfileEvent
 import com.lapcevichme.templates.presentation.viewmodel.ProfileViewModel
 import kotlinx.coroutines.launch
@@ -60,7 +63,8 @@ import com.lapcevichme.templates.R
 @Composable
 fun ProfileTabScreen(
     viewModel: ProfileViewModel = hiltViewModel(),
-    onLogoutSuccess: () -> Unit
+    onLogoutSuccess: () -> Unit,
+    onNavigateToStripeOnboarding: () -> Unit
 ) {
     // Собираем все состояния из ViewModel
     val profileState by viewModel.profileState.collectAsStateWithLifecycle()
@@ -82,7 +86,6 @@ fun ProfileTabScreen(
         }
     }
 
-    // Launcher для выбора изображения
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -93,14 +96,12 @@ fun ProfileTabScreen(
         }
     }
 
-    // Отслеживаем состояние выхода для навигации
     LaunchedEffect(key1 = logoutState) {
         if (logoutState is Resource.Success) {
             onLogoutSuccess()
         }
     }
 
-    // Показываем Snackbar при ошибках
     LaunchedEffect(key1 = profileState, key2 = logoutState) {
         val profileError = (profileState as? Resource.Error)?.message
         val logoutError = (logoutState as? Resource.Error)?.message
@@ -118,7 +119,8 @@ fun ProfileTabScreen(
         language = language,
         avatarUrl = avatarUrl,
         onEvent = viewModel::onEvent,
-        onAvatarClick = { imagePickerLauncher.launch("image/*") }
+        onAvatarClick = { imagePickerLauncher.launch("image/*") },
+        onNavigateToStripeOnboarding = onNavigateToStripeOnboarding
     )
 }
 
@@ -127,14 +129,15 @@ fun ProfileTabScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreenContent(
-    profileResource: Resource<out Any>,
+    profileResource: Resource<out UserProfile?>,
     snackbarHostState: SnackbarHostState,
     username: String,
     bio: String,
     language: String,
     avatarUrl: String?,
     onEvent: (ProfileEvent) -> Unit,
-    onAvatarClick: () -> Unit
+    onAvatarClick: () -> Unit,
+    onNavigateToStripeOnboarding: () -> Unit
 ) {
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
@@ -154,6 +157,7 @@ fun ProfileScreenContent(
                     }
                 }
                 is Resource.Success -> {
+                    val userProfile = profileResource.data
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
@@ -170,7 +174,7 @@ fun ProfileScreenContent(
                             contentAlignment = Alignment.BottomEnd
                         ) {
                             AsyncImage(
-                                model = avatarUrl,
+                                model = avatarUrl ?: userProfile?.profilePicUrl,
                                 contentDescription = "Аватар",
                                 modifier = Modifier
                                     .fillMaxSize()
@@ -195,8 +199,31 @@ fun ProfileScreenContent(
                         OutlinedTextField(value = bio, onValueChange = { onEvent(ProfileEvent.OnBioChange(it)) }, label = { Text("О себе") }, modifier = Modifier.fillMaxWidth().height(120.dp))
                         OutlinedTextField(value = language, onValueChange = { onEvent(ProfileEvent.OnLanguageChange(it)) }, label = { Text("Язык (напр. ru)") }, modifier = Modifier.fillMaxWidth())
 
+                        // --- Кнопка Stripe Onboarding / Стать поставщиком ---
+                        val showStripeButton = userProfile?.organization == null ||
+                                (userProfile.organization != null && userProfile.organization.kycStatus != KycStatus.VERIFIED)
+
+                        if (showStripeButton) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Button(
+                                onClick = onNavigateToStripeOnboarding,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                val buttonText = if (userProfile?.organization == null) {
+                                    "Стать поставщиком"
+                                } else {
+                                    if (userProfile.organization.stripeAccountId == null) {
+                                        "Подключить выплаты (Stripe)"
+                                    } else {
+                                        "Завершить настройку выплат (Stripe)"
+                                    }
+                                }
+                                Text(buttonText)
+                            }
+                        }
 
                         // --- Кнопки действий ---
+                        Spacer(modifier = Modifier.height(8.dp))
                         Button(onClick = { onEvent(ProfileEvent.OnSaveClick) }, modifier = Modifier.fillMaxWidth()) {
                             Text("Сохранить изменения")
                         }

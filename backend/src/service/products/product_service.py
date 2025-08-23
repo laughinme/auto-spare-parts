@@ -1,6 +1,7 @@
 import aiofiles
 import shutil
 from uuid import UUID, uuid4
+from datetime import datetime
 from pathlib import Path
 from fastapi import UploadFile, status, HTTPException
 from redis.asyncio import Redis
@@ -122,43 +123,81 @@ class ProductService:
         return media
 
     async def delete_media(self, media: ProductMedia) -> None:
-        """Delete media file"""
+        """Delete media file and remove from filesystem"""
+        # Delete physical file first
+        try:
+            if media.url and settings.MEDIA_DIR in media.url:
+                url_parts = media.url.split(f"/{settings.MEDIA_DIR}/")
+                if len(url_parts) > 1:
+                    relative_path = url_parts[1]
+                    file_path = Path(settings.MEDIA_DIR) / relative_path
+                    if file_path.exists():
+                        file_path.unlink()
+        except Exception:
+            pass
+        
         await self.media_repo.delete(media.id)
-        await self.uow.commit()
 
     async def add_product_photo(
         self,
         file: UploadFile,
         product: Product
-    ) -> None:
-        """Add photo to product (similar to user picture upload)"""
+    ) -> ProductMedia:
+        """Add photo to product (using same approach as user picture upload)"""
         
         # Validate file type
-        if file.content_type not in ['image/jpeg', 'image/png']:
-            raise HTTPException(status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, "Only JPEG and PNG files are allowed")
-        
-        # Validate file size
-        if file.size and file.size > settings.MAX_PHOTO_SIZE * 1024 * 1024:
-            raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, f"File size exceeds {settings.MAX_PHOTO_SIZE} MB")
-        
-        # Generate unique filename
-        file_extension = file.filename.split('.')[-1] if file.filename and '.' in file.filename else 'jpg'
-        unique_filename = f"{uuid4()}.{file_extension}"
+        if file.content_type not in ("image/jpeg", "image/png"):
+            raise HTTPException(
+                status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+                detail="Only JPEG and PNG files are allowed"
+            )
         
         # Create directory structure
         product_media_dir = Path(settings.MEDIA_DIR) / "products" / str(product.id)
         product_media_dir.mkdir(parents=True, exist_ok=True)
         
-        # Save file
+        # Generate unique filename (same approach as user service)
+        ext = ".jpg" if file.content_type == "image/jpeg" else ".png"
+        unique_filename = f"{uuid4().hex}{ext}"
+        
+        # Save file with async approach (same as user service)
         file_path = product_media_dir / unique_filename
+        limit_bytes = settings.MAX_PHOTO_SIZE * 1024 * 1024
+        written = 0
+        
         try:
-            async with aiofiles.open(file_path, 'wb') as f:
-                shutil.copyfileobj(file.file, f)
+            async with aiofiles.open(file_path, "wb") as out:
+                while chunk := await file.read(1024 * 1024):
+                    if written + len(chunk) > limit_bytes:
+                        try:
+                            await out.flush()
+                            await out.close()
+                        except Exception:
+                            pass
+                        try:
+                            file_path.unlink(missing_ok=True)
+                        except Exception:
+                            pass
+                        raise HTTPException(
+                            status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                            detail=f"File too large. Max {settings.MAX_PHOTO_SIZE} MB"
+                        )
+                    await out.write(chunk)
+                    written += len(chunk)
+        except HTTPException:
+            raise
         except Exception as e:
-            raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, f"Could not save file: {str(e)}")
+            try:
+                file_path.unlink(missing_ok=True)
+            except Exception:
+                pass
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR, 
+                detail=f"Could not save file: {str(e)}"
+            )
         
         # Create media record
-        media_url = f"/media/products/{product.id}/{unique_filename}"
+        media_url = f"{settings.SITE_URL}/{settings.MEDIA_DIR}/products/{product.id}/{unique_filename}"
         media = ProductMedia(
             product_id=product.id,
             url=media_url,
@@ -167,3 +206,151 @@ class ProductService:
         
         await self.media_repo.add(media)
         await self.uow.commit()
+        await self.uow.session.refresh(product)
+        
+        return media
+
+    async def add_product_photos(
+        self,
+        files: list[UploadFile],
+        product: Product
+    ) -> list[ProductMedia]:
+        """Add multiple photos to product"""
+        media_files = []
+        
+        # Validate all files first before processing any
+        for file in files:
+            if file.content_type not in ("image/jpeg", "image/png"):
+                raise HTTPException(
+                    status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+                    detail=f"File {file.filename}: Only JPEG and PNG files are allowed"
+                )
+        
+        # Process each file
+        for file in files:
+            try:
+                media = await self.add_product_photo(file, product)
+                media_files.append(media)
+            except Exception as e:
+                # If any file fails, we still want to return the successful ones
+                # But we should log or handle the error appropriately
+                raise e  # For now, fail fast
+        
+        return media_files
+
+    async def search_published_products(
+        self,
+        *,
+        offset: int = 0,
+        limit: int = 20,
+        search: str | None = None,
+        brand: str | None = None,
+        condition: str | None = None,
+        price_min: float | None = None,
+        price_max: float | None = None,
+    ) -> tuple[list[Product], int]:
+        """Search published products with filters for public catalog"""
+        return await self.products_repo.list_published_products(
+            offset=offset,
+            limit=limit,
+            search=search,
+            brand=brand,
+            condition=condition,
+            price_min=price_min,
+            price_max=price_max,
+        )
+
+    async def get_feed_products(
+        self,
+        *,
+        offset: int = 0,
+        limit: int = 20,
+    ) -> tuple[list[Product], int]:
+        """Get products for feed (For You Page)"""
+        return await self.products_repo.get_feed_products(
+            offset=offset,
+            limit=limit,
+        )
+
+    async def search_published_products_cursor(
+        self,
+        *,
+        limit: int = 20,
+        search: str | None = None,
+        brand: str | None = None,
+        condition: str | None = None,
+        price_min: float | None = None,
+        price_max: float | None = None,
+        cursor: str | None = None,
+    ) -> tuple[list[Product], str | None]:
+        """Search published products with cursor pagination (same pattern as admin users)"""
+        cursor_created_at = None
+        cursor_id = None
+        if cursor:
+            try:
+                ts_str, id_str = cursor.split("_", 1)
+                cursor_created_at = datetime.fromisoformat(ts_str)
+                cursor_id = UUID(id_str)
+            except Exception:
+                raise HTTPException(400, detail='Invalid cursor')
+
+        products = await self.products_repo.search_published_products_cursor(
+            limit=limit,
+            search=search,
+            brand=brand,
+            condition=condition,
+            price_min=price_min,
+            price_max=price_max,
+            cursor_created_at=cursor_created_at,
+            cursor_id=cursor_id,
+        )
+
+        next_cursor = None
+        if len(products) == limit:
+            last = products[-1]
+            if last.created_at is None:
+                next_cursor = None
+            else:
+                next_cursor = f"{last.created_at.isoformat()}_{last.id}"
+
+        return products, next_cursor
+
+    async def get_feed_products_cursor(
+        self,
+        *,
+        limit: int = 20,
+        cursor: str | None = None,
+    ) -> tuple[list[Product], str | None]:
+        """Get products for feed using cursor pagination (same pattern as admin users)"""
+        cursor_created_at = None
+        cursor_id = None
+        if cursor:
+            try:
+                ts_str, id_str = cursor.split("_", 1)
+                cursor_created_at = datetime.fromisoformat(ts_str)
+                cursor_id = UUID(id_str)
+            except Exception:
+                raise HTTPException(400, detail='Invalid cursor')
+
+        products = await self.products_repo.get_feed_products_cursor(
+            limit=limit,
+            cursor_created_at=cursor_created_at,
+            cursor_id=cursor_id,
+        )
+
+        next_cursor = None
+        if len(products) == limit:
+            last = products[-1]
+            if last.created_at is None:
+                next_cursor = None
+            else:
+                next_cursor = f"{last.created_at.isoformat()}_{last.id}"
+
+        return products, next_cursor
+
+    async def get_published_product(self, product_id: UUID | str) -> Product | None:
+        """Get published product by ID for public viewing"""
+        product = await self.products_repo.get_by_id(product_id)
+        if product and product.status == ProductStatus.PUBLISHED:
+            return product
+        return None

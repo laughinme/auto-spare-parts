@@ -1,47 +1,70 @@
 package com.lapcevichme.templates.domain.repository
 
+import com.lapcevichme.templates.domain.model.CursorPage
 import com.lapcevichme.templates.domain.model.Page
 import com.lapcevichme.templates.domain.model.ProductCreate
 import com.lapcevichme.templates.domain.model.ProductModel
 import com.lapcevichme.templates.domain.model.ProductPatch
 import com.lapcevichme.templates.domain.model.Resource
 import kotlinx.coroutines.flow.Flow
-import java.util.UUID
 
 interface ProductRepository {
     fun getProducts(
         offset: Int,
         limit: Int,
         query: String? = null,
-        orgId: UUID? = null
+        orgId: String? = null
     ): Flow<Resource<Page<ProductModel>>>
 
-    fun getProduct(productId: UUID): Flow<Resource<ProductModel>>
+    fun getProduct(productId: String): Flow<Resource<ProductModel>>
 
-    fun createProduct(orgId: UUID, product: ProductCreate): Flow<Resource<ProductModel>>
+    fun createProduct(
+        orgId: String,
+        product: ProductCreate,
+        photos: List<Pair<ByteArray, String>>? // Изменено
+    ): Flow<Resource<ProductModel>>
 
     fun updateProduct(
-        orgId: UUID,
-        productId: UUID,
+        orgId: String,
+        productId: String,
         patch: ProductPatch
     ): Flow<Resource<ProductModel>>
 
-    fun deleteProduct(orgId: UUID, productId: UUID): Flow<Resource<Unit>>
+    fun deleteProduct(orgId: String, productId: String): Flow<Resource<Unit>>
 
-    fun publishProduct(orgId: UUID, productId: UUID): Flow<Resource<ProductModel>>
+    fun publishProduct(orgId: String, productId: String): Flow<Resource<ProductModel>>
 
-    fun unpublishProduct(orgId: UUID, productId: UUID): Flow<Resource<ProductModel>>
+    fun unpublishProduct(orgId: String, productId: String): Flow<Resource<ProductModel>>
 
     fun uploadProductPhoto(
-        orgId: UUID,
-        productId: UUID,
+        orgId: String,
+        productId: String,
         photoBytes: ByteArray,
         mimeType: String
     ): Flow<Resource<ProductModel>>
 
     fun deleteProductPhoto(
-        orgId: UUID,
-        productId: UUID,
-        mediaId: UUID
+        orgId: String,
+        productId: String,
+        mediaId: String
     ): Flow<Resource<Unit>>
+
+    fun searchProductsCatalog(
+        limit: Int = 20,
+        cursor: String? = null,
+        query: String? = null,
+        brand: String? = null,
+        condition: String? = null,
+        priceMin: Double? = null,
+        priceMax: Double? = null
+    ): Flow<Resource<CursorPage<ProductModel>>>
+
+    fun getProductsFeed(
+        limit: Int = 20,
+        cursor: String? = null
+    ): Flow<Resource<CursorPage<ProductModel>>>
+
+    fun getProductDetails(
+        productId: String
+    ): Flow<Resource<ProductModel>>
 }

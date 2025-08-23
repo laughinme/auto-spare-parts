@@ -3,7 +3,7 @@ import android.util.Log
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
 import com.lapcevichme.templates.domain.model.Resource
-import com.lapcevichme.templates.domain.usecase.GetConnectClientSecretUseCase
+import com.lapcevichme.templates.domain.usecase.user.GetConnectClientSecretUseCase
 import com.stripe.android.connect.AccountOnboardingController
 import com.stripe.android.connect.AccountOnboardingListener
 import com.stripe.android.connect.EmbeddedComponentManager

@@ -39,6 +39,7 @@ async def register_user(
             httponly=True,
             secure=True,
             samesite="none",
+            path='/',
         )
         response.set_cookie(
             'csrf_token',
@@ -46,7 +47,8 @@ async def register_user(
             max_age=settings.REFRESH_TTL,
             secure=True,
             httponly=False,
-            samesite='none'
+            samesite='none',
+            path='/',
         )
     
         return TokenPair(access_token=access, refresh_token=None)

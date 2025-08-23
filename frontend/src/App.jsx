@@ -3,6 +3,7 @@ import { useAuth } from "./context/useAuth.js";
 import Topbar from "./components/Topbar.jsx";
 import SupplierTopbar from "./components/supplier/SupplierTopbar.jsx";
 import FYP from "./components/fyp/FYP.jsx";
+import GarageWidget from "./components/fyp/garage/GarageWidget.jsx";
 import ProductDetail from "./components/product/ProductDetail.jsx";
 import CartPage from "./components/cart/CartPage.jsx";
 import OrderPage from "./components/order/OrderPage.jsx";
@@ -16,13 +17,19 @@ import AuthPage from "./components/auth/AuthPage.jsx";
 import { MOCK_PRODUCTS } from "./data/mockProducts.js";
 import { SUPPLIER_SELF_ID } from "./data/constants.js";
 import { createOrdersFromCart } from "./utils/helpers.js";
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 
 function App() {
-  const { user, isUserLoading, logout } = useAuth();
+  // Получаем новое состояние isRestoringSession из контекста
+  const { user, isUserLoading, logout, isRestoringSession } = useAuth();
+  
+  // Wrapper для logout с очисткой localStorage
+  const handleLogout = () => {
+    localStorage.removeItem('userRole');
+    logout();
+  };
   
   const [route, setRoute] = useState("fyp");
+  const [previousRoute, setPreviousRoute] = useState("fyp");
   const [role, setRole] = useState(null);
   const [hasInitializedRole, setHasInitializedRole] = useState(false);
   const [buyerType] = useState(null);
@@ -35,16 +42,13 @@ function App() {
   const [orders, setOrders] = useState([]);
   const [activeOrderId, setActiveOrderId] = useState(null);
   
-
   useEffect(() => {
-    // Expose route setter globally for navigation from auth/register flows
     window.__setRoute = setRoute;
     return () => {
       if (window.__setRoute === setRoute) window.__setRoute = undefined;
     };
   }, [setRoute]);
 
-  // Hooks must be declared before any early returns
   const activeOrder = useMemo(() => orders.find((o) => o.id === activeOrderId) || null, [orders, activeOrderId]);
 
   const supplierMetrics = useMemo(() => {
@@ -56,47 +60,33 @@ function App() {
     return { gmv, pending, mySkus, orders: myOrders.length, conv };
   }, [orders, products]);
 
-  // Сброс флага инициализации при смене пользователя
   useEffect(() => {
     if (!user) {
       setHasInitializedRole(false);
       setRole(null);
+      localStorage.removeItem('userRole'); // Очищаем роль при logout
       console.log('User logged out, resetting role and initialization flag');
     }
   }, [user]);
 
-  // Derive role from user object if provided by API
-  // Expecting something like user.role === 'supplier' | 'buyer'
   useEffect(() => {
     if (user) {
       console.log('Processing user data:', user);
       
-      // Сначала проверяем явные поля роли
-      let apiRole = user.role || user.type || user.user_type;
-      console.log('Found explicit role:', apiRole);
+      // Сначала проверяем сохраненную роль в localStorage
+      const savedRole = localStorage.getItem('userRole');
+      let apiRole = savedRole || user.role || user.type || user.user_type;
+      console.log('Found role - saved:', savedRole, ', from API:', user.role || user.type || user.user_type);
       
-      // Если роль не указана явно, пытаемся определить по другим данным
       if (!apiRole) {
         console.log('No explicit role found, trying to determine from other data');
-        
-        // Временная логика для определения роли (можно настроить под ваши нужды)
-        // Например, если в email есть supplier/vendor/shop - это поставщик
-        if (user.email && (
-          user.email.includes('supplier') || 
-          user.email.includes('vendor') || 
-          user.email.includes('shop') ||
-          user.email.includes('seller')
-        )) {
+        if (user.email && (user.email.includes('supplier') || user.email.includes('vendor') || user.email.includes('shop') || user.email.includes('seller'))) {
           apiRole = 'supplier';
           console.log('Determined role as supplier from email:', user.email);
-        }
-        // Или если есть поле is_supplier
-        else if (user.is_supplier === true) {
+        } else if (user.is_supplier === true) {
           apiRole = 'supplier';
           console.log('Determined role as supplier from is_supplier field');
-        }
-        // По умолчанию - покупатель
-        else {
+        } else {
           apiRole = 'buyer';
           console.log('Defaulting to buyer role');
         }
@@ -106,36 +96,35 @@ function App() {
         console.log('Setting user role:', apiRole, 'for user:', user.email, 'current route:', route);
         setRole(apiRole);
         
-        // Если это первоначальная установка роли и пользователь на дефолтном роуте
-        if (!hasInitializedRole && route === "fyp") {
-          console.log('First time role initialization on fyp route');
+        // Перенаправляем пользователя при первой инициализации роли
+        if (!hasInitializedRole) {
+          console.log('First time role initialization, current route:', route);
           setHasInitializedRole(true);
-          // Перенаправляем поставщика на дашборд
           if (apiRole === "supplier") {
-            console.log('Redirecting supplier to dashboard');
-            setRoute("supplier:dashboard");
+            console.log('Redirecting supplier - savedRole:', savedRole);
+            // Если роль была сохранена из регистрации, направляем на onboarding
+            if (savedRole === 'supplier') {
+              setRoute("onboarding:supplier_stripe");
+            } else {
+              setRoute("supplier:dashboard"); 
+            }
           } else {
-            console.log('Buyer stays on fyp');
+            console.log('Redirecting buyer to fyp');
+            setRoute("fyp");
           }
         }
       }
     }
   }, [user, role, hasInitializedRole, route]);
 
-  // Отдельный эффект для управления роутами поставщика
   useEffect(() => {
     if (role === "supplier") {
       console.log('Supplier route protection activated for route:', route);
-      
-      // Роуты покупателя, с которых нужно перенаправить поставщика
-      const buyerOnlyRoutes = ["fyp", "product", "cart"];
-      
+      const buyerOnlyRoutes = ["fyp", "cart"];
       if (buyerOnlyRoutes.includes(route)) {
         console.log('Redirecting supplier from buyer route:', route, 'to dashboard');
         setRoute("supplier:dashboard");
       }
-      
-      // Перенаправляем с общего чата на специальный чат поставщика
       if (route === "chat") {
         console.log('Redirecting supplier from general chat to supplier chat');
         setRoute("supplier:chat");
@@ -143,14 +132,25 @@ function App() {
     }
   }, [role, route]);
 
-  if (isUserLoading) {
+  // НОВЫЙ БЛОК: Показываем экран загрузки, пока идет восстановление сессии
+  if (isRestoringSession) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <p className="text-lg text-slate-500">Загрузка...</p>
+        <p className="text-lg text-slate-500">Загрузка сессии...</p>
       </div>
     );
   }
 
+  // Эта проверка остается на случай, если сессия восстановлена, но профиль еще грузится
+  if (isUserLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <p className="text-lg text-slate-500">Загрузка пользователя...</p>
+      </div>
+    );
+  }
+
+  // Если все загрузки завершены и пользователя нет, показываем страницу входа
   if (!user) {
     return <AuthPage />;
   }
@@ -162,13 +162,29 @@ function App() {
   };
   const removeVehicle = (value) => setGarage((prev) => prev.filter((x) => x !== value));
 
-  const handleAddToCart = (product) => {
+  const navigateTo = (newRoute) => {
+    console.log("navigateTo called:", route, "->", newRoute);
+    setPreviousRoute(route);
+    setRoute(newRoute);
+  };
+
+  const navigateBack = () => {
+    // Clear selected product when navigating back from product detail page
+    if (route === "product") {
+      setSelectedProduct(null);
+    }
+    setRoute(previousRoute);
+  };
+
+  // Removed unused navigateToFYP helper to avoid linter warning
+
+  const handleAddToCart = (product, quantity = 1) => {
     setCart((prev) => {
       const existing = prev.find((i) => i.productId === product.id);
       if (existing) {
-        return prev.map((i) => (i.productId === product.id ? { ...i, qty: i.qty + 1 } : i));
+        return prev.map((i) => (i.productId === product.id ? { ...i, qty: i.qty + quantity } : i));
       }
-      return [...prev, { productId: product.id, qty: 1 }];
+      return [...prev, { productId: product.id, qty: quantity }];
     });
   };
 
@@ -214,8 +230,6 @@ function App() {
       }, 650);
     }
   };
-
-  
   
   const showTopbar = route !== "onboarding:supplier_stripe";
   const isSupplierRoute = route.startsWith("supplier:");
@@ -227,7 +241,7 @@ function App() {
           <SupplierTopbar
             route={route}
             setRoute={setRoute}
-            onLogout={logout}
+            onLogout={handleLogout}
           />
         ) : (
           <Topbar
@@ -237,7 +251,7 @@ function App() {
             cartCount={cart.reduce((a, b) => a + b.qty, 0)}
             isWorkshop={buyerType === "workshop"}
             showSupplierTab={role === "supplier"}
-            onLogout={logout}
+            onLogout={handleLogout}
           />
         )
       )}
@@ -250,42 +264,36 @@ function App() {
             garage={garage}
             onAddVehicle={handleAddVehicle}
             onRemoveVehicle={removeVehicle}
-            products={products}
             setSelectedProduct={setSelectedProduct}
-            setRoute={setRoute}
+            navigateTo={navigateTo}
             onAddToCart={handleAddToCart}
           />
         )}
-
-        {route === "onboarding:supplier_stripe" && (
-          <SupplierStripeOnboarding />
+        {route === "garage" && role === "buyer" && (
+          <div className="max-w-xl mx-auto">
+            <GarageWidget onVehicleAdded={handleAddVehicle} onVehicleRemoved={removeVehicle} />
+          </div>
         )}
-
+        {route === "onboarding:supplier_stripe" && <SupplierStripeOnboarding />}
         {route === "product" && selectedProduct && (
           <ProductDetail
+            orgId={user?.organization?.id}
+            productId={selectedProduct.id}
             product={selectedProduct}
-            onAdd={() => handleAddToCart(selectedProduct)}
-            onBack={() => setRoute("fyp")}
-            onChat={() => setRoute("cart")}
+            onAdd={role !== "supplier" ? (product, quantity) => handleAddToCart(product, quantity) : null}
+            onBack={navigateBack}
+            onChat={role !== "supplier" ? () => navigateTo("cart") : null}
+            isSupplierView={role === "supplier"}
           />
         )}
-
         {route === "cart" && (
           <CartPage cart={cart} productsById={productsById} setCart={setCart} onCheckout={handleCheckout} />
         )}
-
-        {route === "chat" && role !== "supplier" && (
-          <ChatPage role={role} />
-        )}
-
-        {route === "supplier:chat" && (
-          <SupplierChatPage />
-        )}
-
+        {route === "chat" && role !== "supplier" && <ChatPage role={role} />}
+        {route === "supplier:chat" && <SupplierChatPage />}
         {route === "order" && activeOrder && (
-          <OrderPage order={activeOrder} onBack={() => setRoute("fyp")} onSend={(t) => sendChatMessage(activeOrder.id, role === "buyer" ? "buyer" : "seller", t)} />
+          <OrderPage order={activeOrder} onBack={() => navigateBack()} onSend={(t) => sendChatMessage(activeOrder.id, role === "buyer" ? "buyer" : "seller", t)} />
         )}
-
         {route === "supplier:dashboard" && (
           <SupplierDashboard 
             supplierProfile={supplierProfile} 
@@ -293,21 +301,24 @@ function App() {
             onNavigate={setRoute}
           />
         )}
-
         {route === "supplier:products" && (
           <SupplierProducts
+            orgId={user?.organization?.id}
             products={products}
             setProducts={setProducts}
             supplierProfile={supplierProfile}
-            onCreateNavigate={() => setRoute("supplier:products:new")}
+            onCreateNavigate={() => navigateTo("supplier:products:new")}
+            onProductView={(product) => { 
+              setSelectedProduct(product); 
+              navigateTo("product"); 
+            }}
           />
         )}
-
         {route === "supplier:products:new" && (
           <SupplierProductCreate
             orgId={user?.organization?.id}
             supplierProfile={supplierProfile}
-            onCancel={() => setRoute("supplier:products")}
+            onCancel={() => navigateTo("supplier:products")}
             onCreate={(payload) => {
               const id = `p${Date.now()}`;
               const newProd = {
@@ -321,16 +332,12 @@ function App() {
                 shipEtaDays: 7,
                 category: "Misc",
                 vehicle: payload.vehicle || "Any",
-                img: payload.img, // object URL preview; in real app would be backend URL
+                img: payload.img,
               };
               setProducts((prev) => [newProd, ...prev]);
-              setRoute("supplier:products");
+              navigateTo("supplier:products");
             }}
           />
-        )}
-
-        {route === "tests" && (
-          <DevTests />
         )}
       </main>
     </div>
@@ -350,6 +357,71 @@ const styles = `
 .segmented { @apply inline-flex rounded-xl overflow-hidden border border-slate-200; }
 .seg { @apply px-3 py-1.5 text-sm bg-white hover:bg-slate-50; }
 .seg--active { @apply bg-slate-900 text-white; }
+
+/* Modern Authentication Page Animations */
+@keyframes blob {
+  0% { transform: translate(0px, 0px) scale(1); }
+  33% { transform: translate(30px, -50px) scale(1.1); }
+  66% { transform: translate(-20px, 20px) scale(0.9); }
+  100% { transform: translate(0px, 0px) scale(1); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes float-delayed {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-15px); }
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float-delayed 8s ease-in-out infinite;
+  animation-delay: 1s;
+}
+
+.animate-gradient {
+  background-size: 400% 400%;
+  animation: gradient-shift 3s ease infinite;
+}
+
+/* Glassmorphism backdrop support */
+.backdrop-blur-sm { backdrop-filter: blur(4px); }
+.backdrop-blur { backdrop-filter: blur(8px); }
+.backdrop-blur-md { backdrop-filter: blur(12px); }
+.backdrop-blur-lg { backdrop-filter: blur(16px); }
+.backdrop-blur-xl { backdrop-filter: blur(24px); }
+
+/* Custom scrollbar for test accounts */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
 `;
 
 const StyleInjector = () => <style dangerouslySetInnerHTML={{ __html: styles }} />;

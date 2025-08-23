@@ -35,7 +35,7 @@ async def refresh_tokens(
     ),
 ) -> TokenPair:
     cookie_refresh = request.cookies.get("refresh_token")
-    logger.info(f'Cookie refresh: {cookie_refresh}')
+    # logger.info(f'Cookie refresh: {cookie_refresh}')
     
     if cookie_refresh:
         if not x_csrf:
@@ -58,14 +58,16 @@ async def refresh_tokens(
             max_age=config.REFRESH_TTL,
             httponly=True, 
             secure=True,
-            samesite="none"
+            samesite="none",
+            path='/',
         )
         response.set_cookie(
             "csrf_token", new_csrf,
             max_age=config.REFRESH_TTL,
             httponly=False, 
             secure=True, 
-            samesite="none"
+            samesite="none",
+            path='/',
         )
 
         # body: only short-lived access token

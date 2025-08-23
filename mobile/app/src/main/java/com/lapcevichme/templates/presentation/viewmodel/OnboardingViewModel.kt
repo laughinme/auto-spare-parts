@@ -19,5 +19,14 @@ class OnboardingViewModel @Inject constructor() : ViewModel() {
 
     fun onRoleClicked(newRole: String) {
         _role.value = newRole
+        Log.d(ONBOARDING_VIEWMODEL_TAG, "Role selected: $newRole")
+    }
+
+    // Добавляем константы для ролей
+    companion object {
+        const val ROLE_BUYER = "Buyer"
+        const val ROLE_SELLER = "Seller"
+        // Можно добавить UNKNOWN или NONE, если нужно
+        // const val ROLE_NONE = "None"
     }
 }

@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lapcevichme.templates.domain.model.ExchangeLocation
 import com.lapcevichme.templates.domain.model.Resource
-import com.lapcevichme.templates.domain.usecase.GetUserLocationUseCase
+import com.lapcevichme.templates.domain.usecase.location.GetUserLocationUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

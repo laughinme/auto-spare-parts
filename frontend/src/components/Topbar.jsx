@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function Topbar({ route, setRoute, role, cartCount, isWorkshop, showSupplierTab }) {
+export default function Topbar({ route, setRoute, role, cartCount, isWorkshop, showSupplierTab, onLogout }) {
 	return (
 		<header className="sticky top-0 z-10 backdrop-blur supports-[backdrop-filter]:bg-white/70 bg-white/80 border-b">
 			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -15,6 +15,9 @@ export default function Topbar({ route, setRoute, role, cartCount, isWorkshop, s
 					<button className={navBtnCls(route === "fyp")} onClick={() => setRoute("fyp")}>Главная</button>
 					<button className={navBtnCls(route === "cart")} onClick={() => setRoute("cart")}>Корзина{cartCount ? ` (${cartCount})` : ""}</button>
 					<button className={navBtnCls(route === "chat")} onClick={() => setRoute("chat")}>Чат</button>
+					{role === "buyer" && (
+						<button className={navBtnCls(route === "garage")} onClick={() => setRoute("garage")}>Гараж</button>
+					)}
 					{showSupplierTab && (
 						<div className="flex items-center gap-2">
 							<button className={navBtnCls(route === "supplier:dashboard")} onClick={() => setRoute("supplier:dashboard")}>Панель</button>
@@ -22,7 +25,15 @@ export default function Topbar({ route, setRoute, role, cartCount, isWorkshop, s
 						</div>
 					)}
 				</nav>
-				<div className="text-xs text-slate-500">Роль: {role ?? "—"}</div>
+				<div className="flex items-center gap-2">
+					<div className="text-xs text-slate-500">Роль: {role ?? "—"}</div>
+					<button 
+						className="px-3 py-2 rounded-xl border transition shadow-sm hover:shadow-md border-slate-200 bg-white text-xs" 
+						onClick={() => onLogout && onLogout()}
+					>
+						Выйти
+					</button>
+				</div>
 			</div>
 		</header>
 	);

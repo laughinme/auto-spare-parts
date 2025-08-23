@@ -183,7 +183,10 @@ cython_debug/
 # Custom
 secrets/
 *.DS_Store
-/backend/src/media
+# /backend/src/media
 test.py
 /.vscode
 frontend/package-lock.json
+
+# Vehicle data seeding files (downloaded automatically on deployment)
+# backend/src/database/seeders/data/*.json

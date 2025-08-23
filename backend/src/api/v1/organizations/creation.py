@@ -8,15 +8,15 @@ from service.organizations import OrganizationService, get_organization_service
 
 router = APIRouter()
 
-@router.post(
-    path='/',
-    response_model=OrganizationModel,
-    summary='Create a new organization',
-    include_in_schema=False,
-)
-async def create_organization(
-    payload: OrganizationCreate,
-    user: Annotated[User, Depends(auth_user)],
-    svc: Annotated[OrganizationService, Depends(get_organization_service)],
-):
-    return await svc.create_organization(payload, user)
+# @router.post(
+#     path='/',
+#     response_model=OrganizationModel,
+#     summary='Create a new organization',
+#     include_in_schema=False,
+# )
+# async def create_organization(
+#     payload: OrganizationCreate,
+#     user: Annotated[User, Depends(auth_user)],
+#     svc: Annotated[OrganizationService, Depends(get_organization_service)],
+# ):
+#     return await svc.create_organization(payload, user)
