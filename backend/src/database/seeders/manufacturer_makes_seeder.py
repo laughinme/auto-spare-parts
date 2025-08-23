@@ -2,7 +2,7 @@ from sqlalchemy import delete
 from sqlalchemy.dialects.postgresql import insert
 
 from .base_seeder import BaseSeeder
-from ..relational_db.tables.manufacturers.manufacturer_make_table import ManufacturerMake
+from ..relational_db.tables import ManufacturerMake
 
 
 class ManufacturerMakesSeeder(BaseSeeder):

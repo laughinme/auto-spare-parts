@@ -69318,12 +69318,6 @@
     "manufacturer_name": "THE SHAK FISH HOUSES LLC"
   },
   {
-    "manufacturer_id": 22490,
-    "make_id": 13716,
-    "make_name": "LOBO ADVENTURE TRAILERS",
-    "manufacturer_name": "WOLFPACK MFG"
-  },
-  {
     "manufacturer_id": 22491,
     "make_id": 12388,
     "make_name": "DIME",
@@ -75036,12 +75030,6 @@
     "manufacturer_name": "321TRAILERS LLC"
   },
   {
-    "manufacturer_id": 24403,
-    "make_id": 13717,
-    "make_name": "WEBERLANE MANUFACTURING",
-    "manufacturer_name": "WEBERLANE MFG. (1990) CO."
-  },
-  {
     "manufacturer_id": 24416,
     "make_id": 13587,
     "make_name": "TAYLOR RIG AND EQUIPMENT, LLC",
@@ -75520,17 +75508,5 @@
     "make_id": 13710,
     "make_name": "HEAVY EQUIPMENT SOLUTIONS, LLC.",
     "manufacturer_name": "HEAVY EQUIPMENT SOLUTIONS, LLC."
-  },
-  {
-    "manufacturer_id": 24847,
-    "make_id": 13718,
-    "make_name": "SOLAR RIG",
-    "manufacturer_name": "SOLAR RIG TECHNOLOGIES, LLC"
-  },
-  {
-    "manufacturer_id": 24857,
-    "make_id": 13719,
-    "make_name": "LUND",
-    "manufacturer_name": "LUND MANUFACTURING LLC"
   }
 ]
