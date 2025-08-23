@@ -43,7 +43,7 @@ import com.lapcevichme.templates.ui.theme.PreviewTheme
 fun HomeTabScreen(
     onNavigateToSearch: () -> Unit,
     viewModel: HomeTabViewModel = hiltViewModel(),
-    searchViewModel: SearchViewModel = hiltViewModel()
+    searchViewModel: SearchViewModel // Теперь принимается как параметр
 ) {
     val searchQuery by searchViewModel.searchQuery.collectAsStateWithLifecycle()
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -77,8 +77,9 @@ fun HomeTabScreen(
                     contentDescription = "Search Icon",
                     modifier = Modifier.clickable {
                         keyboardController?.hide()
+                        searchViewModel.onSearchClicked()
                         if (searchQuery != null) {
-                            onNavigateToSearch
+                            onNavigateToSearch()
                         }
                     }
                 )
@@ -90,8 +91,9 @@ fun HomeTabScreen(
             keyboardActions = KeyboardActions(
                 onSearch = {
                     keyboardController?.hide()
+                    searchViewModel.onSearchClicked()
                     if (searchQuery != null) {
-                        onNavigateToSearch
+                        onNavigateToSearch()
                     }
                 }
             )
@@ -102,7 +104,10 @@ fun HomeTabScreen(
         ) {
 
             item {
-                QuickSearchCard()
+                QuickSearchCard(
+                    onNavigateToSearch = onNavigateToSearch,
+                    viewModel = searchViewModel
+                )
             }
 
             if (errorMessage != null) {
@@ -160,7 +165,8 @@ fun HomeTabScreen(
 @Composable
 fun HomeTabScreenLightPreview() {
     PreviewTheme {
-        HomeTabScreen({})
+        // Для превью создаём отдельный экземпляр, это нормально
+        HomeTabScreen(onNavigateToSearch = {}, searchViewModel = hiltViewModel())
     }
 }
 
@@ -168,6 +174,6 @@ fun HomeTabScreenLightPreview() {
 @Composable
 fun HomeTabScreenDarkPreview() {
     PreviewTheme {
-        HomeTabScreen({})
+        HomeTabScreen(onNavigateToSearch = {}, searchViewModel = hiltViewModel())
     }
 }
