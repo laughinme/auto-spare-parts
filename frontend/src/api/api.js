@@ -140,6 +140,17 @@ export async function getGarageVehicles({ search = "", limit = 50 } = {}) {
   return response.data;
 }
 
+/**
+ * Delete a vehicle from user's garage
+ * @param {string} vehicleId - Vehicle UUID
+ */
+export async function deleteGarageVehicle(vehicleId) {
+  if (!vehicleId) {
+    throw new Error('vehicleId is required');
+  }
+  await apiProtected.delete(`/users/me/garage/${vehicleId}/`);
+}
+
 // === VEHICLES (Makes/Models/Years) ===
 
 /**

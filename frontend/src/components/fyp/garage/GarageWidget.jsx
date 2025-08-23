@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import AddVehicleForm from "./AddVehicleForm.jsx"; // Убедитесь, что путь к AddVehicleForm правильный
-import { getGarageVehicles, addVehicleToGarage } from "../../../api/api.js"; // Убедитесь, что путь к api.js правильный
+import AddVehicleForm from "./AddVehicleForm.jsx"; // Make sure the path to AddVehicleForm is correct
+import { getGarageVehicles, addVehicleToGarage, deleteGarageVehicle } from "../../../api/api.js"; // Убедитесь, что путь к api.js правильный
 
 // Компонент для отображения одного автомобиля в списке
 function VehicleItem({ vehicle, onRemove }) {
@@ -93,16 +93,24 @@ export default function GarageWidget({ onVehicleAdded, onVehicleRemoved }) {
     };
 
     const handleRemoveVehicle = async (vehicleToRemove) => {
-        // NOTE: The API for deleting a vehicle is missing in `api.js`.
-        // This is a placeholder for when it's implemented.
-        // For example: await deleteVehicleFromGarage(vehicleToRemove.id);
-        
-        // Optimistically update UI
+        const confirmed = window.confirm("Удалить этот автомобиль из гаража?");
+        if (!confirmed) return;
+
+        // Optimistic update
+        const previous = vehicles;
         setVehicles(prev => prev.filter(v => v.id !== vehicleToRemove.id));
 
-        // Call parent callback
-        if (onVehicleRemoved) {
-            onVehicleRemoved(vehicleToRemove);
+        try {
+            await deleteGarageVehicle(vehicleToRemove.id);
+            // Notify parent only after successful deletion
+            if (onVehicleRemoved) {
+                onVehicleRemoved(vehicleToRemove);
+            }
+        } catch (err) {
+            console.error('Failed to delete vehicle:', err);
+            // Rollback
+            setVehicles(previous);
+            alert('Не удалось удалить автомобиль. Попробуйте позже.');
         }
     };
 
