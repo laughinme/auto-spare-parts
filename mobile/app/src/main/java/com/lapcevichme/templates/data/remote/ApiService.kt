@@ -2,6 +2,8 @@ package com.lapcevichme.templates.data.remote
 
 import com.lapcevichme.templates.data.remote.dto.CityModelDto
 import com.lapcevichme.templates.data.remote.dto.CursorPageDto
+import com.lapcevichme.templates.data.remote.dto.MakeModelDto
+import com.lapcevichme.templates.data.remote.dto.ModelSchemaDto
 import com.lapcevichme.templates.data.remote.dto.OrganizationDto
 import com.lapcevichme.templates.data.remote.dto.PageDto
 import com.lapcevichme.templates.data.remote.dto.ProductCreateDto
@@ -307,6 +309,39 @@ interface ApiService {
     suspend fun getProductDetails(
         @Path("product_id") productId: String
     ): Response<ProductDto>
+
+    /**
+     * Get all makes
+     * @param limit Page size
+     * @param search Search query
+     */
+    @GET("/api/v1/vehicles/makes/")
+    suspend fun listMakes(
+        @Query("limit") limit: Int? = 5,
+        @Query("search") search: String? = null
+    ): Response<List<MakeModelDto>>
+
+    /**
+     * Get all models
+     * @param limit Page size
+     * @param makeId Filter by make ID
+     * @param search Search query
+     */
+    @GET("/api/v1/vehicles/models/")
+    suspend fun listModels(
+        @Query("limit") limit: Int? = 5,
+        @Query("make_id") makeId: Int? = null,
+        @Query("search") search: String? = null
+    ): Response<List<ModelSchemaDto>>
+
+    /**
+     * Get all years for model
+     * @param modelId Model ID
+     */
+    @GET("/api/v1/vehicles/years/")
+    suspend fun listYears(
+        @Query("model_id") modelId: Int
+    ): Response<List<Int>>
 
     /**
      * Получение списка всех поддерживаемых городов.
