@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import delete
 from sqlalchemy.dialects.postgresql import insert
 
 from .base_seeder import BaseSeeder
@@ -13,7 +13,7 @@ class ManufacturerMakesSeeder(BaseSeeder):
         
         # Check if data already exists
         existing_count = await self.get_record_count(ManufacturerMake)
-        if existing_count > 0:
+        if existing_count > 0 and not self.force:
             self.log_progress(f"Table already has {existing_count} manufacturer-make relations, skipping...")
             return
         
@@ -21,9 +21,13 @@ class ManufacturerMakesSeeder(BaseSeeder):
         self.log_progress("Loading manufacturer-make mappings from JSON...")
         mappings_data = await self.load_json_data("manufacturer_makes.json")
         
-        if not mappings_data:
+        if not mappings_data and not self.force:
             self.log_progress("No manufacturer-make mappings data found in JSON file")
             return
+        
+        if self.force:
+            self.log_progress("Deleting existing manufacturer-make relations...")
+            await self.session.execute(delete(ManufacturerMake))
         
         # Prepare data for insertion
         mappings_to_insert = []
@@ -50,13 +54,23 @@ class ManufacturerMakesSeeder(BaseSeeder):
                 seen.add(key)
                 unique_mappings.append(mapping)
         
-        # Bulk insert with ON CONFLICT DO NOTHING for PostgreSQL
-        stmt = insert(ManufacturerMake).values(unique_mappings)
-        stmt = stmt.on_conflict_do_nothing(
-            index_elements=['manufacturer_id', 'make_id']
-        )
+        batch_size = 2000
+        total_batches = (len(unique_mappings) + batch_size - 1) // batch_size
         
-        await self.session.execute(stmt)
+        for i in range(total_batches):
+            start_idx = i * batch_size
+            end_idx = min((i + 1) * batch_size, len(unique_mappings))
+            batch = unique_mappings[start_idx:end_idx]
+            
+            self.log_progress(f"Inserting batch {i+1}/{total_batches} ({len(batch)} manufacturer-make relations)")
+            
+            # Bulk insert with ON CONFLICT DO NOTHING for PostgreSQL
+            stmt = insert(ManufacturerMake).values(batch)
+            stmt = stmt.on_conflict_do_nothing(
+                index_elements=['manufacturer_id', 'make_id']
+            )
+            await self.session.execute(stmt)
+        
         await self.commit()
         
         self.log_progress(f"Successfully seeded {len(unique_mappings)} unique manufacturer-make relations")
