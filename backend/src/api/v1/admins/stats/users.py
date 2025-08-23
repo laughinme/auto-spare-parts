@@ -2,7 +2,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query
 
 from database.relational_db import User
-from domain.statistics import ActiveUsersGraph, RegistrationsGraph
+from domain.statistics import RegistrationsGraph
 from core.config import Settings
 from core.security import auth_admin
 from service.statistics import StatService, get_stats_service
