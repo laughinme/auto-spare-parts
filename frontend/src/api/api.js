@@ -1,5 +1,5 @@
 
-import apiProtected from './axiosInstance.js';
+import apiProtected, { apiPublic } from './axiosInstance.js';
 
 export async function createProduct({ productData, orgId }) {
   const url = `/organizations/${orgId}/products/`;
@@ -136,6 +136,50 @@ export async function addVehicleToGarage(vehicleData) {
 export async function getGarageVehicles({ search = "", limit = 50 } = {}) {
   const response = await apiProtected.get('/users/me/garage/vehicles', {
     params: { search, limit }
+  });
+  return response.data;
+}
+
+// === VEHICLES (Makes/Models/Years) ===
+
+/**
+ * Get vehicle makes
+ * @param {Object} params
+ * @param {number} [params.limit=50]
+ * @param {string} [params.search]
+ */
+export async function getVehicleMakes({ limit = 50, search } = {}) {
+  const response = await apiPublic.get('/vehicles/makes/', {
+    params: { limit, search }
+  });
+  return response.data;
+}
+
+/**
+ * Get vehicle models
+ * @param {Object} params
+ * @param {number} [params.limit=50]
+ * @param {number} [params.make_id]
+ * @param {string} [params.search]
+ */
+export async function getVehicleModels({ limit = 50, make_id, search } = {}) {
+  const response = await apiPublic.get('/vehicles/models/', {
+    params: { limit, make_id, search }
+  });
+  return response.data;
+}
+
+/**
+ * Get model years
+ * @param {Object} params
+ * @param {number} params.model_id
+ */
+export async function getVehicleYears({ model_id }) {
+  if (!model_id) {
+    throw new Error('model_id is required');
+  }
+  const response = await apiPublic.get('/vehicles/years/', {
+    params: { model_id }
   });
   return response.data;
 }

@@ -1,68 +1,88 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { getVehicleMakes, getVehicleModels, getVehicleYears } from "../../../api/api.js";
 
 // AddVehicleForm component for adding vehicles to garage
 export default function AddVehicleForm({ onSubmit, onCancel, loading }) {
 	const [formData, setFormData] = useState({
 		make_id: '',
 		model_id: '',
-		year: new Date().getFullYear(),
-		vehicle_type_id: '',
+		year: '',
 		vin: '',
 		comment: ''
 	});
 	const [errors, setErrors] = useState({});
 
-	// Mock data for demo - in real app, these would come from API
-	const mockMakes = [
-		{ make_id: 1, make_name: 'Toyota' },
-		{ make_id: 2, make_name: 'Honda' },
-		{ make_id: 3, make_name: 'BMW' },
-		{ make_id: 4, make_name: 'Mercedes-Benz' },
-		{ make_id: 5, make_name: 'Audi' },
-		{ make_id: 6, make_name: 'Volkswagen' },
-		{ make_id: 7, make_name: 'Ford' },
-		{ make_id: 8, make_name: 'Chevrolet' },
-		{ make_id: 9, make_name: 'Nissan' },
-		{ make_id: 10, make_name: 'Hyundai' }
-	];
+	// Remote collections
+	const [makes, setMakes] = useState([]);
+	const [models, setModels] = useState([]);
+	const [years, setYears] = useState([]);
 
-	const mockModels = {
-		1: [{ model_id: 1, model_name: 'Camry' }, { model_id: 2, model_name: 'Corolla' }, { model_id: 3, model_name: 'RAV4' }],
-		2: [{ model_id: 4, model_name: 'Civic' }, { model_id: 5, model_name: 'Accord' }, { model_id: 6, model_name: 'CR-V' }],
-		3: [{ model_id: 7, model_name: '3 Series' }, { model_id: 8, model_name: '5 Series' }, { model_id: 9, model_name: 'X3' }],
-		4: [{ model_id: 10, model_name: 'C-Class' }, { model_id: 11, model_name: 'E-Class' }, { model_id: 12, model_name: 'GLC' }],
-		5: [{ model_id: 13, model_name: 'A4' }, { model_id: 14, model_name: 'A6' }, { model_id: 15, model_name: 'Q5' }],
-		6: [{ model_id: 16, model_name: 'Golf' }, { model_id: 17, model_name: 'Passat' }, { model_id: 18, model_name: 'Tiguan' }],
-		7: [{ model_id: 19, model_name: 'Focus' }, { model_id: 20, model_name: 'Mustang' }, { model_id: 21, model_name: 'Explorer' }],
-		8: [{ model_id: 22, model_name: 'Malibu' }, { model_id: 23, model_name: 'Equinox' }, { model_id: 24, model_name: 'Silverado' }],
-		9: [{ model_id: 25, model_name: 'Altima' }, { model_id: 26, model_name: 'Sentra' }, { model_id: 27, model_name: 'Rogue' }],
-		10: [{ model_id: 28, model_name: 'Elantra' }, { model_id: 29, model_name: 'Sonata' }, { model_id: 30, model_name: 'Tucson' }]
-	};
+	// Loading flags
+	const [loadingMakes, setLoadingMakes] = useState(false);
+	const [loadingModels, setLoadingModels] = useState(false);
+	const [loadingYears, setLoadingYears] = useState(false);
 
-	const mockVehicleTypes = [
-		{ vehicle_type_id: 1, name: 'Седан' },
-		{ vehicle_type_id: 2, name: 'Хэтчбек' },
-		{ vehicle_type_id: 3, name: 'Универсал' },
-		{ vehicle_type_id: 4, name: 'Кроссовер' },
-		{ vehicle_type_id: 5, name: 'Внедорожник' },
-		{ vehicle_type_id: 6, name: 'Кабриолет' },
-		{ vehicle_type_id: 7, name: 'Купе' },
-		{ vehicle_type_id: 8, name: 'Пикап' }
-	];
+	// Fetch makes on mount
+	useEffect(() => {
+		let isMounted = true;
+		(async () => {
+			try {
+				setLoadingMakes(true);
+				const data = await getVehicleMakes({ limit: 100 });
+				if (isMounted) setMakes(data || []);
+			} catch (e) {
+				console.error('Failed to load makes', e);
+			} finally {
+				if (isMounted) setLoadingMakes(false);
+			}
+		})();
+		return () => { isMounted = false; };
+	}, []);
 
-	const currentYear = new Date().getFullYear();
-	const years = Array.from({ length: 30 }, (_, i) => currentYear - i);
+	// Fetch models when make selected
+	useEffect(() => {
+		let isMounted = true;
+		(async () => {
+			if (!formData.make_id) { setModels([]); return; }
+			try {
+				setLoadingModels(true);
+				const data = await getVehicleModels({ limit: 50, make_id: parseInt(formData.make_id) });
+				if (isMounted) setModels(data || []);
+			} catch (e) {
+				console.error('Failed to load models', e);
+			} finally {
+				if (isMounted) setLoadingModels(false);
+			}
+		})();
+		return () => { isMounted = false; };
+	}, [formData.make_id]);
 
-	const availableModels = formData.make_id ? mockModels[formData.make_id] || [] : [];
+	// Fetch years when model selected
+	useEffect(() => {
+		let isMounted = true;
+		(async () => {
+			if (!formData.model_id) { setYears([]); return; }
+			try {
+				setLoadingYears(true);
+				const data = await getVehicleYears({ model_id: parseInt(formData.model_id) });
+				if (isMounted) setYears(Array.isArray(data) ? data : []);
+			} catch (e) {
+				console.error('Failed to load years', e);
+			} finally {
+				if (isMounted) setLoadingYears(false);
+			}
+		})();
+		return () => { isMounted = false; };
+	}, [formData.model_id]);
 
 	const handleInputChange = (field, value) => {
 		setFormData(prev => ({
 			...prev,
 			[field]: value,
-			// Reset model when make changes
-			...(field === 'make_id' ? { model_id: '' } : {})
+			...(field === 'make_id' ? { model_id: '', year: '' } : {}),
+			...(field === 'model_id' ? { year: '' } : {})
 		}));
-		// Clear error when user starts typing
+		// no-op
 		if (errors[field]) {
 			setErrors(prev => ({ ...prev, [field]: null }));
 		}
@@ -70,11 +90,9 @@ export default function AddVehicleForm({ onSubmit, onCancel, loading }) {
 
 	const validateForm = () => {
 		const newErrors = {};
-		
 		if (!formData.make_id) newErrors.make_id = 'Выберите марку';
 		if (!formData.model_id) newErrors.model_id = 'Выберите модель';
 		if (!formData.year) newErrors.year = 'Выберите год';
-		
 		setErrors(newErrors);
 		return Object.keys(newErrors).length === 0;
 	};
@@ -83,11 +101,11 @@ export default function AddVehicleForm({ onSubmit, onCancel, loading }) {
 		e.preventDefault();
 		if (validateForm()) {
 			const submitData = {
-				...formData,
 				make_id: parseInt(formData.make_id),
 				model_id: parseInt(formData.model_id),
 				year: parseInt(formData.year),
-				vehicle_type_id: formData.vehicle_type_id ? parseInt(formData.vehicle_type_id) : null
+				vin: formData.vin || undefined,
+				comment: formData.comment || undefined
 			};
 			onSubmit(submitData);
 		}
@@ -124,11 +142,9 @@ export default function AddVehicleForm({ onSubmit, onCancel, loading }) {
 								errors.make_id ? 'border-red-300' : 'border-slate-300'
 							}`}
 						>
-							<option value="">Выберите марку</option>
-							{mockMakes.map(make => (
-								<option key={make.make_id} value={make.make_id}>
-									{make.make_name}
-								</option>
+							<option value="">{loadingMakes ? 'Загрузка...' : 'Выберите марку'}</option>
+							{makes.map(mk => (
+								<option key={mk.make_id} value={mk.make_id}>{mk.make_name}</option>
 							))}
 						</select>
 						{errors.make_id && <p className="text-red-500 text-xs mt-1">{errors.make_id}</p>}
@@ -146,8 +162,8 @@ export default function AddVehicleForm({ onSubmit, onCancel, loading }) {
 								errors.model_id ? 'border-red-300' : 'border-slate-300'
 							} ${!formData.make_id ? 'bg-slate-100' : ''}`}
 						>
-							<option value="">Выберите модель</option>
-							{availableModels.map(model => (
+							<option value="">{loadingModels ? 'Загрузка...' : (!formData.make_id ? 'Сначала выберите марку' : 'Выберите модель')}</option>
+							{models.map(model => (
 								<option key={model.model_id} value={model.model_id}>
 									{model.model_name}
 								</option>
@@ -157,7 +173,7 @@ export default function AddVehicleForm({ onSubmit, onCancel, loading }) {
 					</div>
 				</div>
 
-				{/* Year and Vehicle Type Row */}
+				{/* Year */}
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 					<div>
 						<label className="block text-sm font-medium text-slate-700 mb-2">
@@ -169,32 +185,14 @@ export default function AddVehicleForm({ onSubmit, onCancel, loading }) {
 							className={`w-full px-3 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
 								errors.year ? 'border-red-300' : 'border-slate-300'
 							}`}
+							disabled={!formData.model_id}
 						>
+							<option value="">{loadingYears ? 'Загрузка...' : (!formData.model_id ? 'Сначала выберите модель' : 'Выберите год')}</option>
 							{years.map(year => (
-								<option key={year} value={year}>
-									{year}
-								</option>
+								<option key={year} value={year}>{year}</option>
 							))}
 						</select>
 						{errors.year && <p className="text-red-500 text-xs mt-1">{errors.year}</p>}
-					</div>
-
-					<div>
-						<label className="block text-sm font-medium text-slate-700 mb-2">
-							Тип кузова
-						</label>
-						<select
-							value={formData.vehicle_type_id}
-							onChange={(e) => handleInputChange('vehicle_type_id', e.target.value)}
-							className="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-						>
-							<option value="">Выберите тип</option>
-							{mockVehicleTypes.map(type => (
-								<option key={type.vehicle_type_id} value={type.vehicle_type_id}>
-									{type.name}
-								</option>
-							))}
-						</select>
 					</div>
 				</div>
 

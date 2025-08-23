@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import AddVehicleForm from "../AddVehicleForm.jsx"; // Убедитесь, что путь к AddVehicleForm правильный
+import AddVehicleForm from "./AddVehicleForm.jsx"; // Убедитесь, что путь к AddVehicleForm правильный
 import { getGarageVehicles, addVehicleToGarage } from "../../../api/api.js"; // Убедитесь, что путь к api.js правильный
 
 // Компонент для отображения одного автомобиля в списке
@@ -8,13 +8,7 @@ function VehicleItem({ vehicle, onRemove }) {
         <div className="group relative bg-gradient-to-r from-slate-50 to-white border border-slate-200 hover:border-blue-300 rounded-xl p-4 transition-all duration-200 hover:shadow-sm">
             <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                        {vehicle.vehicle_type && (
-                            <span className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
-                                {vehicle.vehicle_type.name}
-                            </span>
-                        )}
-                    </div>
+                    <div className="flex items-center gap-2 mb-1"></div>
                     <h4 className="font-semibold text-slate-900 truncate">
                         {vehicle.make.make_name} {vehicle.model.model_name}
                     </h4>
@@ -69,7 +63,8 @@ export default function GarageWidget({ onVehicleAdded, onVehicleRemoved }) {
             setLoading(true);
             setError(null);
             const data = await getGarageVehicles();
-            setVehicles(data);
+            const items = Array.isArray(data?.items) ? data.items : Array.isArray(data) ? data : [];
+            setVehicles(items);
         } catch (err) {
             console.error('Failed to load garage vehicles:', err);
             setError("Не удалось загрузить автомобили.");
