@@ -20,6 +20,8 @@ from domain.products import (
     ProductPatch,
     MediaCreate,
     ProductStatus,
+    ProductCondition,
+    ProductOriginality,
 )
 
 settings = Settings() # type: ignore
@@ -272,7 +274,8 @@ class ProductService:
         limit: int = 20,
         search: str | None = None,
         make_id: int | None = None,
-        condition: str | None = None,
+        condition: ProductCondition | None = None,
+        originality: ProductOriginality | None = None,
         price_min: float | None = None,
         price_max: float | None = None,
         cursor: str | None = None,
@@ -293,6 +296,7 @@ class ProductService:
             search=search,
             make_id=make_id,
             condition=condition,
+            originality=originality,
             price_min=price_min,
             price_max=price_max,
             cursor_created_at=cursor_created_at,

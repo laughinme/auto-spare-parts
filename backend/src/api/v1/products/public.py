@@ -2,7 +2,7 @@ from typing import Annotated
 from uuid import UUID
 from fastapi import APIRouter, Depends, Query, HTTPException
 
-from domain.products import ProductModel, ProductCondition
+from domain.products import ProductModel, ProductCondition, ProductOriginality
 from domain.common import CursorPage
 from service.products import ProductService, get_product_service
 
@@ -18,9 +18,10 @@ async def search_products_cursor(
     svc: Annotated[ProductService, Depends(get_product_service)],
     limit: int = Query(20, ge=1, le=100, description="Maximum number of items"),
     cursor: str | None = Query(None, description="Simple cursor (timestamp_uuid)"),
-    q: str | None = Query(None, description="Search query (make, part number, description)"),
+    q: str | None = Query(None, description="Search query (title, description, make, part number)"),
     make_id: int | None = Query(None, description="Filter by make"),
     condition: ProductCondition | None = Query(None, description="Filter by condition"),
+    originality: ProductOriginality | None = Query(None, description="Filter by originality"),
     price_min: float | None = Query(None, ge=0, description="Minimum price filter"),
     price_max: float | None = Query(None, ge=0, description="Maximum price filter"),
 ):
@@ -28,7 +29,8 @@ async def search_products_cursor(
         limit=limit,
         search=q,
         make_id=make_id,
-        condition=condition.value if condition else None,
+        condition=condition,
+        originality=originality,
         price_min=price_min,
         price_max=price_max,
         cursor=cursor,

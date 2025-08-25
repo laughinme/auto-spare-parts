@@ -4,7 +4,7 @@ from sqlalchemy import select, func, or_, and_
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from domain.products import ProductStatus
+from domain.products import ProductStatus, ProductCondition, ProductOriginality
 from .products_table import Product
 from ..makes import Make
 
@@ -100,7 +100,8 @@ class ProductsInterface:
         limit: int = 20,
         search: str | None = None,
         make_id: int | None = None,
-        condition: str | None = None,
+        condition: ProductCondition | None = None,
+        originality: ProductOriginality | None = None,
         price_min: float | None = None,
         price_max: float | None = None,
         cursor_created_at: datetime | None = None,
@@ -113,32 +114,31 @@ class ProductsInterface:
             .where(Product.status == ProductStatus.PUBLISHED)
         )
         
-        # Text search (make, part number, description)
         if search:
             pattern = f"%{search}%"
             stmt = stmt.where(
                 or_(
                     Make.make_name.ilike(pattern),
                     Product.part_number.ilike(pattern),
-                    Product.description.ilike(pattern)
+                    Product.description.ilike(pattern),
+                    Product.title.ilike(pattern),
                 )
             )
         
-        # Make filter
         if make_id:
             stmt = stmt.where(Product.make_id == make_id)
         
-        # Condition filter
         if condition:
             stmt = stmt.where(Product.condition == condition)
+            
+        if originality:
+            stmt = stmt.where(Product.originality == originality)
         
-        # Price range filter
         if price_min is not None:
             stmt = stmt.where(Product.price >= price_min)
         if price_max is not None:
             stmt = stmt.where(Product.price <= price_max)
         
-        # Cursor pagination (created_at desc, id desc) - same as admin users
         if cursor_created_at is not None and cursor_id is not None:
             stmt = stmt.where(
                 or_(

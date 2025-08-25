@@ -42,7 +42,6 @@ class Product(TimestampMixin, Base):
     make: Mapped["Make"] = relationship(lazy="selectin") # type: ignore
 
     __table_args__ = (
-        # price >= 0
         CheckConstraint(price >= 0, name="ck_products_price_nonnegative"),
 
         CheckConstraint(
@@ -69,6 +68,24 @@ class Product(TimestampMixin, Base):
         # ),
 
         Index("ix_products_org_status", org_id, status),
+        Index(
+            'ix_products_title_trgm',
+            'title',
+            postgresql_using='gin',
+            postgresql_ops={'title': 'gin_trgm_ops'}
+        ),
+        Index(
+            'ix_products_description_trgm',
+            'description',
+            postgresql_using='gin',
+            postgresql_ops={'description': 'gin_trgm_ops'}
+        ),
+        Index(
+            'ix_products_part_number_trgm',
+            'part_number',
+            postgresql_using='gin',
+            postgresql_ops={'part_number': 'gin_trgm_ops'}
+        ),
     )
 
 
@@ -76,13 +93,10 @@ class ProductMedia(CreatedAtMixin, Base):
     """Product media files table (photos)"""
     __tablename__ = "product_media"
 
-    # Primary key and relationships
     id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), default=uuid4, primary_key=True)
     product_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("products.id"), nullable=False, comment="Product ID")
 
-    # Media file data
     url: Mapped[str] = mapped_column(String, nullable=False, comment="Media file URL")
     alt: Mapped[str | None] = mapped_column(String, nullable=True, comment="Alternative text")
 
-    # Back reference
     product: Mapped[Product] = relationship(back_populates="media")
