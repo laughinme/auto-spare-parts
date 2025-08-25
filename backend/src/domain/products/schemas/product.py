@@ -1,9 +1,10 @@
 from uuid import UUID
 from pydantic import BaseModel, Field, model_validator, computed_field
 
-from ..enums import ProductStatus, ProductCondition
+from ..enums import ProductStatus, ProductCondition, ProductOriginality, StockType
 from ...common.timestamps import TimestampModel
 from ...organizations import OrganizationShare
+from ...makes import MakeModel
 
 
 class MediaModel(BaseModel):
@@ -23,25 +24,38 @@ class ProductModel(TimestampModel):
     """Product model for API responses"""
     
     id: UUID = Field(..., description="Unique product ID")
-    organization: OrganizationShare = Field(..., description="Seller organization ID")
     
-    brand: str = Field(..., description="Part brand/manufacturer (e.g., BMW, Mercedes)")
+    title: str = Field(..., description="Product title")
+    description: str | None = Field(None, description="Product listing description")
+    
+    make: MakeModel = Field(..., description="Part brand/manufacturer")
     part_number: str = Field(..., description="Part number (OEM or aftermarket)")
     price: float = Field(..., ge=0, description="Price in USD")
+    
+    stock_type: StockType = Field(..., description="Part stock type")
+    quantity: int = Field(..., description="Part stock quantity on hand", alias="quantity_on_hand")
+    
     condition: ProductCondition = Field(..., description="Part condition")
-    description: str | None = Field(None, description="Product listing description")
+    originality: ProductOriginality = Field(..., description="Part originality")
+    
+    allow_cart: bool = Field(..., description="Allow adding to cart. If stock_type is UNIQUE, this must be False.")
+    allow_chat: bool = Field(True, description="Allow chat with seller")
     
     status: ProductStatus = Field(..., description="Publication status")
     media: list[MediaModel] = Field(default_factory=list, description="Product photos")
+    
+    organization: OrganizationShare = Field(..., description="Seller organization")
 
 class ProductBrief(BaseModel):
     """
     Brief product model for list views and summaries.
     """
     id: UUID = Field(..., description="Unique product ID")
-    brand: str = Field(..., description="Part brand/manufacturer (e.g., BMW, Mercedes)")
-    part_number: str = Field(..., description="Part number (OEM or aftermarket)")
+    title: str = Field(..., description="Product title")
+    make: MakeModel = Field(..., description="Part brand/manufacturer")
+    part_number: str = Field(..., description="Part number")
     price: float = Field(..., ge=0, description="Price in USD")
+    allow_cart: bool = Field(..., description="Allow adding to cart. If stock_type is UNIQUE, this must be False.")
     # photo_url: str | None = Field(
     #     None,
     #     description="URL of the first product photo, or None if no photos are available"
@@ -49,18 +63,51 @@ class ProductBrief(BaseModel):
     media: list[MediaModel] = Field(default_factory=list, description="Product photos")
     
 class ProductCreate(BaseModel):
-    brand: str = Field(..., description="Part brand/manufacturer")
-    part_number: str = Field(..., description="Part number")
-    price: float = Field(..., ge=0, description="Price in USD")
-    condition: ProductCondition = Field(..., description="Part condition")
+    title: str = Field(..., description="Product title")
     description: str | None = Field(None, description="Product listing description")
+    
+    make_id: int = Field(..., description="Part brand/manufacturer id")
+    part_number: str = Field(..., description="Official part number")
+    price: float = Field(..., ge=0, description="Price in USD")
+        
+    stock_type: StockType = Field(..., description="Part stock type")
+    quantity: int = Field(..., description="Part stock quantity")
+    
+    condition: ProductCondition = Field(..., description="Part condition")
+    originality: ProductOriginality = Field(..., description="Part originality")
+    
     status: ProductStatus = Field(ProductStatus.DRAFT, description="Publication status")
-
+    allow_cart: bool = Field(..., description="Allow adding to cart. If stock_type is UNIQUE, this must be False.")
+    allow_chat: bool = Field(True, description="Allow chat with seller")
+    
+    @model_validator(mode='after')
+    def check_stock_type(self):
+        if self.stock_type == StockType.UNIQUE and self.allow_cart:
+            raise ValueError("Cart cannot be allowed for UNIQUE stock type")
+        return self
 
 class ProductPatch(BaseModel):
-    brand: str | None = Field(None, description="Part brand/manufacturer")
-    part_number: str | None = Field(None, description="Part number")
-    price: float | None = Field(None, ge=0, description="Price in USD")
-    condition: ProductCondition | None = Field(None, description="Part condition")
+    """
+    Patch model for updating product fields. All fields are optional.
+    """
+    title: str | None = Field(None, description="Product title")
     description: str | None = Field(None, description="Product listing description")
+    
+    make_id: int | None = Field(None, description="Part brand/manufacturer id")
+    part_number: str | None = Field(None, description="Official part number")
+    price: float | None = Field(None, ge=0, description="Price in USD")
+    
+    stock_type: StockType | None = Field(None, description="Part stock type")
+    quantity: int | None = Field(None, description="Part stock quantity")
+    
+    condition: ProductCondition | None = Field(None, description="Part condition")
+    originality: ProductOriginality | None = Field(None, description="Part originality")
     status: ProductStatus | None = Field(None, description="Publication status")
+    allow_cart: bool | None = Field(None, description="Allow adding to cart. If stock_type is UNIQUE, this must be False.")
+    allow_chat: bool | None = Field(None, description="Allow chat with seller")
+    
+    @model_validator(mode='after')
+    def check_stock_type(self):
+        if self.stock_type is not None and self.stock_type == StockType.UNIQUE and self.allow_cart:
+            raise ValueError("Cart cannot be allowed for UNIQUE stock type")
+        return self

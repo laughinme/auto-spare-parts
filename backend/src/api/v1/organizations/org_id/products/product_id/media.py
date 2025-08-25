@@ -21,13 +21,15 @@ async def upload_product_photos(
     files: Annotated[list[UploadFile], File(..., description=f"JPEG or PNG files (max {config.MAX_PHOTO_SIZE} MB each). Can upload multiple files.")],
     org_id: Annotated[UUID, Path(..., description="Organization ID")],
     product_id: Annotated[UUID, Path(..., description="Product ID")],
-    _: Annotated[User, Depends(auth_user)],
+    user: Annotated[User, Depends(auth_user)],
     svc: Annotated[ProductService, Depends(get_product_service)],
 ):
     """Upload one or more photos for product"""
     product = await svc.get_product(product_id)
     if product is None or product.org_id != org_id:
         raise HTTPException(404, 'Product not found')
+    if product.organization.owner_user_id != user.id:
+        raise HTTPException(403, 'You do not have access to this product')
     
     # Support both single file and multiple files
     if len(files) == 1:
@@ -47,12 +49,14 @@ async def delete_media(
     org_id: Annotated[UUID, Path(..., description="Organization ID")],
     product_id: Annotated[UUID, Path(..., description="Product ID")],
     media_id: Annotated[UUID, Path(..., description="Media file ID")],
-    _: Annotated[User, Depends(auth_user)],
+    user: Annotated[User, Depends(auth_user)],
     svc: Annotated[ProductService, Depends(get_product_service)],
 ):
     product = await svc.get_product(product_id)
     if product is None or product.org_id != org_id:
         raise HTTPException(404, 'Product not found')
+    if product.organization.owner_user_id != user.id:
+        raise HTTPException(403, 'You do not have access to this product')
     
     media = await svc.media_repo.get_by_id(media_id)
     if media is None or media.product_id != product.id:

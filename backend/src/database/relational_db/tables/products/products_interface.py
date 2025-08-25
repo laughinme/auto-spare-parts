@@ -1,10 +1,12 @@
 from uuid import UUID
 from datetime import datetime
 from sqlalchemy import select, func, or_, and_
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from domain.products import ProductStatus
 from .products_table import Product
-from domain.products.enums.status import ProductStatus
+from ..makes import Make
 
 
 class ProductsInterface:
@@ -20,7 +22,10 @@ class ProductsInterface:
 
     async def get_by_id(self, id: UUID | str) -> Product | None:
         """Get product by ID"""
-        return await self.session.scalar(select(Product).where(Product.id == id))
+        return await self.session.scalar(
+            select(Product)
+            .where(Product.id == id)
+        )
 
     async def list_by_org(
         self,
@@ -32,18 +37,22 @@ class ProductsInterface:
         search: str | None = None,
     ) -> tuple[list[Product], int]:
         """Get organization products list with filters and pagination"""
-        stmt = select(Product).where(Product.org_id == org_id)
+        stmt = (
+            select(Product)
+            .join(Product.make)
+            .where(Product.org_id == org_id)
+        )
         
         # Filter by status
         if status is not None:
             stmt = stmt.where(Product.status == status)
             
-        # Text search (brand, part number, description)
+        # Text search (make, part number, description)
         if search:
             pattern = f"%{search}%"
             stmt = stmt.where(
                 or_(
-                    Product.brand.ilike(pattern),
+                    Make.make_name.ilike(pattern),
                     Product.part_number.ilike(pattern),
                     Product.description.ilike(pattern)
                 )
@@ -54,55 +63,6 @@ class ProductsInterface:
         total = await self.session.scalar(count_stmt)
         
         # Pagination and sorting
-        stmt = stmt.order_by(Product.created_at.desc()).offset(offset).limit(limit)
-        rows = await self.session.scalars(stmt)
-        
-        return list(rows.all()), int(total or 0)
-
-    async def list_published_products(
-        self,
-        *,
-        offset: int = 0,
-        limit: int = 20,
-        search: str | None = None,
-        brand: str | None = None,
-        condition: str | None = None,
-        price_min: float | None = None,
-        price_max: float | None = None,
-    ) -> tuple[list[Product], int]:
-        """Get published products list with filters for public catalog"""
-        stmt = select(Product).where(Product.status == ProductStatus.PUBLISHED)
-        
-        # Text search (brand, part number, description)
-        if search:
-            pattern = f"%{search}%"
-            stmt = stmt.where(
-                or_(
-                    Product.brand.ilike(pattern),
-                    Product.part_number.ilike(pattern),
-                    Product.description.ilike(pattern)
-                )
-            )
-        
-        # Brand filter
-        if brand:
-            stmt = stmt.where(Product.brand.ilike(f"%{brand}%"))
-            
-        # Condition filter
-        if condition:
-            stmt = stmt.where(Product.condition == condition)
-            
-        # Price range filter
-        if price_min is not None:
-            stmt = stmt.where(Product.price >= price_min)
-        if price_max is not None:
-            stmt = stmt.where(Product.price <= price_max)
-        
-        # Count total items
-        count_stmt = select(func.count()).select_from(stmt.subquery())
-        total = await self.session.scalar(count_stmt)
-        
-        # Pagination and sorting (newest first for now)
         stmt = stmt.order_by(Product.created_at.desc()).offset(offset).limit(limit)
         rows = await self.session.scalars(stmt)
         
@@ -139,35 +99,39 @@ class ProductsInterface:
         *,
         limit: int = 20,
         search: str | None = None,
-        brand: str | None = None,
+        make_id: int | None = None,
         condition: str | None = None,
         price_min: float | None = None,
         price_max: float | None = None,
         cursor_created_at: datetime | None = None,
         cursor_id: UUID | None = None,
     ) -> list[Product]:
-        """Search published products with cursor pagination (same pattern as admin users)"""
-        stmt = select(Product).where(Product.status == ProductStatus.PUBLISHED)
+        """Search published products with cursor pagination"""
+        stmt = (
+            select(Product)
+            .join(Product.make)
+            .where(Product.status == ProductStatus.PUBLISHED)
+        )
         
-        # Text search (brand, part number, description)
+        # Text search (make, part number, description)
         if search:
             pattern = f"%{search}%"
             stmt = stmt.where(
                 or_(
-                    Product.brand.ilike(pattern),
+                    Make.make_name.ilike(pattern),
                     Product.part_number.ilike(pattern),
                     Product.description.ilike(pattern)
                 )
             )
         
-        # Brand filter
-        if brand:
-            stmt = stmt.where(Product.brand.ilike(f"%{brand}%"))
-            
+        # Make filter
+        if make_id:
+            stmt = stmt.where(Product.make_id == make_id)
+        
         # Condition filter
         if condition:
             stmt = stmt.where(Product.condition == condition)
-            
+        
         # Price range filter
         if price_min is not None:
             stmt = stmt.where(Product.price >= price_min)

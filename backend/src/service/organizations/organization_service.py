@@ -24,7 +24,7 @@ class OrganizationService:
         await self.uow.session.refresh(organization)
         return organization
 
-    async def get_by_id(self, organization_id: UUID | str) -> Organization | None:
+    async def get_organization(self, organization_id: UUID | str) -> Organization | None:
         return await self.org_repo.get_by_id(organization_id)
     
     async def get_by_stripe_account_id(self, stripe_account_id: str) -> Organization | None:

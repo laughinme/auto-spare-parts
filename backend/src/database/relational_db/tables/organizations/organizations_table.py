@@ -2,7 +2,6 @@ from uuid import UUID, uuid4
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 from sqlalchemy import String, ForeignKey, Uuid, Index
 from sqlalchemy.dialects.postgresql import ENUM
-from datetime import datetime, UTC
 
 from ..table_base import Base
 from ..mixins import CreatedAtMixin
@@ -24,6 +23,9 @@ class Organization(CreatedAtMixin, Base):
     payout_schedule: Mapped[PayoutSchedule] = mapped_column(ENUM(PayoutSchedule, name="payout_schedule"), default=PayoutSchedule.WEEKLY, nullable=False)
     
     # Minimal Stripe linkage kept for UI flows only
+    
+    owner: Mapped["User"] = relationship(back_populates="organization", lazy="selectin") # type: ignore
+    products: Mapped[list["Product"]] = relationship(back_populates="organization", lazy="selectin") # type: ignore
 
     __table_args__ = (
         Index(
@@ -33,5 +35,3 @@ class Organization(CreatedAtMixin, Base):
             postgresql_ops={'name': 'gin_trgm_ops'}
         ),
     )
-    
-    owner: Mapped["User"] = relationship(back_populates="organization", lazy="selectin") # type: ignore

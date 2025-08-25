@@ -7,7 +7,10 @@ def get_org_id_router() -> APIRouter:
 
     router = APIRouter(
         prefix='/{org_id}',
-        responses={401: {"description": "Not authorized"}}
+        responses={
+            401: {"description": "Not authorized"},
+            404: {"description": "Organization with this id not found"}
+        }
     )
 
     router.include_router(get_router)
