@@ -69,11 +69,11 @@ fun SearchResultScreen(
                 items(items.size) { index ->
                     val product = items[index]
                     SparePartCard(
-                        brand = product.brand,
-                        price = product.price.toString(),
-                        productName = product.partNumber,
-                        imageUrl = product.media.firstOrNull()?.url ?: "",
-                        shopName = product.organization!!.name
+                        product = product,
+                        onClick = {
+                            // TODO: Реализовать навигацию на экран продукта, например:
+                            // navController.navigate("productDetail/${product.id}")
+                        }
                     )
                 }
             }
@@ -106,6 +106,6 @@ fun SearchResultScreen(
 @Composable
 fun SearchResultScreenPreview() {
     PreviewTheme {
-        SearchResultScreen()
+        SearchResultScreen() // Для превью может потребоваться мок ViewModel или NavController
     }
 }

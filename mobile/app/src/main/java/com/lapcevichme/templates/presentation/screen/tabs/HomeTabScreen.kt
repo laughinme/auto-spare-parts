@@ -130,11 +130,13 @@ fun HomeTabScreen(
                 items(items.size) { index ->
                     val product = items[index]
                     SparePartCard(
-                        brand = product.brand,
-                        price = product.price.toString(),
-                        productName = product.partNumber,
-                        imageUrl = product.media.firstOrNull()?.url ?: "",
-                        shopName = product.organization!!.name
+                        product = product,
+                        onClick = {
+                            // TODO: Реализовать навигацию на экран продукта.
+                            // Возможно, потребуется передать NavController или специальный обработчик
+                            // в HomeTabScreen, если навигация должна происходить отсюда.
+                            // Пример: onNavigateToProductDetail(product.id)
+                        }
                     )
                 }
             }
