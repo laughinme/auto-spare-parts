@@ -50,11 +50,21 @@ class ModelsSeeder(BaseSeeder):
                 seen.add(key)
                 unique_models.append(model)
         
-        # Bulk insert with ON CONFLICT DO NOTHING for PostgreSQL
-        stmt = insert(Model).values(unique_models)
-        stmt = stmt.on_conflict_do_nothing()
+        # Process in batches
+        batch_size = 2000
+        total_batches = (len(unique_models) + batch_size - 1) // batch_size
         
-        await self.session.execute(stmt)
+        for i in range(total_batches):
+            start_idx = i * batch_size
+            end_idx = min((i + 1) * batch_size, len(unique_models))
+            batch = unique_models[start_idx:end_idx]
+            
+            self.log_progress(f"Inserting batch {i+1}/{total_batches} ({len(batch)} models)")
+            
+            # Bulk insert with ON CONFLICT DO UPDATE for PostgreSQL
+            stmt = insert(Model).values(batch)
+            await self.session.execute(stmt)
+        
         await self.commit()
         
         self.log_progress(f"Successfully seeded {len(unique_models)} unique models")
