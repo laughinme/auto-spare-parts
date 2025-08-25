@@ -5,8 +5,7 @@ from sqlalchemy.dialects.postgresql import ENUM
 
 from ..table_base import Base
 from ..mixins import TimestampMixin, CreatedAtMixin
-from domain.products import ProductStatus
-from domain.products import ProductCondition
+from domain.products import ProductStatus, ProductCondition
 
 
 class Product(TimestampMixin, Base):

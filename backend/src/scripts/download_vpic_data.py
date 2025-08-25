@@ -24,7 +24,7 @@ class VPICDownloader:
     async def make_request(self, client: httpx.AsyncClient, url: str, retries: int = 0) -> dict[str, Any] | None:
         """Make HTTP request with retry logic"""
         try:
-            await asyncio.sleep(self.delay_between_requests)
+            # await asyncio.sleep(self.delay_between_requests)
             
             response = await client.get(url, timeout=30)
             if response.status_code == 200:
@@ -160,6 +160,7 @@ class VPICDownloader:
         all_models = []
         
         for year in years:
+            print(f"   Progress: {year} out of {max(years)}")
             url = f"{self.base_url}/getmodelsformakeidyear/makeid/{make_id}/modelyear/{year}?format=json"
             data = await self.make_request(client, url)
             
@@ -180,17 +181,19 @@ class VPICDownloader:
         """Download models and years for all makes"""
         print("📥 Downloading models and years...")
         
-        # Year range for downloading
-        current_year = datetime.now().year
-        years = list(range(2000, current_year + 1))
+        # current_year = datetime.now().year
+        # years = list(range(2000, current_year + 1))
+        years = [2024]
         
         all_models = []
         all_model_years = []
         total = len(makes)
         
-        for i, make in enumerate(makes[:100]):  # Limit for testing
-            if i % 5 == 0:
-                print(f"   Progress: {i}/{min(100, total)}")
+        # for i, make in enumerate(makes[:100]):  # Limit for testing
+        for i, make in enumerate(makes):
+            # if i % 5 == 0:
+                # print(f"   Progress: {i}/{min(100, total)}")
+            print(f"   Progress: {i}/{total}")
                 
             make_id = make.get("Make_ID")
             make_name = make.get("Make_Name")
@@ -237,6 +240,13 @@ class VPICDownloader:
             json.dump(data, f, ensure_ascii=False, indent=2)
         
         print(f"💾 Saved {len(data)} records to {filename}")
+        
+        
+    async def load_from_json(self, filename: str) -> list[dict[str, Any]]:
+        """Load data from JSON file"""
+        filepath = self.data_dir / filename
+        with open(filepath, 'r', encoding='utf-8') as f:
+            return json.load(f)
 
     async def download_all_data(self):
         """Download all data from vPIC API"""
@@ -245,22 +255,23 @@ class VPICDownloader:
         
         async with httpx.AsyncClient() as client:
             # 1. Manufacturers (with pagination)
-            manufacturers = await self.download_manufacturers_paginated(client)
-            await self.save_to_json(manufacturers, "manufacturers.json")
+            # manufacturers = await self.download_manufacturers_paginated(client)
+            # await self.save_to_json(manufacturers, "manufacturers.json")
             
             # 2. Makes/brands
-            makes = await self.download_makes(client)
-            await self.save_to_json(makes, "makes.json")
+            # makes = await self.download_makes(client)
+            # await self.save_to_json(makes, "makes.json")
             
             # 3. Manufacturer-make relationships
-            manufacturer_makes = await self.download_manufacturer_makes_mapping(client, manufacturers[:100])  # Limit for testing
-            await self.save_to_json(manufacturer_makes, "manufacturer_makes.json")
+            # manufacturer_makes = await self.download_manufacturer_makes_mapping(client, manufacturers[:100])  # Limit for testing
+            # await self.save_to_json(manufacturer_makes, "manufacturer_makes.json")
             
             # 4. Vehicle types
-            vehicle_types = await self.download_vehicle_types(client, makes[:100])  # Limit for testing
-            await self.save_to_json(vehicle_types, "vehicle_types.json")
+            # vehicle_types = await self.download_vehicle_types(client, makes[:100])  # Limit for testing
+            # await self.save_to_json(vehicle_types, "vehicle_types.json")
             
             # 5. Models and years
+            makes = await self.load_from_json("makes.json")
             models, model_years = await self.download_models_and_years(client, makes)
             await self.save_to_json(models, "models.json")
             await self.save_to_json(model_years, "model_years.json")
