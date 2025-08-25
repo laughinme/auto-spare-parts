@@ -3,10 +3,9 @@ package com.lapcevichme.templates.domain.model
 import com.lapcevichme.templates.domain.model.enums.ProductCondition
 import com.lapcevichme.templates.domain.model.enums.ProductStatus
 
-
 data class ProductModel(
     val id: String,
-    val organization: OrganizationModel?, // <-- ИЗМЕНЕНО НА NULLABLE
+    val organization: OrganizationShare,
     val createdAt: String,
     val updatedAt: String?,
     val brand: String,

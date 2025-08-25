@@ -9,6 +9,8 @@ import com.lapcevichme.templates.domain.model.CursorPage
 import com.lapcevichme.templates.domain.model.ProductModel
 import com.lapcevichme.templates.domain.model.MediaModel
 import com.lapcevichme.templates.domain.model.OrganizationModel
+import com.lapcevichme.templates.domain.model.OrganizationShare
+
 // Removed: import com.lapcevichme.templates.domain.model.enums.toDomain // Not used directly here, and was causing an error if it was for a specific enum not present.
 
 data class ProductCreateDto(
@@ -30,7 +32,7 @@ data class ProductDto(
     @SerializedName("id")
     val id: String,
     @SerializedName("organization")
-    val organization: OrganizationDto?,
+    val organization: OrganizationShare,
     @SerializedName("created_at")
     val createdAt: String,
     @SerializedName("updated_at")
@@ -97,7 +99,7 @@ fun MediaDto.toDomain(): MediaModel {
 fun ProductDto.toDomain(): ProductModel {
     return ProductModel(
         id = this.id,
-        organization = this.organization?.toDomain(), // Assuming OrganizationDto has a toDomain()
+        organization = this.organization,
         createdAt = this.createdAt,
         updatedAt = this.updatedAt,
         brand = this.brand,
