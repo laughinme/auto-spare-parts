@@ -1,18 +1,18 @@
-from typing import Annotated
-from uuid import UUID
-from fastapi import APIRouter, Depends, Path, Query, HTTPException, Header
+# from typing import Annotated
+# from uuid import UUID
+# from fastapi import APIRouter, Depends, Path, Query, HTTPException, Header
 
-from core.security import auth_user
-from database.relational_db import User
-from domain.products import (
-    ProductCreate,
-    ProductPatch,
-    ProductModel,
-    ProductStatus,
-)
-from service.products import ProductService, get_product_service
+# from core.security import auth_user
+# from database.relational_db import User
+# from domain.products import (
+#     ProductCreate,
+#     ProductPatch,
+#     ProductModel,
+#     ProductStatus,
+# )
+# from service.products import ProductService, get_product_service
 
-router = APIRouter()
+# router = APIRouter()
 
 
 # @router.post(

@@ -35,6 +35,11 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.lapcevichme.templates.R
+import com.lapcevichme.templates.domain.model.MediaModel // Предполагаемый импорт для MediaModel, если он не в ProductModel
+import com.lapcevichme.templates.domain.model.OrganizationShare // Предполагаемый импорт для OrganizationShare, если он не в ProductModel
+import com.lapcevichme.templates.domain.model.ProductModel
+import com.lapcevichme.templates.domain.model.enums.ProductCondition
+import com.lapcevichme.templates.domain.model.enums.ProductStatus
 import com.lapcevichme.templates.ui.theme.PreviewTheme
 
 // It's good practice to have actual drawable resources for placeholders and errors
@@ -42,18 +47,22 @@ import com.lapcevichme.templates.ui.theme.PreviewTheme
 
 @Composable
 fun SparePartCard(
-    imageUrl: String = "https://www.google.com/imgres?q=%D1%8F%D0%B4%D0%B5%D1%80%D0%BD%D1%8B%D0%B9%20%D0%B2%D0%B7%D1%80%D1%8B%D0%B2&imgurl=https%3A%2F%2Fupload.wikimedia.org%2Fwikipedia%2Fcommons%2F7%2F79%2FOperation_Upshot-Knothole_-_Badger_001.jpg&imgrefurl=https%3A%2F%2Fru.wikipedia.org%2Fwiki%2F%25D0%25AF%25D0%25B4%25D0%25B5%25D1%2580%25D0%25BD%25D0%25BE%25D0%25B5_%25D0%25BE%25D1%2580%25D1%2583%25D0%25B6%25D0%25B8%25D0%25B5&docid=SNmwVVPlXS33RM&tbnid=tlbjR2Iqbdpb4M&vet=12ahUKEwj1v6fBk56PAxXJFhAIHbmGOjwQM3oECBAQAA..i&w=1140&h=969&hcb=2&ved=2ahUKEwj1v6fBk56PAxXJFhAIHbmGOjwQM3oECBAQAA",
-    brand: String = "BMW",
-    productName: String = "Тормозной диск передний вентилируемый",
-    shopName: String = "Магазин Авто-Мир",
-    price: String = "3 500 ₽",
+    product: ProductModel, // Измененный параметр
+    onClick: () -> Unit = {} // Добавлен onClick для навигации
 ) {
+    // Используем значения из product:
+    val imageUrl = product.media.firstOrNull()?.url ?: "https://upload.wikimedia.org/wikipedia/commons/7/79/Operation_Upshot-Knothole_-_Badger_001.jpg" // URL заглушки, если нет изображения
+    val brand = product.brand
+    val productName = product.partNumber
+    val shopName = product.organization.name // Убрал безопасный доступ, т.к. organization не nullable в ProductModel
+    val price = "${product.price} ₽" // Форматирование цены
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .height(160.dp)
             .padding(horizontal = 10.dp, vertical = 5.dp)
-            .clickable(onClick = {}),//TODO Миша сделай тут навигацию на экран товара
+            .clickable(onClick = onClick), // Используем переданный onClick
         shape = MaterialTheme.shapes.large,
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
@@ -72,8 +81,8 @@ fun SparePartCard(
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxHeight()
-                    .weight(0.35f) // Adjust weight for image width (approx 1/3 or 1/4)
-                    .clip(MaterialTheme.shapes.large) // Clip to card shape if needed, though usually image is flush
+                    .weight(0.35f)
+                    .clip(MaterialTheme.shapes.large)
             )
 
             Spacer(modifier = Modifier.width(8.dp))
@@ -81,7 +90,7 @@ fun SparePartCard(
             Column(
                 modifier = Modifier
                     .weight(0.65f)
-                    .padding(12.dp) // Adjusted padding (sm:p-5 is a bit larger)
+                    .padding(12.dp)
                     .fillMaxHeight(),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
@@ -99,9 +108,7 @@ fun SparePartCard(
                             ),
                             letterSpacing = 0.5.sp // tracking-wide
                         )
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Spacer(modifier = Modifier.width(4.dp))
-                        }
+                        // Если у вас есть рейтинг или что-то подобное, его можно вернуть сюда
                     }
 
                     Spacer(modifier = Modifier.height(4.dp)) // mb-2 (margin bottom from brand/rating row)
@@ -140,11 +147,30 @@ fun SparePartCard(
     }
 }
 
+// Пример для @Preview, создаем фейковый ProductModel
+private fun getPreviewProductModel(): ProductModel {
+    return ProductModel(
+        id = "preview_id",
+        organization = OrganizationShare(id = "org_id", name = "Магазин Авто-Мир Preview", country = "RU", address = "Какой-то адрес Preview"),        createdAt = "2023-01-01T12:00:00Z",
+        updatedAt = null,
+        brand = "BMW Preview",
+        partNumber = "Тормозной диск Preview",
+        price = 3500.0,
+        condition = ProductCondition.NEW, // Предполагается, что у вас есть такой enum
+        description = "Описание для превью",
+        status = ProductStatus.DRAFT, // Предполагается, что у вас есть такой enum
+        media = listOf(
+            // MediaModel(url="https://...", type="image") // Добавьте пример MediaModel, если нужно
+        )
+    )
+}
+
+
 @Preview(showBackground = true, name = "SparePartCard Light Preview")
 @Composable
 fun SparePartCardPreview() {
     PreviewTheme {
-        SparePartCard()
+        SparePartCard(product = getPreviewProductModel()) // TODO Миша сделай тут навигацию на экран товара
     }
 }
 
@@ -152,6 +178,6 @@ fun SparePartCardPreview() {
 @Composable
 fun SparePartCardDarkPreview() {
     PreviewTheme { // Example dark theme
-         SparePartCard()
+         SparePartCard(product = getPreviewProductModel()) // TODO Миша сделай тут навигацию на экран товара
     }
 }

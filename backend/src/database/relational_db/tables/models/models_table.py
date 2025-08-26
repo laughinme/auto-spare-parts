@@ -9,6 +9,11 @@ class Model(TimestampMixin, Base):
     """Vehicle models table for storing different vehicle models"""
     __tablename__ = "models"
 
+    # model_id: Mapped[int] = mapped_column(
+    #     Integer,
+    #     primary_key=True,
+    #     comment="Primary key for model"
+    # )
     model_id: Mapped[int] = mapped_column(
         Integer,
         primary_key=True,

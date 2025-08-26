@@ -51,16 +51,17 @@ async def patch_org_product(
 @router.delete(
     path='/',
     summary='Delete organization product',
-    status_code=204
+    status_code=204,
+    deprecated=True,
 )
 async def delete_org_product(
     org_id: Annotated[UUID, Path(..., description="Organization ID")],
     product_id: Annotated[UUID, Path(..., description="Product ID")],
-    _: Annotated[User, Depends(auth_user)],
+    user: Annotated[User, Depends(auth_user)],
     svc: Annotated[ProductService, Depends(get_product_service)],
 ):
-    product = await svc.get_product(product_id)
-    if product is None or product.org_id != org_id:
-        raise HTTPException(404, 'Product not found')
-    await svc.delete_product(product)
-    return None
+    pass
+    # product = await svc.get_product(product_id)
+    # if product is None or product.org_id != org_id:
+    #     raise HTTPException(404, 'Product not found')
+    # await svc.delete_product(product)

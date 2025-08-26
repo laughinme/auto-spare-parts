@@ -6,8 +6,10 @@ import com.lapcevichme.templates.data.remote.dto.toDomain
 import com.lapcevichme.templates.data.remote.dto.toDto
 import com.lapcevichme.templates.domain.model.CursorPage
 import com.lapcevichme.templates.domain.model.Resource
+import com.lapcevichme.templates.domain.model.garage.MakeModel
 import com.lapcevichme.templates.domain.model.garage.VehicleCreate
 import com.lapcevichme.templates.domain.model.garage.VehicleModel
+import com.lapcevichme.templates.domain.model.garage.VehicleModelInfo
 import com.lapcevichme.templates.domain.repository.GarageRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -80,6 +82,72 @@ class GarageRepositoryImpl @Inject constructor(
             emit(Resource.Error(e.localizedMessage ?: "Network error occurred."))
         } catch (e: IOException) {
             Log.e(TAG, "getGarageVehicles IOException. Message: ${e.message}", e)
+            emit(Resource.Error("Failed to connect to the server."))
+        }
+    }
+
+    override suspend fun getVehiclesMakes(query: String?): Flow<Resource<List<MakeModel>>> = flow {
+        Log.d(TAG, "getVehiclesMakes called with query: $query")
+        emit(Resource.Loading())
+        try {
+            val response = apiService.listMakes(search = query)
+            if (response.isSuccessful && response.body() != null) {
+                Log.d(TAG, "getVehiclesMakes successful. Count: ${response.body()!!.size}")
+                emit(Resource.Success(response.body()!!.map { it.toDomain() }))
+            } else {
+                val errorBody = response.errorBody()?.stringSafely()
+                Log.e(TAG, "getVehiclesMakes failed. Code: ${response.code()}, Message: ${response.message()}, ErrorBody: $errorBody")
+                emit(Resource.Error(errorBody ?: "Failed to get vehicles makes: ${response.code()}"))
+            }
+        } catch (e: HttpException) {
+            Log.e(TAG, "getVehiclesMakes HttpException. Message: ${e.localizedMessage}", e)
+            emit(Resource.Error(e.localizedMessage ?: "Network error occurred."))
+        } catch (e: IOException) {
+            Log.e(TAG, "getVehiclesMakes IOException. Message: ${e.message}", e)
+            emit(Resource.Error("Failed to connect to the server."))
+        }
+    }
+
+    override suspend fun getVehiclesModels(makeId: Int, query: String?): Flow<Resource<List<VehicleModelInfo>>> = flow {
+        Log.d(TAG, "getVehiclesModels called with makeId: $makeId, query: $query")
+        emit(Resource.Loading())
+        try {
+            val response = apiService.listModels(makeId = makeId, search = query)
+            if (response.isSuccessful && response.body() != null) {
+                Log.d(TAG, "getVehiclesModels successful for makeId: $makeId. Count: ${response.body()!!.size}")
+                emit(Resource.Success(response.body()!!.map { it.toDomain() }))
+            } else {
+                val errorBody = response.errorBody()?.stringSafely()
+                Log.e(TAG, "getVehiclesModels failed for makeId: $makeId. Code: ${response.code()}, Message: ${response.message()}, ErrorBody: $errorBody")
+                emit(Resource.Error(errorBody ?: "Failed to get vehicles models: ${response.code()}"))
+            }
+        } catch (e: HttpException) {
+            Log.e(TAG, "getVehiclesModels HttpException for makeId: $makeId. Message: ${e.localizedMessage}", e)
+            emit(Resource.Error(e.localizedMessage ?: "Network error occurred."))
+        } catch (e: IOException) {
+            Log.e(TAG, "getVehiclesModels IOException for makeId: $makeId. Message: ${e.message}", e)
+            emit(Resource.Error("Failed to connect to the server."))
+        }
+    }
+
+    override suspend fun getVehiclesYears(modelId: Int): Flow<Resource<List<Int>>> = flow {
+        Log.d(TAG, "getVehiclesYears called with modelId: $modelId")
+        emit(Resource.Loading())
+        try {
+            val response = apiService.listYears(modelId = modelId)
+            if (response.isSuccessful && response.body() != null) {
+                Log.d(TAG, "getVehiclesYears successful for modelId: $modelId. Count: ${response.body()!!.size}")
+                emit(Resource.Success(response.body()!!))
+            } else {
+                val errorBody = response.errorBody()?.stringSafely()
+                Log.e(TAG, "getVehiclesYears failed for modelId: $modelId. Code: ${response.code()}, Message: ${response.message()}, ErrorBody: $errorBody")
+                emit(Resource.Error(errorBody ?: "Failed to get vehicles years: ${response.code()}"))
+            }
+        } catch (e: HttpException) {
+            Log.e(TAG, "getVehiclesYears HttpException for modelId: $modelId. Message: ${e.localizedMessage}", e)
+            emit(Resource.Error(e.localizedMessage ?: "Network error occurred."))
+        } catch (e: IOException) {
+            Log.e(TAG, "getVehiclesYears IOException for modelId: $modelId. Message: ${e.message}", e)
             emit(Resource.Error("Failed to connect to the server."))
         }
     }

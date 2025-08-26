@@ -2,6 +2,9 @@
 package com.lapcevichme.templates.presentation.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.ViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -18,12 +21,7 @@ import com.lapcevichme.templates.presentation.screen.tabs.GarageTabScreen
 import com.lapcevichme.templates.presentation.screen.tabs.HomeTabScreen
 import com.lapcevichme.templates.presentation.screen.tabs.ProfileTabScreen
 import com.lapcevichme.templates.presentation.viewmodel.OnboardingViewModel
-
-/**
- * Главный навигационный компонент приложения.
- * @param navController NavController для управления навигацией.
- * @param startDestination Стартовый маршрут-граф, который определяется в MainActivity.
- */
+import com.lapcevichme.templates.presentation.viewmodel.SearchViewModel
 
 @Composable
 fun AppNavigation(navController: NavHostController, startDestination: String) {
@@ -89,11 +87,24 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
             startDestination = Routes.HOME_TAB,
             route = Routes.MAIN_GRAPH
         ) {
+            // Эта вспомогательная функция получает ViewModel, привязанную к графу навигации
+            @Composable
+            fun sharedSearchViewModel(): SearchViewModel {
+                val parentEntry = remember(navController.currentBackStackEntry) {
+                    navController.getBackStackEntry(Routes.MAIN_GRAPH)
+                }
+                return hiltViewModel<SearchViewModel>(parentEntry)
+            }
+
             composable(Routes.HOME_TAB) {
+                // Получаем общую ViewModel
+                val searchViewModel: SearchViewModel = sharedSearchViewModel()
                 HomeTabScreen(
                     onNavigateToSearch = {
                         navController.navigate(Routes.SEARCH_RESULT)
-                    }
+                    },
+                    // Передаём общую ViewModel на экран
+                    searchViewModel = searchViewModel
                 )
             }
             composable(Routes.GARAGE_TAB) { GarageTabScreen() }
@@ -119,7 +130,6 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
                     }
                 )
             }
-
             composable(Routes.STRIPE_ONBOARDING) {
                 ConnectOnboardingScreen(
                     onOnboardingComplete = {
@@ -131,9 +141,10 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
                 )
             }
 
-            // Новый экран результатов поиска
+            // Экран результатов поиска теперь тоже использует общую ViewModel
             composable(route = Routes.SEARCH_RESULT) {
-                SearchResultScreen()
+                val searchViewModel: SearchViewModel = sharedSearchViewModel()
+                SearchResultScreen(viewModel = searchViewModel)
             }
         }
     }

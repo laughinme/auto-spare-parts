@@ -1,9 +1,10 @@
-from .product import (
+from .products import (
     ProductModel,
     ProductCreate,
     ProductPatch,
     MediaModel,
     MediaCreate,
+    ProductBrief,
 )
 
 __all__ = [
@@ -12,6 +13,5 @@ __all__ = [
     "ProductPatch",
     "MediaModel",
     "MediaCreate",
+    "ProductBrief",
 ]
-
-

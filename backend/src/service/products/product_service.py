@@ -1,10 +1,10 @@
 import aiofiles
-import shutil
 from uuid import UUID, uuid4
 from datetime import datetime
 from pathlib import Path
 from fastapi import UploadFile, status, HTTPException
 from redis.asyncio import Redis
+from sqlalchemy.exc import IntegrityError
 
 from core.config import Settings
 from database.relational_db import (
@@ -13,14 +13,18 @@ from database.relational_db import (
     ProductMediaInterface,
     Product,
     ProductMedia,
+    Organization,
+    CartItemInterface,
 )
 from domain.products import (
     ProductCreate,
     ProductPatch,
     MediaCreate,
     ProductStatus,
+    ProductCondition,
+    ProductOriginality,
+    StockType,
 )
-
 
 settings = Settings() # type: ignore
 
@@ -32,35 +36,67 @@ class ProductService:
         uow: UoW,
         products_repo: ProductsInterface,
         media_repo: ProductMediaInterface,
+        carts_repo: CartItemInterface,
         redis: Redis | None = None,
     ):
         self.uow = uow
         self.products_repo = products_repo
         self.media_repo = media_repo
+        self.carts_repo = carts_repo
         self.redis = redis
+        
+        
+    def _validate_product_integrity(self, product: Product) -> None:
+        if product.stock_type == StockType.UNIQUE:
+            if product.allow_cart:
+                raise ValueError("Cart cannot be allowed for UNIQUE stock type")
+            if product.quantity_on_hand != 1:
+                raise ValueError("Quantity must be 1 for UNIQUE stock type")
+        if product.status == ProductStatus.PUBLISHED:
+            if product.quantity_on_hand <= 0:
+                raise ValueError("Quantity must be greater than 0 for published products")
+            if product.price <= 0:
+                raise ValueError("Price must be greater than 0 for published products")
+        if not product.allow_cart and not product.allow_chat:
+            raise ValueError("Product must allow either cart or chat")
 
-    async def create_product(self, org_id: UUID | str, payload: ProductCreate, *, idempotency_key: str | None = None) -> Product:
-        """Create a new product"""
-        # Simple idempotency via Redis (optional)
+    async def create_product(
+        self,
+        org: Organization,
+        payload: ProductCreate,
+        *,
+        idempotency_key: str | None = None
+    ) -> Product:
         if idempotency_key and self.redis:
-            key = f"idem:product:create:{org_id}:{idempotency_key}"
+            key = f"idem:product:create:{org.id}:{idempotency_key}"
             was_set = await self.redis.set(name=key, value="1", nx=True, ex=60)
             if not was_set:
                 raise ValueError("Idempotency key already used")
 
-        # Create product from payload
         product = Product(
-            org_id=org_id,
-            brand=payload.brand,
+            make_id=payload.make_id,
+            title=payload.title,
+            description=payload.description,
             part_number=payload.part_number,
             price=payload.price,
             condition=payload.condition,
-            description=payload.description,
+            originality=payload.originality,
+            stock_type=payload.stock_type,
+            quantity_original=payload.quantity,
+            quantity_on_hand=payload.quantity,
             status=payload.status,
+            allow_cart=payload.allow_cart,
+            allow_chat=payload.allow_chat,
         )
-
-        await self.products_repo.add(product)
-        await self.uow.commit()
+        org.products.append(product)
+        try:
+            self._validate_product_integrity(product)
+            await self.uow.commit()
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+        except IntegrityError as e:
+            raise HTTPException(status_code=400, detail=f"Failed to add product to organization. Probably make_id is invalid")
+        
         await self.uow.session.refresh(product)
         return product
 
@@ -88,10 +124,23 @@ class ProductService:
 
     async def patch_product(self, product: Product, payload: ProductPatch) -> Product:
         """Update product"""
-        data = payload.model_dump(exclude_none=True)
+        data = payload.model_dump(exclude_unset=True)
         for field, value in data.items():
             setattr(product, field, value)
-        await self.uow.commit()
+            
+        if data.get('stock_type') is not None:
+            if await self.carts_repo.product_id_exists(product.id):
+                raise HTTPException(status_code=400, detail="Stock type cannot be changed for already reserved products")
+            # TODO: check if there are any active orders for this product
+        
+        try:
+            self._validate_product_integrity(product)
+            await self.uow.commit()
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+        except IntegrityError as e:
+            raise HTTPException(status_code=400, detail=f"Failed to update product: {str(e)}")
+        
         await self.uow.session.refresh(product)
         return product
 
@@ -103,15 +152,21 @@ class ProductService:
     async def publish(self, product: Product) -> Product:
         """Publish product"""
         product.status = ProductStatus.PUBLISHED
+        try:
+            self._validate_product_integrity(product)
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+        
         await self.uow.commit()
         await self.uow.session.refresh(product)
         return product
 
     async def unpublish(self, product: Product) -> Product:
         """Unpublish product"""
-        product.status = ProductStatus.DRAFT
-        await self.uow.commit()
-        await self.uow.session.refresh(product)
+        product.status = ProductStatus.ARCHIVED
+        
+        # await self.uow.commit()
+        # await self.uow.session.refresh(product)
         return product
 
     async def add_media(self, product: Product, payload: MediaCreate) -> ProductMedia:
@@ -201,7 +256,7 @@ class ProductService:
         media = ProductMedia(
             product_id=product.id,
             url=media_url,
-            alt=f"{product.brand} {product.part_number} photo"
+            alt=f"{product.make.name} {product.part_number} photo"
         )
         
         await self.media_repo.add(media)
@@ -238,28 +293,6 @@ class ProductService:
         
         return media_files
 
-    async def search_published_products(
-        self,
-        *,
-        offset: int = 0,
-        limit: int = 20,
-        search: str | None = None,
-        brand: str | None = None,
-        condition: str | None = None,
-        price_min: float | None = None,
-        price_max: float | None = None,
-    ) -> tuple[list[Product], int]:
-        """Search published products with filters for public catalog"""
-        return await self.products_repo.list_published_products(
-            offset=offset,
-            limit=limit,
-            search=search,
-            brand=brand,
-            condition=condition,
-            price_min=price_min,
-            price_max=price_max,
-        )
-
     async def get_feed_products(
         self,
         *,
@@ -277,8 +310,9 @@ class ProductService:
         *,
         limit: int = 20,
         search: str | None = None,
-        brand: str | None = None,
-        condition: str | None = None,
+        make_id: int | None = None,
+        condition: ProductCondition | None = None,
+        originality: ProductOriginality | None = None,
         price_min: float | None = None,
         price_max: float | None = None,
         cursor: str | None = None,
@@ -297,8 +331,9 @@ class ProductService:
         products = await self.products_repo.search_published_products_cursor(
             limit=limit,
             search=search,
-            brand=brand,
+            make_id=make_id,
             condition=condition,
+            originality=originality,
             price_min=price_min,
             price_max=price_max,
             cursor_created_at=cursor_created_at,
@@ -353,4 +388,3 @@ class ProductService:
         product = await self.products_repo.get_by_id(product_id)
         if product and product.status == ProductStatus.PUBLISHED:
             return product
-        return None

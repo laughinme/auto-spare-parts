@@ -1,6 +1,7 @@
-import React, {useState } from "react";
-import { createProduct } from "../../api/api.js";
+import React, {useState, useEffect } from "react";
+import { createProduct, uploadProductPhotos } from "../../api/api.js";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import PhotoUpload from "../product/PhotoUpload.jsx";
 export default function SupplierProductCreate({onCancel, onCreate,orgId  }) {
 
   const queryClient = useQueryClient();
@@ -11,10 +12,29 @@ export default function SupplierProductCreate({onCancel, onCreate,orgId  }) {
   const [condition, setCondition] = useState("new");
   const [description, setDescription] = useState("");
   const [status] = useState("draft");
+  const [photos, setPhotos] = useState([]);
   
-  const { mutate, isPending, error } = useMutation({
+  const { mutate: createProductMutation, isPending, error } = useMutation({
     mutationFn: createProduct,
-    onSuccess: (data) => {
+    onSuccess: async (createdProduct) => {
+      // If photos are selected, upload them after product creation
+      if (photos.length > 0) {
+        try {
+          const filesToUpload = photos.filter(photo => photo.isNew && photo.file);
+          if (filesToUpload.length > 0) {
+            const files = filesToUpload.map(photo => photo.file);
+            await uploadProductPhotos({ 
+              orgId, 
+              productId: createdProduct.id, 
+              files 
+            });
+          }
+        } catch (photoError) {
+          console.error('Failed to upload photos:', photoError);
+          alert(`Товар создан, но не удалось загрузить фото: ${photoError.message}`);
+        }
+      }
+
       alert("Товар успешно создан!");
       // Инвалидируем кэш продуктов для данной организации
       queryClient.invalidateQueries({ 
@@ -24,7 +44,7 @@ export default function SupplierProductCreate({onCancel, onCreate,orgId  }) {
       if (onCancel) {
         onCancel(); // Это вернет нас на страницу товаров
       }
-      onCreate && onCreate(data);
+      onCreate && onCreate(createdProduct);
     },
     onError: (err) => {
       alert(`Не удалось создать товар: ${err.message}`);
@@ -51,8 +71,19 @@ const handleCreate = () => {
       alert("Ошибка: ID организации не найден.");
       return;
   }
-  mutate({ productData, orgId }); 
+  createProductMutation({ productData, orgId }); 
 };
+
+  // Cleanup blob URLs when component unmounts
+  useEffect(() => {
+    return () => {
+      photos.forEach(photo => {
+        if (photo.preview && photo.isNew) {
+          URL.revokeObjectURL(photo.preview);
+        }
+      });
+    };
+  }, [photos]);
 
 
   return (
@@ -251,6 +282,28 @@ const handleCreate = () => {
                       </div>
                     </div>
 
+                    {/* Photo Upload Section */}
+                    <div className="p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl border border-purple-200/50">
+                      <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                        <div className="p-1.5 bg-purple-100 rounded-lg">
+                          <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                        Фотографии товара
+                      </h3>
+                      <p className="text-sm text-slate-600 mb-4">
+                        Добавьте качественные фотографии товара, чтобы покупатели могли лучше оценить запчасть
+                      </p>
+                      
+                      <PhotoUpload 
+                        photos={photos}
+                        onPhotosChange={setPhotos}
+                        maxFiles={10}
+                        disabled={isPending}
+                      />
+                    </div>
+
                     {/* Progress Indicator */}
                     <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
                       <div className="flex items-center justify-between mb-2">
@@ -263,6 +316,11 @@ const handleCreate = () => {
                           style={{width: `${(Object.values({brand, partNumber, price, description}).filter(Boolean).length / 4) * 100}%`}}
                         ></div>
                       </div>
+                      {photos.length > 0 && (
+                        <div className="mt-2 text-xs text-green-600 font-medium">
+                          📸 {photos.length} фото добавлено
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

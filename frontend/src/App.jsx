@@ -14,6 +14,7 @@ import SupplierStripeOnboarding from "./components/onboarding/SupplierStripeOnbo
 import SupplierProducts from "./components/supplier/SupplierProducts.jsx";
 import SupplierProductCreate from "./components/supplier/SupplierProductCreate.jsx";
 import AuthPage from "./components/auth/AuthPage.jsx";
+import LandingPage from "./components/landing/LandingPage.jsx";
 import { MOCK_PRODUCTS } from "./data/mockProducts.js";
 import { SUPPLIER_SELF_ID } from "./data/constants.js";
 import { createOrdersFromCart } from "./utils/helpers.js";
@@ -25,6 +26,7 @@ function App() {
   // Wrapper для logout с очисткой localStorage
   const handleLogout = () => {
     localStorage.removeItem('userRole');
+    setShowLanding(true); // Показываем лендинг после logout
     logout();
   };
   
@@ -41,6 +43,9 @@ function App() {
   const [cart, setCart] = useState([]);
   const [orders, setOrders] = useState([]);
   const [activeOrderId, setActiveOrderId] = useState(null);
+  
+  // State for controlling landing page display
+  const [showLanding, setShowLanding] = useState(true);
   
   useEffect(() => {
     window.__setRoute = setRoute;
@@ -66,6 +71,8 @@ function App() {
       setRole(null);
       localStorage.removeItem('userRole'); // Очищаем роль при logout
       console.log('User logged out, resetting role and initialization flag');
+    } else {
+      setShowLanding(false); // Скрываем лендинг если пользователь вошел
     }
   }, [user]);
 
@@ -150,8 +157,11 @@ function App() {
     );
   }
 
-  // Если все загрузки завершены и пользователя нет, показываем страницу входа
+  // Если все загрузки завершены и пользователя нет, показываем лендинг или страницу входа
   if (!user) {
+    if (showLanding) {
+      return <LandingPage onGetStarted={() => setShowLanding(false)} />;
+    }
     return <AuthPage />;
   }
   
@@ -406,6 +416,58 @@ const styles = `
   background-size: 400% 400%;
   animation: gradient-shift 3s ease infinite;
 }
+
+/* Landing Page Animations */
+@keyframes slideInUp {
+  from { transform: translateY(100px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slideInLeft {
+  from { transform: translateX(-100px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes fadeInScale {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes rotateIn {
+  from { transform: rotate(-10deg) scale(0.8); opacity: 0; }
+  to { transform: rotate(0deg) scale(1); opacity: 1; }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
+  50% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.8), 0 0 60px rgba(59, 130, 246, 0.4); }
+}
+
+@keyframes text-glow {
+  0%, 100% { text-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
+  50% { text-shadow: 0 0 30px rgba(59, 130, 246, 0.8), 0 0 40px rgba(59, 130, 246, 0.6); }
+}
+
+.animate-slide-up { animation: slideInUp 0.8s ease-out; }
+.animate-slide-left { animation: slideInLeft 0.8s ease-out; }
+.animate-slide-right { animation: slideInRight 0.8s ease-out; }
+.animate-fade-scale { animation: fadeInScale 0.6s ease-out; }
+.animate-rotate-in { animation: rotateIn 0.8s ease-out; }
+.animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+.animate-text-glow { animation: text-glow 3s ease-in-out infinite; }
+
+/* Delay classes for staggered animations */
+.delay-100 { animation-delay: 0.1s; animation-fill-mode: both; }
+.delay-200 { animation-delay: 0.2s; animation-fill-mode: both; }
+.delay-300 { animation-delay: 0.3s; animation-fill-mode: both; }
+.delay-400 { animation-delay: 0.4s; animation-fill-mode: both; }
+.delay-500 { animation-delay: 0.5s; animation-fill-mode: both; }
+.animation-delay-6000 { animation-delay: 6s; }
 
 /* Glassmorphism backdrop support */
 .backdrop-blur-sm { backdrop-filter: blur(4px); }

@@ -6,7 +6,7 @@ from ..mixins import TimestampMixin
 
 
 class ManufacturerMake(TimestampMixin, Base):
-    """Junction table linking manufacturers to the makes/brands they produce"""
+    """Junction table linking manufacturers to the makes they produce"""
     __tablename__ = "manufacturer_make"
 
     manufacturer_id: Mapped[int] = mapped_column(

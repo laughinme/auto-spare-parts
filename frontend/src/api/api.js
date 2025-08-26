@@ -184,3 +184,56 @@ export async function getVehicleYears({ model_id }) {
   return response.data;
 }
 
+// === PRODUCT MEDIA API ===
+
+/**
+ * Upload product photos
+ * @param {Object} params - Upload parameters
+ * @param {string} params.orgId - Organization ID
+ * @param {string} params.productId - Product ID
+ * @param {FileList|File[]} params.files - Files to upload (JPEG or PNG, max 10 MB each)
+ */
+export async function uploadProductPhotos({ orgId, productId, files }) {
+  if (!orgId || !productId) {
+    throw new Error("Organization ID and Product ID are required");
+  }
+  
+  if (!files || files.length === 0) {
+    throw new Error("At least one file is required");
+  }
+
+  const formData = new FormData();
+  
+  // Add all files to FormData
+  Array.from(files).forEach(file => {
+    formData.append('files', file);
+  });
+
+  const response = await apiProtected.put(
+    `/organizations/${orgId}/products/${productId}/media`,
+    formData,
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }
+  );
+  
+  return response.data;
+}
+
+/**
+ * Delete product media file
+ * @param {Object} params - Delete parameters
+ * @param {string} params.orgId - Organization ID
+ * @param {string} params.productId - Product ID
+ * @param {string} params.mediaId - Media file ID
+ */
+export async function deleteProductMedia({ orgId, productId, mediaId }) {
+  if (!orgId || !productId || !mediaId) {
+    throw new Error("Organization ID, Product ID and Media ID are required");
+  }
+
+  await apiProtected.delete(`/organizations/${orgId}/products/${productId}/media/${mediaId}`);
+}
+
