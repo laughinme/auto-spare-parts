@@ -110,14 +110,7 @@ export default function ProductCard({
     return null;
   };
 
-  // Функция для отображения цены с резервным текстом
-  const getDisplayPrice = () => {
-    const priceValue = typeof product.price === 'string' ? parseFloat(product.price) : product.price;
-    if (Number.isFinite(priceValue)) {
-      return `${formatPrice(priceValue)} ₽`;
-    }
-    return 'Цена по запросу';
-  };
+ 
 
   // Рендер варианта для корзины
   if (variant === "cart") {

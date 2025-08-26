@@ -16,6 +16,7 @@ import SupplierProductCreate from "./components/supplier/SupplierProductCreate.j
 import AuthPage from "./components/auth/AuthPage.jsx";
 import LandingPage from "./components/landing/LandingPage.jsx";
 import { MOCK_PRODUCTS } from "./data/mockProducts.js";
+
 import { SUPPLIER_SELF_ID } from "./data/constants.js";
 import { createOrdersFromCart } from "./utils/helpers.js";
 
@@ -37,7 +38,7 @@ function App() {
   const [buyerType] = useState(null);
   const [garage, setGarage] = useState([]);
   const [supplierProfile] = useState(null);
-  const [products, setProducts] = useState(MOCK_PRODUCTS);
+  const [products, setProducts] = useState([]);
   const productsById = useMemo(() => Object.fromEntries(products.map((p) => [p.id, p])), [products]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [cart, setCart] = useState([]);
@@ -78,38 +79,29 @@ function App() {
 
   useEffect(() => {
     if (user) {
-      console.log('Processing user data:', user);
       
       // Сначала проверяем сохраненную роль в localStorage
       const savedRole = localStorage.getItem('userRole');
       let apiRole = savedRole || user.role || user.type || user.user_type;
-      console.log('Found role - saved:', savedRole, ', from API:', user.role || user.type || user.user_type);
       
       if (!apiRole) {
-        console.log('No explicit role found, trying to determine from other data');
         if (user.email && (user.email.includes('supplier') || user.email.includes('vendor') || user.email.includes('shop') || user.email.includes('seller'))) {
           apiRole = 'supplier';
-          console.log('Determined role as supplier from email:', user.email);
         } else if (user.is_supplier === true) {
           apiRole = 'supplier';
-          console.log('Determined role as supplier from is_supplier field');
         } else {
           apiRole = 'buyer';
-          console.log('Defaulting to buyer role');
+          
         }
       }
       
       if (apiRole !== role) {
-        console.log('Setting user role:', apiRole, 'for user:', user.email, 'current route:', route);
         setRole(apiRole);
         
         // Перенаправляем пользователя при первой инициализации роли
         if (!hasInitializedRole) {
-          console.log('First time role initialization, current route:', route);
           setHasInitializedRole(true);
           if (apiRole === "supplier") {
-            console.log('Redirecting supplier - savedRole:', savedRole);
-            // Если роль была сохранена из регистрации, направляем на onboarding
             if (savedRole === 'supplier') {
               setRoute("onboarding:supplier_stripe");
             } else {
@@ -186,7 +178,7 @@ function App() {
     setRoute(previousRoute);
   };
 
-  // Removed unused navigateToFYP helper to avoid linter warning
+
 
   const handleAddToCart = (product, quantity = 1) => {
     setCart((prev) => {
