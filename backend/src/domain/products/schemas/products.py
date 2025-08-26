@@ -43,6 +43,9 @@ class ProductModel(TimestampModel):
     allow_chat: bool = Field(True, description="Allow chat with seller")
     
     status: ProductStatus = Field(..., description="Publication status")
+    is_in_stock: bool = Field(..., description="Is product in stock")
+    is_buyable: bool = Field(..., description="Is product buyable")
+    
     media: list[MediaModel] = Field(default_factory=list, description="Product photos")
     
     organization: OrganizationShare = Field(..., description="Seller organization")

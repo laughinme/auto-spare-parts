@@ -2,6 +2,7 @@ from uuid import UUID, uuid4
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 from sqlalchemy import String, ForeignKey, Uuid, Text, Numeric, Integer, Boolean, CheckConstraint, Index, or_, false, and_
 from sqlalchemy.dialects.postgresql import ENUM
+from sqlalchemy.ext.hybrid import hybrid_property
 
 from domain.products import ProductStatus, ProductCondition, ProductOriginality, StockType
 from ..table_base import Base
@@ -35,6 +36,32 @@ class Product(TimestampMixin, Base):
     )
     allow_cart: Mapped[bool] = mapped_column(Boolean, nullable=False, comment="Allow adding to cart")
     allow_chat: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, comment="Allow chat with seller")
+    
+    @hybrid_property
+    def is_in_stock(self) -> bool:
+        return self.quantity_on_hand > 0
+    
+    @is_in_stock.expression
+    @classmethod
+    def is_in_stock_expr(cls):
+        return cls.quantity_on_hand > 0
+    
+    @hybrid_property
+    def is_buyable(self) -> bool:
+        return (
+            self.status == ProductStatus.PUBLISHED
+            and self.allow_cart
+            and self.is_in_stock
+        )
+    
+    @is_buyable.expression
+    @classmethod
+    def is_buyable_expr(cls):
+        return and_(
+            cls.status == ProductStatus.PUBLISHED,
+            cls.allow_cart,
+            cls.is_in_stock
+        )
 
     # Relationships
     media: Mapped[list["ProductMedia"]] = relationship(back_populates="product", cascade="all, delete-orphan", lazy="selectin")
