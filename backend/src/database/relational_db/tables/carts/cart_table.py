@@ -1,7 +1,7 @@
 from uuid import UUID, uuid4
 from decimal import Decimal
 from sqlalchemy.orm import mapped_column, Mapped, relationship
-from sqlalchemy import ForeignKey, Uuid, Integer, DECIMAL, select, func, Float, UniqueConstraint
+from sqlalchemy import ForeignKey, Uuid, Integer, Numeric, select, func, UniqueConstraint, String
 from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.ext.hybrid import hybrid_property
 
@@ -66,9 +66,14 @@ class CartItem(TimestampMixin, Base):
     cart_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("carts.id"), nullable=False, comment="Cart ID")
     product_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("products.id"), nullable=False, comment="Product ID")
     seller_org_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("organizations.id"), nullable=False, comment="Seller organization ID")
+    
+    title: Mapped[str] = mapped_column(String, nullable=False, comment="Product title snapshot")
+    description: Mapped[str] = mapped_column(String, nullable=True, comment="Product description snapshot")
+    part_number: Mapped[str] = mapped_column(String, nullable=False, comment="Product part number snapshot")
+    
 
     quantity: Mapped[int] = mapped_column(Integer, nullable=False, default=1, comment="Quantity of this product")
-    unit_price: Mapped[float] = mapped_column(Float, nullable=False, comment="Price per unit when added to cart (USD)")
+    unit_price: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False, comment="Price per unit when added to cart (USD)")
 
     @hybrid_property
     def total_price(self) -> float:

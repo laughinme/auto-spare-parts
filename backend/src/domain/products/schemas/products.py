@@ -1,5 +1,6 @@
 from uuid import UUID
-from pydantic import BaseModel, Field, model_validator, computed_field
+from decimal import Decimal
+from pydantic import BaseModel, Field, model_validator, field_validator
 
 from ..enums import ProductStatus, ProductCondition, ProductOriginality, StockType
 from ...common.timestamps import TimestampModel
@@ -68,7 +69,7 @@ class ProductCreate(BaseModel):
     
     make_id: int = Field(..., description="Part brand/manufacturer id")
     part_number: str = Field(..., description="Official part number")
-    price: float = Field(..., ge=0, description="Price in USD")
+    price: Decimal = Field(..., ge=0, description="Price in USD (2 decimal places)")
         
     stock_type: StockType = Field(..., description="Part stock type")
     quantity: int = Field(..., description="Part stock quantity")
@@ -80,10 +81,27 @@ class ProductCreate(BaseModel):
     allow_cart: bool = Field(..., description="Allow adding to cart. If stock_type is UNIQUE, this must be False.")
     allow_chat: bool = Field(True, description="Allow chat with seller")
     
+    @field_validator("price")
+    @classmethod
+    def price_two_decimal_places(cls, v: Decimal) -> Decimal:
+        if v != v.quantize(Decimal("0.01")):
+            raise ValueError("Price must have exactly two decimal places")
+        return v
+    
     @model_validator(mode='after')
-    def check_stock_type(self):
-        if self.stock_type == StockType.UNIQUE and self.allow_cart:
-            raise ValueError("Cart cannot be allowed for UNIQUE stock type")
+    def check_integrity(self):
+        if self.stock_type == StockType.UNIQUE:
+            if self.allow_cart:
+                raise ValueError("Cart cannot be allowed for UNIQUE stock type")
+            if self.quantity != 1:
+                raise ValueError("Quantity must be 1 for UNIQUE stock type")
+        if self.status == ProductStatus.PUBLISHED:
+            if self.quantity <= 0:
+                raise ValueError("Quantity must be greater than 0 for published products")
+            if self.price <= 0:
+                raise ValueError("Price must be greater than 0 for published products")
+        if not self.allow_cart and not self.allow_chat:
+            raise ValueError("Product must allow either cart or chat")
         return self
 
 class ProductPatch(BaseModel):
@@ -95,7 +113,7 @@ class ProductPatch(BaseModel):
     
     make_id: int | None = Field(None, description="Part brand/manufacturer id")
     part_number: str | None = Field(None, description="Official part number")
-    price: float | None = Field(None, ge=0, description="Price in USD")
+    price: Decimal | None = Field(None, ge=0, description="Price in USD (2 decimal places)")
     
     stock_type: StockType | None = Field(None, description="Part stock type")
     quantity: int | None = Field(None, description="Part stock quantity")
@@ -105,6 +123,13 @@ class ProductPatch(BaseModel):
     status: ProductStatus | None = Field(None, description="Publication status")
     allow_cart: bool | None = Field(None, description="Allow adding to cart. If stock_type is UNIQUE, this must be False.")
     allow_chat: bool | None = Field(None, description="Allow chat with seller")
+    
+    @field_validator("price")
+    @classmethod
+    def price_two_decimal_places(cls, v: Decimal) -> Decimal:
+        if v != v.quantize(Decimal("0.01")):
+            raise ValueError("Price must have exactly two decimal places")
+        return v
     
     @model_validator(mode='after')
     def check_stock_type(self):

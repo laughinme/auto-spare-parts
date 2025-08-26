@@ -43,17 +43,14 @@ class Product(TimestampMixin, Base):
 
     __table_args__ = (
         CheckConstraint(price >= 0, name="ck_products_price_nonnegative"),
-
         CheckConstraint(
             or_(stock_type != StockType.UNIQUE, allow_cart.is_(false())),
             name="ck_products_unique_no_cart",
         ),
-
         CheckConstraint(
             and_(quantity_original >= 0, quantity_on_hand >= 0),
             name="ck_products_qty_nonnegative",
         ),
-
         CheckConstraint(
             or_(
                 stock_type != StockType.UNIQUE,
@@ -61,11 +58,14 @@ class Product(TimestampMixin, Base):
             ),
             name="ck_products_unique_qty_shape",
         ),
-
         # CheckConstraint(
         #     quantity_on_hand <= quantity_original,
         #     name="ck_products_qoh_le_original",
         # ),
+        CheckConstraint(
+            or_(allow_cart, allow_chat),
+            name="ck_products_at_least_one_channel"
+        ),
 
         Index("ix_products_org_status", org_id, status),
         Index(

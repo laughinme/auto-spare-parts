@@ -1,4 +1,4 @@
-from .product import (
+from .products import (
     ProductModel,
     ProductCreate,
     ProductPatch,

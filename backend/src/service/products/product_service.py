@@ -14,6 +14,7 @@ from database.relational_db import (
     Product,
     ProductMedia,
     Organization,
+    CartItemInterface,
 )
 from domain.products import (
     ProductCreate,
@@ -22,6 +23,7 @@ from domain.products import (
     ProductStatus,
     ProductCondition,
     ProductOriginality,
+    StockType,
 )
 
 settings = Settings() # type: ignore
@@ -34,12 +36,29 @@ class ProductService:
         uow: UoW,
         products_repo: ProductsInterface,
         media_repo: ProductMediaInterface,
+        carts_repo: CartItemInterface,
         redis: Redis | None = None,
     ):
         self.uow = uow
         self.products_repo = products_repo
         self.media_repo = media_repo
+        self.carts_repo = carts_repo
         self.redis = redis
+        
+        
+    def _validate_product_integrity(self, product: Product) -> None:
+        if product.stock_type == StockType.UNIQUE:
+            if product.allow_cart:
+                raise ValueError("Cart cannot be allowed for UNIQUE stock type")
+            if product.quantity_on_hand != 1:
+                raise ValueError("Quantity must be 1 for UNIQUE stock type")
+        if product.status == ProductStatus.PUBLISHED:
+            if product.quantity_on_hand <= 0:
+                raise ValueError("Quantity must be greater than 0 for published products")
+            if product.price <= 0:
+                raise ValueError("Price must be greater than 0 for published products")
+        if not product.allow_cart and not product.allow_chat:
+            raise ValueError("Product must allow either cart or chat")
 
     async def create_product(
         self,
@@ -69,9 +88,12 @@ class ProductService:
             allow_cart=payload.allow_cart,
             allow_chat=payload.allow_chat,
         )
+        org.products.append(product)
         try:
-            org.products.append(product)
+            self._validate_product_integrity(product)
             await self.uow.commit()
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
         except IntegrityError as e:
             raise HTTPException(status_code=400, detail=f"Failed to add product to organization. Probably make_id is invalid")
         
@@ -102,11 +124,20 @@ class ProductService:
 
     async def patch_product(self, product: Product, payload: ProductPatch) -> Product:
         """Update product"""
-        data = payload.model_dump(exclude_none=True)
+        data = payload.model_dump(exclude_unset=True)
+        for field, value in data.items():
+            setattr(product, field, value)
+            
+        if data.get('stock_type') is not None:
+            if await self.carts_repo.product_id_exists(product.id):
+                raise HTTPException(status_code=400, detail="Stock type cannot be changed for already reserved products")
+            # TODO: check if there are any active orders for this product
+        
         try:
-            for field, value in data.items():
-                setattr(product, field, value)
+            self._validate_product_integrity(product)
             await self.uow.commit()
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
         except IntegrityError as e:
             raise HTTPException(status_code=400, detail=f"Failed to update product: {str(e)}")
         
@@ -121,6 +152,11 @@ class ProductService:
     async def publish(self, product: Product) -> Product:
         """Publish product"""
         product.status = ProductStatus.PUBLISHED
+        try:
+            self._validate_product_integrity(product)
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+        
         await self.uow.commit()
         await self.uow.session.refresh(product)
         return product
@@ -128,8 +164,9 @@ class ProductService:
     async def unpublish(self, product: Product) -> Product:
         """Unpublish product"""
         product.status = ProductStatus.ARCHIVED
-        await self.uow.commit()
-        await self.uow.session.refresh(product)
+        
+        # await self.uow.commit()
+        # await self.uow.session.refresh(product)
         return product
 
     async def add_media(self, product: Product, payload: MediaCreate) -> ProductMedia:

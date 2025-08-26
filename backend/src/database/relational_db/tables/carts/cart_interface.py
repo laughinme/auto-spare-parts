@@ -1,5 +1,6 @@
+from genericpath import exists
 from uuid import UUID
-from sqlalchemy import select, delete, update
+from sqlalchemy import select, delete, update, exists
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlalchemy.dialects.postgresql import insert
@@ -71,7 +72,10 @@ class CartItemInterface:
     async def update_quantity(self, item_id: UUID | str, quantity: int) -> CartItem | None:
         result = await self.session.execute(
             update(CartItem)
-            .options(selectinload(CartItem.cart))
+            .options(
+                selectinload(CartItem.cart),
+                selectinload(CartItem.product)
+            )
             .where(CartItem.id == item_id)
             .values(quantity=quantity)
             .returning(CartItem)
@@ -86,3 +90,19 @@ class CartItemInterface:
             .returning(CartItem)
         )
         return result.scalar()
+    
+    async def by_product_id(self, product_id: UUID | str) -> list[CartItem]:
+        result = await self.session.scalars(
+            select(CartItem)
+            .where(CartItem.product_id == product_id)
+        )
+        return list(result.all())
+
+    async def product_id_exists(self, product_id: UUID | str) -> bool:
+        result = await self.session.execute(
+            select(
+                exists()
+                .where(CartItem.product_id == product_id)
+            )
+        )
+        return result.scalar_one()
