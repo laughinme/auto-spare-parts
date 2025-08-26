@@ -24,6 +24,7 @@ from domain.products import (
     ProductCondition,
     ProductOriginality,
     StockType,
+    AdjustStock,
 )
 
 settings = Settings() # type: ignore
@@ -167,6 +168,16 @@ class ProductService:
         
         # await self.uow.commit()
         # await self.uow.session.refresh(product)
+        return product
+    
+    async def adjust_stock(self, product: Product, payload: AdjustStock) -> Product:
+        """Adjust product stock"""
+        product.quantity_on_hand += payload.delta
+        if product.quantity_on_hand < 0:
+            raise HTTPException(400, detail='Not enough stock')
+        
+        await self.uow.commit()
+        await self.uow.session.refresh(product)
         return product
 
     async def add_media(self, product: Product, payload: MediaCreate) -> ProductMedia:

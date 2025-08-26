@@ -20,12 +20,14 @@ router = APIRouter()
 async def get_org_product(
     org_id: Annotated[UUID, Path(..., description="Organization ID")],
     product_id: Annotated[UUID, Path(..., description="Product ID")],
-    _: Annotated[User, Depends(auth_user)],
+    user: Annotated[User, Depends(auth_user)],
     svc: Annotated[ProductService, Depends(get_product_service)],
 ):
     product = await svc.get_product(product_id)
     if product is None or product.org_id != org_id:
         raise HTTPException(404, 'Product not found')
+    if product.organization.owner_user_id != user.id:
+        raise HTTPException(403, detail='You do not have access to this product')
     return product
 
 
@@ -38,12 +40,14 @@ async def patch_org_product(
     payload: ProductPatch,
     org_id: Annotated[UUID, Path(..., description="Organization ID")],
     product_id: Annotated[UUID, Path(..., description="Product ID")],
-    _: Annotated[User, Depends(auth_user)],
+    user: Annotated[User, Depends(auth_user)],
     svc: Annotated[ProductService, Depends(get_product_service)],
 ):
     product = await svc.get_product(product_id)
     if product is None or product.org_id != org_id:
         raise HTTPException(404, 'Product not found')
+    if product.organization.owner_user_id != user.id:
+        raise HTTPException(403, detail='You do not have access to this product')
     updated_product = await svc.patch_product(product, payload)
     return updated_product
 
