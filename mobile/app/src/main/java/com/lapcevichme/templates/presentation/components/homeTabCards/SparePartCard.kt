@@ -1,5 +1,6 @@
 package com.lapcevichme.templates.presentation.components.homeTabCards
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -39,7 +40,10 @@ import com.lapcevichme.templates.domain.model.MediaModel // Предполага
 import com.lapcevichme.templates.domain.model.OrganizationShare // Предполагаемый импорт для OrganizationShare, если он не в ProductModel
 import com.lapcevichme.templates.domain.model.ProductModel
 import com.lapcevichme.templates.domain.model.enums.ProductCondition
+import com.lapcevichme.templates.domain.model.enums.ProductOriginality
 import com.lapcevichme.templates.domain.model.enums.ProductStatus
+import com.lapcevichme.templates.domain.model.enums.StockType
+import com.lapcevichme.templates.domain.model.garage.MakeModel
 import com.lapcevichme.templates.ui.theme.PreviewTheme
 
 // It's good practice to have actual drawable resources for placeholders and errors
@@ -52,7 +56,7 @@ fun SparePartCard(
 ) {
     // Используем значения из product:
     val imageUrl = product.media.firstOrNull()?.url ?: "https://upload.wikimedia.org/wikipedia/commons/7/79/Operation_Upshot-Knothole_-_Badger_001.jpg" // URL заглушки, если нет изображения
-    val brand = product.brand
+    val brand = product.make.makeName
     val productName = product.partNumber
     val shopName = product.organization.name // Убрал безопасный доступ, т.к. organization не nullable в ProductModel
     val price = "${product.price} ₽" // Форматирование цены
@@ -151,17 +155,35 @@ fun SparePartCard(
 private fun getPreviewProductModel(): ProductModel {
     return ProductModel(
         id = "preview_id",
-        organization = OrganizationShare(id = "org_id", name = "Магазин Авто-Мир Preview", country = "RU", address = "Какой-то адрес Preview"),        createdAt = "2023-01-01T12:00:00Z",
+        organization = OrganizationShare(
+            id = "org_id",
+            name = "Магазин Авто-Мир Preview",
+            country = "RU",
+            address = "Какой-то адрес Preview"
+        ),
+        createdAt = "2023-01-01T12:00:00Z",
         updatedAt = null,
-        brand = "BMW Preview",
+        make = MakeModel(makeId = 1, makeName = "BMW"),
         partNumber = "Тормозной диск Preview",
         price = 3500.0,
         condition = ProductCondition.NEW, // Предполагается, что у вас есть такой enum
         description = "Описание для превью",
         status = ProductStatus.DRAFT, // Предполагается, что у вас есть такой enum
         media = listOf(
-            // MediaModel(url="https://...", type="image") // Добавьте пример MediaModel, если нужно
-        )
+            MediaModel(
+                id = "media_id_1",
+                url = "https://example.com/image.jpg", // Замените на реальный URL или оставьте пустым для заглушки
+                alt = null
+            )
+        ),
+        title = "Geg",
+        stockType = StockType.STOCK,
+        quantityOnHand = 3,
+        originality = ProductOriginality.OEM,
+        allowCart = true,
+        allowChat = false,
+        isInStock = true,
+        isBuyable = true,
     )
 }
 
@@ -174,7 +196,7 @@ fun SparePartCardPreview() {
     }
 }
 
-@Preview(showBackground = true, uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES, name = "SparePartCard Dark Preview")
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES, name = "SparePartCard Dark Preview")
 @Composable
 fun SparePartCardDarkPreview() {
     PreviewTheme { // Example dark theme

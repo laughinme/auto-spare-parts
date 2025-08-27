@@ -3,8 +3,8 @@ package com.lapcevichme.templates.data.repository
 import android.util.Log
 import com.lapcevichme.templates.data.remote.ApiService
 import com.lapcevichme.templates.data.remote.dto.toDomain
+import com.lapcevichme.templates.data.remote.dto.toDto
 import com.lapcevichme.templates.domain.model.CursorPage
-import com.lapcevichme.templates.domain.model.enums.toDto // Предполагается, что ProductCreate имеет метод toDto()
 import com.lapcevichme.templates.domain.model.enums.toDomain // Предполагается, что ProductDto имеет метод toDomain()
 import com.lapcevichme.templates.domain.model.Page
 import com.lapcevichme.templates.domain.model.ProductCreate
@@ -107,10 +107,10 @@ class ProductRepositoryImpl @Inject constructor(
         product: ProductCreate,
         photos: List<Pair<ByteArray, String>>? // Изменено для списка фото
     ): Flow<Resource<ProductModel>> = flow {
-        Log.d(TAG, "createProduct called for orgId: $orgId, product brand: ${product.brand}, with ${photos?.size ?: 0} photo(s)")
+        Log.d(TAG, "createProduct called for orgId: $orgId, product brand: ${product.makeId}, with ${photos?.size ?: 0} photo(s)")
         emit(Resource.Loading())
         try {
-            val productCreateDto = product.toDto() 
+            val productCreateDto = product.toDto()
             val createProductResponse = apiService.createProduct(orgId, productCreateDto)
 
             if (createProductResponse.isSuccessful && createProductResponse.body() != null) {

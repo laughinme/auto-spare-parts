@@ -15,36 +15,12 @@ import com.lapcevichme.templates.domain.model.ProductModel
 import com.lapcevichme.templates.domain.model.ProductPatch
 
 // Простое присваивание. Gson сделает всю работу.
-fun ProductCreate.toDto(): ProductCreateDto {
-    return ProductCreateDto(
-        brand = this.brand,
-        partNumber = this.partNumber,
-        price = this.price,
-        condition = this.condition, // <-- Просто присваиваем enum
-        description = this.description,
-        status = this.status // <-- Просто присваиваем enum
-    )
-}
-
-// Простое присваивание. Gson сделает всю работу.
 
 fun MediaDto.toDomain(): MediaModel {
     return MediaModel(
         id = this.id,
         url = this.url,
         alt = this.alt
-    )
-}
-
-// Простое присваивание. Gson сделает всю работу.
-fun ProductPatch.toDto(): ProductPatchDto {
-    return ProductPatchDto(
-        brand = this.brand,
-        partNumber = this.partNumber,
-        price = this.price,
-        condition = this.condition, // <-- Просто присваиваем enum
-        description = this.description,
-        status = this.status // <-- Просто присваиваем enum
     )
 }
 

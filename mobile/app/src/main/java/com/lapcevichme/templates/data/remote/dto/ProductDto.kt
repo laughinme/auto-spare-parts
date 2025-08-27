@@ -1,4 +1,4 @@
-// com/lapcevichme/templates/data/remote/dto/ProductDtos.kt
+// com/lapcevichme/templates/data/remote/dto/ProductDto.kt
 
 package com.lapcevichme.templates.data.remote.dto
 
@@ -8,49 +8,79 @@ import com.lapcevichme.templates.domain.model.enums.ProductStatus
 import com.lapcevichme.templates.domain.model.CursorPage
 import com.lapcevichme.templates.domain.model.ProductModel
 import com.lapcevichme.templates.domain.model.MediaModel
-import com.lapcevichme.templates.domain.model.OrganizationModel
+import com.lapcevichme.templates.domain.model.ProductCreate
+import com.lapcevichme.templates.domain.model.ProductPatch
+import com.lapcevichme.templates.domain.model.enums.StockType
+import com.lapcevichme.templates.domain.model.enums.ProductOriginality
+// Assuming CursorPageDto is in this package, adjust if it's elsewhere, e.g., garage sub-package
 import com.lapcevichme.templates.domain.model.OrganizationShare
 
-// Removed: import com.lapcevichme.templates.domain.model.enums.toDomain // Not used directly here, and was causing an error if it was for a specific enum not present.
-
 data class ProductCreateDto(
-    @SerializedName("brand")
-    val brand: String,
+    @SerializedName("title")
+    val title: String,
+    @SerializedName("make_id") 
+    val makeId: Int,
     @SerializedName("part_number")
     val partNumber: String,
     @SerializedName("price")
-    val price: Double,
+    val price: String, 
+    @SerializedName("stock_type")
+    val stockType: String, 
+    @SerializedName("quantity")
+    val quantity: Int,
     @SerializedName("condition")
-    val condition: ProductCondition,
+    val condition: String, 
+    @SerializedName("originality")
+    val originality: String, 
     @SerializedName("description")
     val description: String? = null,
     @SerializedName("status")
-    val status: ProductStatus = ProductStatus.DRAFT
+    val status: String = ProductStatus.DRAFT.name, 
+    @SerializedName("allow_cart")
+    val allowCart: Boolean,
+    @SerializedName("allow_chat")
+    val allowChat: Boolean? = true 
 )
 
 data class ProductDto(
     @SerializedName("id")
     val id: String,
+    @SerializedName("title") 
+    val title: String,
     @SerializedName("organization")
-    val organization: OrganizationShare,
+    val organization: OrganizationShareDto, 
     @SerializedName("created_at")
     val createdAt: String,
     @SerializedName("updated_at")
     val updatedAt: String?,
-    @SerializedName("brand")
-    val brand: String,
+    @SerializedName("make") 
+    val make: MakeModelDto, 
     @SerializedName("part_number")
     val partNumber: String,
     @SerializedName("price")
     val price: Double,
     @SerializedName("condition")
-    val condition: ProductCondition,
+    val condition: ProductCondition, 
     @SerializedName("description")
     val description: String? = null,
     @SerializedName("status")
-    val status: ProductStatus,
+    val status: ProductStatus, 
     @SerializedName("media")
-    val media: List<MediaDto>
+    val media: List<MediaDto>,
+    @SerializedName("stock_type")
+    val stockType: String, 
+    @SerializedName("quantity_on_hand")
+    val quantityOnHand: Int,
+    @SerializedName("originality")
+    val originality: String, 
+    @SerializedName("allow_cart")
+    val allowCart: Boolean,
+    @SerializedName("allow_chat")
+    val allowChat: Boolean = true, 
+    @SerializedName("is_in_stock")
+    val isInStock: Boolean,
+    @SerializedName("is_buyable")
+    val isBuyable: Boolean
 )
 
 data class MediaDto(
@@ -63,21 +93,33 @@ data class MediaDto(
 )
 
 data class ProductPatchDto(
-    @SerializedName("brand")
-    val brand: String? = null,
+    @SerializedName("title") 
+    val title: String? = null,
+    @SerializedName("description")
+    val description: String? = null,
+    @SerializedName("make_id")
+    val makeId: Int? = null,
     @SerializedName("part_number")
     val partNumber: String? = null,
     @SerializedName("price")
-    val price: Double? = null,
+    val price: String? = null, 
+    @SerializedName("stock_type")
+    val stockType: String? = null, 
+    @SerializedName("quantity") 
+    val quantity: Int? = null,
     @SerializedName("condition")
-    val condition: ProductCondition? = null,
-    @SerializedName("description")
-    val description: String? = null,
+    val condition: String? = null, 
+    @SerializedName("originality")
+    val originality: String? = null, 
     @SerializedName("status")
-    val status: ProductStatus? = null
+    val status: String? = null, 
+    @SerializedName("allow_cart")
+    val allowCart: Boolean? = null,
+    @SerializedName("allow_chat")
+    val allowChat: Boolean? = null
 )
 
-data class PageDto<T>( // Used for non-cursor pagination if needed elsewhere
+data class PageDto<T>( 
     @SerializedName("items")
     val items: List<T>,
     @SerializedName("offset")
@@ -99,25 +141,67 @@ fun MediaDto.toDomain(): MediaModel {
 fun ProductDto.toDomain(): ProductModel {
     return ProductModel(
         id = this.id,
-        organization = this.organization,
+        title = this.title, 
+        organization = this.organization.toDomain(),
         createdAt = this.createdAt,
         updatedAt = this.updatedAt,
-        brand = this.brand,
+        make = this.make.toDomain(), 
         partNumber = this.partNumber,
         price = this.price,
-        condition = this.condition, // Direct mapping as enum types match
+        condition = this.condition, 
         description = this.description,
-        status = this.status, // Direct mapping as enum types match
-        media = this.media.map { it.toDomain() }
+        status = this.status, 
+        media = this.media.map { it.toDomain() },
+        stockType = StockType.valueOf(this.stockType.uppercase()), 
+        quantityOnHand = this.quantityOnHand,
+        originality = ProductOriginality.valueOf(this.originality.uppercase()), 
+        allowCart = this.allowCart,
+        allowChat = this.allowChat,
+        isInStock = this.isInStock,
+        isBuyable = this.isBuyable
     )
 }
 
-// Ensure CursorPageDto is imported if not in the same file (it's in GarageDtos.kt)
-// import com.lapcevichme.templates.data.remote.dto.CursorPageDto 
+// Mapper from Domain to DTO for ProductCreate
+fun ProductCreate.toDto(): ProductCreateDto {
+    return ProductCreateDto(
+        title = this.title,
+        makeId = this.makeId,
+        partNumber = this.partNumber,
+        price = this.price, 
+        stockType = this.stockType.name.lowercase(),
+        quantity = this.quantity,
+        condition = this.condition.name.lowercase(),
+        originality = this.originality.name.lowercase(),
+        description = this.description,
+        status = this.status.name.lowercase(),
+        allowCart = this.allowCart,
+        allowChat = this.allowChat 
+    )
+}
 
+// Mapper from Domain to DTO for ProductPatch
+fun ProductPatch.toDto(): ProductPatchDto {
+    return ProductPatchDto(
+        title = this.title,
+        description = this.description,
+        makeId = this.makeId,
+        partNumber = this.partNumber,
+        price = this.price?.toString(), 
+        stockType = this.stockType?.name?.lowercase(),
+        quantity = this.quantity,
+        condition = this.condition?.name?.lowercase(),
+        originality = this.originality?.name?.lowercase(),
+        status = this.status?.name?.lowercase(),
+        allowCart = this.allowCart,
+        allowChat = this.allowChat
+    )
+}
+
+// Specialized toDomain mapper for CursorPageDto<ProductDto>
 fun CursorPageDto<ProductDto>.toDomain(): CursorPage<ProductModel> {
     return CursorPage(
-        items = this.items.map { it.toDomain() },
-        nextCursor = this.nextCursor // Assumes 'nextCursor' is the field in the generic CursorPageDto
+        items = this.items.map { it.toDomain() }, // Uses ProductDto.toDomain()
+        nextCursor = this.nextCursor
     )
 }

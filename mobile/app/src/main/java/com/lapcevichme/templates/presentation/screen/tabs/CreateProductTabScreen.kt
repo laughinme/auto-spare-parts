@@ -1,24 +1,14 @@
 package com.lapcevichme.templates.presentation.screen.tabs
 
 import android.content.res.Configuration
-import android.net.Uri // ADDED
-import androidx.activity.compose.rememberLauncherForActivityResult // ADDED
-import androidx.activity.result.PickVisualMediaRequest // ADDED
-import androidx.activity.result.contract.ActivityResultContracts // ADDED
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable // ADDED
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -29,42 +19,13 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Edit // ADDED
-import androidx.compose.material.icons.filled.Delete // ADDED
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton // ADDED
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.layout.ContentScale // ADDED
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -72,36 +33,162 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImage // ADDED
-import com.lapcevichme.templates.domain.model.enums.ProductCondition
+import coil.compose.AsyncImage
 import com.lapcevichme.templates.domain.model.Resource
+import com.lapcevichme.templates.domain.model.enums.ProductCondition
+import com.lapcevichme.templates.domain.model.enums.ProductOriginality
+import com.lapcevichme.templates.domain.model.enums.StockType
+import com.lapcevichme.templates.domain.model.garage.MakeModel
 import com.lapcevichme.templates.presentation.viewmodel.SparePartCreateEvent
 import com.lapcevichme.templates.presentation.viewmodel.SparePartCreateViewModel
 import com.lapcevichme.templates.presentation.viewmodel.UiEvent
 import com.lapcevichme.templates.ui.theme.PreviewTheme
 import kotlinx.coroutines.flow.collectLatest
 
+// ... (остальной код SparePartCreateScreen остается без изменений) ...
+// ... (BasicInfoSection, MakeSelector, PriceAndDescriptionSection и другие) ...
 
+// ИЗМЕНЕНИЯ ТОЛЬКО В AdditionalInfoSection
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AdditionalInfoSection(viewModel: SparePartCreateViewModel) {
+    val stockType by viewModel.stockType.collectAsStateWithLifecycle()
+    val originality by viewModel.originality.collectAsStateWithLifecycle()
+    val allowCart by viewModel.allowCart.collectAsStateWithLifecycle()
+
+    var stockTypeExpanded by remember { mutableStateOf(false) }
+    var originalityExpanded by remember { mutableStateOf(false) }
+
+    SectionCard(title = "4. Дополнительно") {
+        // Выбор наличия
+        ExposedDropdownMenuBox(
+            expanded = stockTypeExpanded,
+            onExpandedChange = { stockTypeExpanded = !it }
+        ) {
+            OutlinedTextField(
+                // ИЗМЕНЕНО: Текст для новых значений
+                value = when (stockType) {
+                    StockType.STOCK -> "На складе"
+                    StockType.UNIQUE -> "Под заказ"
+                },
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Наличие") },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = stockTypeExpanded) },
+                modifier = Modifier
+                    .menuAnchor()
+                    .fillMaxWidth()
+            )
+            ExposedDropdownMenu(
+                expanded = stockTypeExpanded,
+                onDismissRequest = { stockTypeExpanded = false }
+            ) {
+                DropdownMenuItem(
+                    // ИЗМЕНЕНО: Текст и передаваемое значение
+                    text = { Text("На складе") },
+                    onClick = {
+                        viewModel.onEvent(SparePartCreateEvent.OnStockTypeChanged(StockType.STOCK))
+                        stockTypeExpanded = false
+                    }
+                )
+                DropdownMenuItem(
+                    // ИЗМЕНЕНО: Текст и передаваемое значение
+                    text = { Text("Под заказ") },
+                    onClick = {
+                        viewModel.onEvent(SparePartCreateEvent.OnStockTypeChanged(StockType.UNIQUE))
+                        stockTypeExpanded = false
+                    }
+                )
+            }
+        }
+        Spacer(Modifier.height(16.dp))
+        // Выбор оригинальности
+        ExposedDropdownMenuBox(
+            expanded = originalityExpanded,
+            onExpandedChange = { originalityExpanded = !it }
+        ) {
+            OutlinedTextField(
+                // ИЗМЕНЕНО: Текст для новых значений
+                value = when (originality) {
+                    ProductOriginality.OEM -> "Оригинал (OEM)"
+                    ProductOriginality.AFTERMARKET -> "Аналог (Aftermarket)"
+                },
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Оригинальность") },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = originalityExpanded) },
+                modifier = Modifier
+                    .menuAnchor()
+                    .fillMaxWidth()
+            )
+            ExposedDropdownMenu(
+                expanded = originalityExpanded,
+                onDismissRequest = { originalityExpanded = false }
+            ) {
+                DropdownMenuItem(
+                    // ИЗМЕНЕНО: Текст и передаваемое значение
+                    text = { Text("Оригинал (OEM)") },
+                    onClick = {
+                        viewModel.onEvent(SparePartCreateEvent.OnOriginalityChanged(ProductOriginality.OEM))
+                        originalityExpanded = false
+                    }
+                )
+                DropdownMenuItem(
+                    // ИЗМЕНЕНО: Текст и передаваемое значение
+                    text = { Text("Аналог (Aftermarket)") },
+                    onClick = {
+                        viewModel.onEvent(SparePartCreateEvent.OnOriginalityChanged(ProductOriginality.AFTERMARKET))
+                        originalityExpanded = false
+                    }
+                )
+            }
+        }
+        Spacer(Modifier.height(16.dp))
+        // Переключатель "Разрешить добавление в корзину"
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { viewModel.onEvent(SparePartCreateEvent.OnAllowCartChanged(!allowCart)) }
+                .padding(vertical = 8.dp)
+        ) {
+            Text("Разрешить добавление в корзину", modifier = Modifier.weight(1f))
+            Switch(
+                checked = allowCart,
+                onCheckedChange = { viewModel.onEvent(SparePartCreateEvent.OnAllowCartChanged(it)) }
+            )
+        }
+    }
+}
+
+
+// ... (Весь остальной код SparePartCreateScreen остается таким же, как в предыдущем ответе)
+// Я приложу полный код файла ниже для удобства копирования.
+
+// ПОЛНЫЙ КОД SparePartCreateScreen.kt
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SparePartCreateScreen(
     viewModel: SparePartCreateViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit
 ) {
-    val brand by viewModel.brand.collectAsStateWithLifecycle()
+    val title by viewModel.title.collectAsStateWithLifecycle()
+    val makeSearchQuery by viewModel.makeSearchQuery.collectAsStateWithLifecycle()
+    val makes by viewModel.vehiclesMakes.collectAsStateWithLifecycle()
+    val pickedMake by viewModel.pickedVehiclesMake.collectAsStateWithLifecycle()
     val partNumber by viewModel.partNumber.collectAsStateWithLifecycle()
-    val conditionOptions = listOf("новый", "б/у")
-    val selectedCondition by viewModel.condition.collectAsStateWithLifecycle()
-
+    val condition by viewModel.condition.collectAsStateWithLifecycle()
     val price by viewModel.price.collectAsStateWithLifecycle()
+    val quantity by viewModel.quantity.collectAsStateWithLifecycle()
     val description by viewModel.description.collectAsStateWithLifecycle()
     val selectedImageUris by viewModel.selectedImageUris.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val creationState by viewModel.creationState.collectAsState()
 
-    // ADDED: Launcher for picking an image
     val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickMultipleVisualMedia(), // Для выбора нескольких изображений
-        onResult = { uris: List<Uri> -> // Результат - список Uri
+        contract = ActivityResultContracts.PickMultipleVisualMedia(),
+        onResult = { uris: List<Uri> ->
             uris.forEach { uri ->
                 viewModel.onEvent(SparePartCreateEvent.OnImageSelected(uri))
             }
@@ -111,12 +198,8 @@ fun SparePartCreateScreen(
     LaunchedEffect(key1 = true) {
         viewModel.uiEvent.collectLatest { event ->
             when (event) {
-                is UiEvent.ShowSnackbar -> {
-                    snackbarHostState.showSnackbar(
-                        message = event.message
-                    )
-                }
-                else -> {}
+                is UiEvent.ShowSnackbar -> snackbarHostState.showSnackbar(message = event.message)
+                is UiEvent.NavigateToHome -> onNavigateBack() // Или навигация на главный экран
             }
         }
     }
@@ -133,100 +216,108 @@ fun SparePartCreateScreen(
             )
         }
     ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            item { OrganizationSection(viewModel = viewModel) }
-            item {
-                BasicInfoSection(
-                    brand = brand,
-                    onBrandChange = { viewModel.onEvent(SparePartCreateEvent.OnBrandChanged(it)) },
-                    partNumber = partNumber,
-                    onPartNumberChange = { viewModel.onEvent(SparePartCreateEvent.OnPartNumberChanged(it)) },
-                    selectedCondition = when (selectedCondition) {
-                        ProductCondition.NEW -> "новый"
-                        ProductCondition.USED -> "б/у"
-                        else -> null
-                    },
-                    onConditionSelected = { viewModel.onEvent(SparePartCreateEvent.OnConditionChanged(it)) },
-                    conditionOptions = conditionOptions
-                )
+        Box(modifier = Modifier.fillMaxSize()) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                item { OrganizationSection(viewModel = viewModel) }
+                item {
+                    BasicInfoSection(
+                        title = title,
+                        onTitleChange = { viewModel.onEvent(SparePartCreateEvent.OnTitleChanged(it)) },
+                        makeSearchQuery = makeSearchQuery,
+                        onMakeSearchQueryChange = { viewModel.onEvent(SparePartCreateEvent.OnMakeSearchQueryChanged(it)) },
+                        makes = makes,
+                        onMakeSelected = { viewModel.onEvent(SparePartCreateEvent.OnMakeSelected(it)) },
+                        pickedMake = pickedMake,
+                        partNumber = partNumber,
+                        onPartNumberChange = { viewModel.onEvent(SparePartCreateEvent.OnPartNumberChanged(it)) },
+                        selectedCondition = condition,
+                        onConditionSelected = { viewModel.onEvent(SparePartCreateEvent.OnConditionChanged(it)) }
+                    )
+                }
+                item {
+                    PhotosSection(
+                        selectedImageUris = selectedImageUris,
+                        onAddImageClick = {
+                            imagePickerLauncher.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                            )
+                        },
+                        onRemoveImageClick = { uriToRemove ->
+                            viewModel.onEvent(SparePartCreateEvent.OnImageRemoved(uriToRemove))
+                        }
+                    )
+                }
+                item {
+                    PriceAndDescriptionSection(
+                        price = price,
+                        onPriceChange = { viewModel.onEvent(SparePartCreateEvent.OnPriceChanged(it)) },
+                        quantity = quantity,
+                        onQuantityChange = { viewModel.onEvent(SparePartCreateEvent.OnQuantityChanged(it)) },
+                        description = description,
+                        onDescriptionChange = { viewModel.onEvent(SparePartCreateEvent.OnDescriptionChanged(it)) }
+                    )
+                }
+                item {
+                    AdditionalInfoSection(viewModel = viewModel)
+                }
+                item {
+                    ActionButtons(
+                        isPublishing = creationState is Resource.Loading,
+                        onPublishClick = { viewModel.onEvent(SparePartCreateEvent.OnCreateClick) },
+                        onCancelClick = onNavigateBack
+                    )
+                }
             }
-            // MODIFIED: Pass selectedImageUri and launcher to PhotosSection
-            item {
-                PhotosSection(
-                    // ЗАМЕНИТЕ selectedImageUri = selectedImageUri,
-                    // НА ЭТО:
-                    selectedImageUris = selectedImageUris,
-
-                    // ЗАМЕНИТЕ onImageClick = { ... }
-                    // НА ЭТО (переименуем для ясности и обновим вызов):
-                    onAddImageClick = {
-                        // Для PickMultipleVisualMedia достаточно просто запустить
-                        // Можно указать тип медиа, если нужно (по умолчанию фото и видео)
-                        imagePickerLauncher.launch(
-                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                        )
-                    },
-
-                    // ЗАМЕНИТЕ onRemoveImageClick = { viewModel.onEvent(SparePartCreateEvent.OnImageSelected(null)) }
-                    // НА ЭТО (теперь передаем конкретный Uri для удаления):
-                    onRemoveImageClick = { uriToRemove ->
-                        viewModel.onEvent(SparePartCreateEvent.OnImageRemoved(uriToRemove))
-                    }
-                )
-            }
-            item {
-                PriceAndDescriptionSection(
-                    price = price,
-                    onPriceChange = { viewModel.onEvent(SparePartCreateEvent.OnPriceChanged(it)) },
-                    description = description,
-                    onDescriptionChange = { viewModel.onEvent(SparePartCreateEvent.OnDescriptionChanged(it)) }
-                )
-            }
-            item {
-                ActionButtons(
-                    onPublishClick = { viewModel.onEvent(SparePartCreateEvent.OnCreateClick) },
-                    onCancelClick = onNavigateBack
+            if (creationState is Resource.Loading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center)
                 )
             }
         }
     }
 }
 
-@Composable
-fun OrganizationSection(viewModel: SparePartCreateViewModel) {
-    SectionCard(title = "1. Организация") {
-        OrganizationSelector(viewModel = viewModel)
-    }
-}
 
 @Composable
 fun BasicInfoSection(
-    brand: String?,
-    onBrandChange: (String) -> Unit,
-    partNumber: String?,
+    title: String,
+    onTitleChange: (String) -> Unit,
+    makeSearchQuery: String,
+    onMakeSearchQueryChange: (String) -> Unit,
+    makes: List<MakeModel>?,
+    onMakeSelected: (MakeModel) -> Unit,
+    pickedMake: MakeModel?,
+    partNumber: String,
     onPartNumberChange: (String) -> Unit,
-    selectedCondition: String?,
-    onConditionSelected: (String) -> Unit,
-    conditionOptions: List<String>
+    selectedCondition: ProductCondition,
+    onConditionSelected: (ProductCondition) -> Unit
 ) {
-    SectionCard(title = "2. Основная информация") {
+    SectionCard(title = "1. Основная информация") {
         OutlinedTextField(
-            value = brand ?: "",
-            onValueChange = onBrandChange,
-            label = { Text("Бренд") },
-            placeholder = { Text("Например, Toyota") },
+            value = title,
+            onValueChange = onTitleChange,
+            label = { Text("Название объявления") },
+            placeholder = { Text("Например, Фара левая") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
         )
         Spacer(modifier = Modifier.height(16.dp))
+        MakeSelector(
+            query = makeSearchQuery,
+            onQueryChange = onMakeSearchQueryChange,
+            suggestions = makes,
+            onSuggestionSelected = onMakeSelected,
+            pickedMake = pickedMake
+        )
+        Spacer(modifier = Modifier.height(16.dp))
         OutlinedTextField(
-            value = partNumber ?: "",
+            value = partNumber,
             onValueChange = onPartNumberChange,
             label = { Text("Номер детали") },
             placeholder = { Text("Например, 12345-67890") },
@@ -236,7 +327,7 @@ fun BasicInfoSection(
         Spacer(modifier = Modifier.height(16.dp))
         Text("Состояние", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Row(Modifier.fillMaxWidth()) {
-            conditionOptions.forEach { option ->
+            ProductCondition.entries.forEach { option ->
                 Row(
                     Modifier
                         .selectable(
@@ -250,41 +341,159 @@ fun BasicInfoSection(
                         selected = (option == selectedCondition),
                         onClick = { onConditionSelected(option) }
                     )
-                    Text(text = option, modifier = Modifier.padding(start = 4.dp))
+                    Text(text = when(option) {
+                        ProductCondition.NEW -> "Новый"
+                        ProductCondition.USED -> "Б/у"
+                    }, modifier = Modifier.padding(start = 4.dp))
                 }
             }
         }
     }
 }
 
-// MODIFIED: PhotosSection to handle image selection and display
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MakeSelector(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    suggestions: List<MakeModel>?,
+    onSuggestionSelected: (MakeModel) -> Unit,
+    pickedMake: MakeModel?
+) {
+    var expanded by remember(suggestions) { mutableStateOf(!suggestions.isNullOrEmpty()) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded && pickedMake == null,
+        onExpandedChange = { expanded = it }
+    ) {
+        OutlinedTextField(
+            value = query,
+            onValueChange = onQueryChange,
+            label = { Text("Марка автомобиля") },
+            modifier = Modifier
+                .menuAnchor()
+                .fillMaxWidth(),
+            singleLine = true
+        )
+        if (pickedMake == null) {
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                suggestions?.forEach { make ->
+                    DropdownMenuItem(
+                        text = { Text(make.makeName) },
+                        onClick = {
+                            onSuggestionSelected(make)
+                            expanded = false
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PriceAndDescriptionSection(
+    price: String,
+    onPriceChange: (String) -> Unit,
+    quantity: String,
+    onQuantityChange: (String) -> Unit,
+    description: String,
+    onDescriptionChange: (String) -> Unit
+) {
+    SectionCard(title = "3. Цена и описание") {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            OutlinedTextField(
+                value = price,
+                onValueChange = onPriceChange,
+                label = { Text("Цена") },
+                leadingIcon = { Text("₽") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.weight(1f),
+                singleLine = true
+            )
+            OutlinedTextField(
+                value = quantity,
+                onValueChange = onQuantityChange,
+                label = { Text("Кол-во") },
+                trailingIcon = { Text("шт.") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.weight(1f),
+                singleLine = true
+            )
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        OutlinedTextField(
+            value = description,
+            onValueChange = onDescriptionChange,
+            label = { Text("Описание") },
+            placeholder = { Text("Расскажите подробнее о детали...") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(120.dp)
+        )
+    }
+}
+
+@Composable
+fun ActionButtons(
+    isPublishing: Boolean,
+    onPublishClick: () -> Unit,
+    onCancelClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
+    ) {
+        OutlinedButton(onClick = onCancelClick, enabled = !isPublishing) {
+            Text("Отмена")
+        }
+        Button(onClick = onPublishClick, enabled = !isPublishing) {
+            Text("Опубликовать")
+        }
+    }
+}
+
+
+@Composable
+fun OrganizationSection(viewModel: SparePartCreateViewModel) {
+    SectionCard(title = "Организация") {
+        OrganizationSelector(viewModel = viewModel)
+    }
+}
+
+
 @Composable
 fun PhotosSection(
     selectedImageUris: List<Uri>,
     onAddImageClick: () -> Unit,
     onRemoveImageClick: (Uri) -> Unit
 ) {
-    SectionCard(title = "3. Фотографии") {
-        // Отображение выбранных изображений
+    SectionCard(title = "2. Фотографии") {
         if (selectedImageUris.isNotEmpty()) {
             LazyRow(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 16.dp), // Отступ перед кнопкой добавления
+                    .padding(bottom = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(selectedImageUris) { uri ->
                     Box(
                         modifier = Modifier
-                            .size(100.dp) // Размер превью
+                            .size(100.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant) // Фон на случай долгой загрузки
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
                     ) {
                         AsyncImage(
                             model = uri,
                             contentDescription = "Выбранное изображение",
                             modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop // Обрезать для заполнения
+                            contentScale = ContentScale.Crop
                         )
                         IconButton(
                             onClick = { onRemoveImageClick(uri) },
@@ -299,7 +508,7 @@ fun PhotosSection(
                             Icon(
                                 imageVector = Icons.Filled.Close,
                                 contentDescription = "Удалить фото",
-                                tint = MaterialTheme.colorScheme.onPrimaryContainer // Или другой контрастный цвет
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                         }
                     }
@@ -307,19 +516,17 @@ fun PhotosSection(
             }
         }
 
-        // Область для добавления изображений
-        // Отображается всегда, но может менять вид/текст
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(if (selectedImageUris.isEmpty()) 150.dp else 80.dp) // Выше, если пусто
+                .height(if (selectedImageUris.isEmpty()) 150.dp else 80.dp)
                 .border(
                     width = 2.dp,
-                    brush = SolidColor(MaterialTheme.colorScheme.outline), // Используем SolidColor для кисти
+                    brush = SolidColor(MaterialTheme.colorScheme.outline),
                     shape = RoundedCornerShape(12.dp)
                 )
-                .clickable { onAddImageClick() }
-                .padding(16.dp), // Внутренний отступ для контента
+                .clickable(onClick = onAddImageClick)
+                .padding(16.dp),
             contentAlignment = Alignment.Center
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
@@ -344,53 +551,6 @@ fun PhotosSection(
                     )
                 }
             }
-        }
-    }
-}
-
-
-@Composable
-fun PriceAndDescriptionSection(
-    price: String?,
-    onPriceChange: (String) -> Unit,
-    description: String?,
-    onDescriptionChange: (String) -> Unit
-) {
-    SectionCard(title = "4. Цена и описание") {
-        OutlinedTextField(
-            value = price ?: "",
-            onValueChange = onPriceChange,
-            label = { Text("Цена") },
-            leadingIcon = { Text("₽") },
-            trailingIcon = { Text("RUB") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        OutlinedTextField(
-            value = description ?: "",
-            onValueChange = onDescriptionChange,
-            label = { Text("Описание") },
-            placeholder = { Text("Расскажите подробнее о детали...") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(120.dp)
-        )
-    }
-}
-
-@Composable
-fun ActionButtons(onPublishClick: () -> Unit, onCancelClick: () -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
-    ) {
-        OutlinedButton(onClick = onCancelClick) {
-            Text("Отмена")
-        }
-        Button(onClick = onPublishClick) {
-            Text("Опубликовать")
         }
     }
 }
@@ -486,7 +646,7 @@ fun OrganizationSelector(
                     Text("Попробовать снова")
                 }
             }
-            null -> { // Should ideally be handled by Resource.Loading or initial state
+            null -> {
                 Text("Загрузка списка организаций...")
             }
         }
@@ -503,9 +663,6 @@ fun OrganizationSelector(
 @Composable
 fun SparePartCreateScreenPreview() {
     PreviewTheme {
-        // ViewModel instance for preview might require a fake/mock implementation
-        // For simplicity, passing a default hiltViewModel might work in some preview contexts
-        // or you'd need to mock the ViewModel and its state for reliable previews.
         SparePartCreateScreen(onNavigateBack = {})
     }
 }
