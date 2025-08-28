@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     
     # Site data (url, paths)
     SITE_URL: str = ''
+    WEB_URL: str = 'http://localhost:5173'
     
     # Media settings
     MEDIA_DIR: str = 'media'

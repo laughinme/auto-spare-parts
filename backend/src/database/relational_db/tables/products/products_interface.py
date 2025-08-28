@@ -1,3 +1,4 @@
+from decimal import Decimal
 from uuid import UUID
 from datetime import datetime
 from sqlalchemy import select, func, or_, and_
@@ -102,8 +103,8 @@ class ProductsInterface:
         make_id: int | None = None,
         condition: ProductCondition | None = None,
         originality: ProductOriginality | None = None,
-        price_min: float | None = None,
-        price_max: float | None = None,
+        price_min: Decimal | None = None,
+        price_max: Decimal | None = None,
         cursor_created_at: datetime | None = None,
         cursor_id: UUID | None = None,
     ) -> list[Product]:

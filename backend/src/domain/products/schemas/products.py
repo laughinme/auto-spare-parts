@@ -31,7 +31,7 @@ class ProductModel(TimestampModel):
     
     make: MakeModel = Field(..., description="Part brand/manufacturer")
     part_number: str = Field(..., description="Part number (OEM or aftermarket)")
-    price: float = Field(..., ge=0, description="Price in USD")
+    price: Decimal = Field(..., ge=0, description="Price in USD")
     
     stock_type: StockType = Field(..., description="Part stock type")
     quantity: int = Field(..., description="Part stock quantity on hand", alias="quantity_on_hand")
@@ -58,8 +58,9 @@ class ProductBrief(BaseModel):
     title: str = Field(..., description="Product title")
     make: MakeModel = Field(..., description="Part brand/manufacturer")
     part_number: str = Field(..., description="Part number")
-    price: float = Field(..., ge=0, description="Price in USD")
+    price: Decimal = Field(..., ge=0, description="Price in USD")
     allow_cart: bool = Field(..., description="Allow adding to cart. If stock_type is UNIQUE, this must be False.")
+    # allow_chat: bool = Field(True, description="Allow chat with seller")
     # photo_url: str | None = Field(
     #     None,
     #     description="URL of the first product photo, or None if no photos are available"

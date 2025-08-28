@@ -42,8 +42,8 @@ class Cart(TimestampMixin, Base):
         )
         
     @hybrid_property
-    def total_amount(self) -> float:
-        return sum(i.total_price for i in self.items)
+    def total_amount(self) -> Decimal:
+        return sum((i.total_price for i in self.items), start=Decimal('0'))
 
     @total_amount.expression
     @classmethod
@@ -70,19 +70,18 @@ class CartItem(TimestampMixin, Base):
     title: Mapped[str] = mapped_column(String, nullable=False, comment="Product title snapshot")
     description: Mapped[str] = mapped_column(String, nullable=True, comment="Product description snapshot")
     part_number: Mapped[str] = mapped_column(String, nullable=False, comment="Product part number snapshot")
-    
 
     quantity: Mapped[int] = mapped_column(Integer, nullable=False, default=1, comment="Quantity of this product")
-    unit_price: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False, comment="Price per unit when added to cart (USD)")
+    unit_price: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, comment="Price per unit when added to cart (USD)")
 
     @hybrid_property
-    def total_price(self) -> float:
-        return self.quantity * self.unit_price
+    def total_price(self) -> Decimal:
+        return Decimal(self.quantity * self.unit_price)
 
     @total_price.expression
     @classmethod
     def total_price_expr(cls):
-        return cls.quantity * cls.unit_price
+        return (cls.quantity * cls.unit_price).cast(Numeric(12, 2))
 
     # Relationships
     cart: Mapped[Cart] = relationship(back_populates="items", lazy="selectin")

@@ -36,8 +36,11 @@ class CartInterface:
             .where(Cart.id == cart_id)
             .options(
                 selectinload(Cart.items)
-                .selectinload(CartItem.product)
-                .selectinload(Product.media)
+                    .selectinload(CartItem.product)
+                    .selectinload(Product.media),
+                selectinload(Cart.items)
+                    .selectinload(CartItem.product)
+                    .selectinload(Product.make)
             )
         )
         await self.session.flush()
@@ -106,3 +109,12 @@ class CartItemInterface:
             )
         )
         return result.scalar_one()
+    
+    async def delete_items(self, item_ids: list[UUID]) -> None:
+        if not item_ids:
+            return
+
+        await self.session.execute(
+            delete(CartItem)
+            .where(CartItem.id.in_(item_ids))
+        )

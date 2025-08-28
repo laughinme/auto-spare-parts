@@ -1,4 +1,5 @@
 from uuid import UUID
+from decimal import Decimal
 from pydantic import BaseModel, Field
 
 from ...common import CreatedAtModel
@@ -11,8 +12,8 @@ class CartItemModel(CreatedAtModel):
     id: UUID = Field(..., description="Unique cart item ID")
     product: ProductBrief = Field(..., description="Product details")
     quantity: int = Field(..., ge=1, description="Quantity of this product in cart")
-    unit_price: float = Field(..., ge=0, description="Price per unit when added to cart (USD)")
-    total_price: float = Field(..., ge=0, description="Total price for this item (quantity * unit_price)")
+    unit_price: Decimal = Field(..., ge=0, description="Price per unit when added to cart (USD)")
+    total_price: Decimal = Field(..., ge=0, description="Total price for this item (quantity * unit_price)")
 
 class CartModel(BaseModel):
     """Cart model for API responses"""
@@ -22,7 +23,7 @@ class CartModel(BaseModel):
     items: list[CartItemModel] = Field(default_factory=list, description="Items in cart")
     unique_items: int = Field(..., ge=0, description="Total number of unique items in cart")
     total_items: int = Field(..., ge=0, description="Total number of items in cart")
-    total_amount: float = Field(..., ge=0, description="Total cart value in USD")
+    total_amount: Decimal = Field(..., ge=0, description="Total cart value in USD")
 
 class CartItemCreate(BaseModel):
     """Schema for adding item to cart"""
@@ -39,7 +40,7 @@ class CartSummary(BaseModel):
     """Simplified cart summary for quick responses"""
     
     total_items: int = Field(..., ge=0, description="Total number of items in cart")
-    total_amount: float = Field(..., ge=0, description="Total cart value in USD")
+    total_amount: Decimal = Field(..., ge=0, description="Total cart value in USD")
 
 class CartItemRemove(BaseModel):
     """Schema for removing item from cart"""

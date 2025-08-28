@@ -1,5 +1,6 @@
 import aiofiles
 from uuid import UUID, uuid4
+from decimal import Decimal
 from datetime import datetime
 from pathlib import Path
 from fastapi import UploadFile, status, HTTPException
@@ -45,9 +46,9 @@ class ProductService:
         self.media_repo = media_repo
         self.carts_repo = carts_repo
         self.redis = redis
-        
-        
-    def _validate_product_integrity(self, product: Product) -> None:
+    
+    @staticmethod
+    def _validate_product_integrity(product: Product) -> None:
         if product.stock_type == StockType.UNIQUE:
             if product.allow_cart:
                 raise ValueError("Cart cannot be allowed for UNIQUE stock type")
@@ -324,8 +325,8 @@ class ProductService:
         make_id: int | None = None,
         condition: ProductCondition | None = None,
         originality: ProductOriginality | None = None,
-        price_min: float | None = None,
-        price_max: float | None = None,
+        price_min: Decimal | None = None,
+        price_max: Decimal | None = None,
         cursor: str | None = None,
     ) -> tuple[list[Product], str | None]:
         """Search published products with cursor pagination (same pattern as admin users)"""

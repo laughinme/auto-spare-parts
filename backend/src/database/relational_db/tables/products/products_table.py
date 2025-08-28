@@ -1,4 +1,5 @@
 from uuid import UUID, uuid4
+from decimal import Decimal
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 from sqlalchemy import String, ForeignKey, Uuid, Text, Numeric, Integer, Boolean, CheckConstraint, Index, or_, false, and_
 from sqlalchemy.dialects.postgresql import ENUM
@@ -21,7 +22,7 @@ class Product(TimestampMixin, Base):
     description: Mapped[str | None] = mapped_column(Text, nullable=True, comment="Product listing description")
     
     part_number: Mapped[str] = mapped_column(String, nullable=False, index=True, comment="Part number (OEM or aftermarket)")
-    price: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False, comment="Price in USD")
+    price: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, comment="Price in USD")
     
     stock_type: Mapped[StockType] = mapped_column(ENUM(StockType, name="product_stock_type"), nullable=False, comment="Part stock type")
     quantity_original: Mapped[int] = mapped_column(Integer, nullable=False, comment="Original part stock quantity")

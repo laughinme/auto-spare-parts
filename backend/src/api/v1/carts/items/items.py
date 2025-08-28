@@ -7,7 +7,6 @@ from domain.carts import (
     CartModel, 
     CartItemCreate, 
     CartItemUpdate, 
-    CartItemRemove,
 )
 from database.relational_db import User
 from service.carts import CartService, get_cart_service
@@ -26,7 +25,8 @@ async def add_item_to_cart(
     user: Annotated[User, Depends(auth_user)],
     cart_service: Annotated[CartService, Depends(get_cart_service)],
 ):
-    return await cart_service.add_item_to_cart(user, payload)
+    cart = await cart_service.add_item_to_cart(user, payload)
+    return cart
 
 @router.put(
     '/{item_id}',

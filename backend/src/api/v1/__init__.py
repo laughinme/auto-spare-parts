@@ -10,12 +10,14 @@ def get_v1_router() -> APIRouter:
     from .misc import get_misc_router
     from .products import get_products_router
     from .carts import get_carts_router
+    from .checkouts import get_checkouts_router
     
     
     router = APIRouter(prefix='/v1')
 
     router.include_router(get_auth_routers())
     router.include_router(get_users_router())
+    router.include_router(get_checkouts_router())
     router.include_router(get_carts_router())
     router.include_router(get_vehicles_router())
     router.include_router(get_products_router())

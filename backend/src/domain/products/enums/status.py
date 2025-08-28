@@ -5,4 +5,4 @@ class ProductStatus(str, Enum):
     DRAFT = "draft"
     PUBLISHED = "published"
     ARCHIVED = "archived"
-    # DELETED = "deleted"
+    # PAUSED = "paused"
