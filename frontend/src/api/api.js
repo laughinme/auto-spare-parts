@@ -1,32 +1,27 @@
-
 import apiProtected, { apiPublic } from './axiosInstance.js';
+
+/* ==================== ORGANIZATION PRODUCTS ==================== */
 
 export async function createProduct({ productData, orgId }) {
   const url = `/organizations/${orgId}/products/`;
   const response = await apiProtected.post(url, productData);
-
   return response.data;
 }
 
 export async function getProducts({ orgId, query, limit = 20, offset = 0 }) {
-    const response = await apiProtected.get(`/organizations/${orgId}/products/`, {
-      params: {
-        q: query,
-        limit,
-        offset,
-      }
-    });
-    return response.data;
-  }
+  const response = await apiProtected.get(`/organizations/${orgId}/products/`, {
+    params: { q: query, limit, offset },
+  });
+  return response.data;
+}
 
-  export async function getDetailsProducts({ orgId, productId }) {
-    if (!orgId || !productId) {
-      throw new Error("Organization ID and Product ID are required");
-    }
-    
-    const response = await apiProtected.get(`/organizations/${orgId}/products/${productId}/`);
-    return response.data;
+export async function getDetailsProducts({ orgId, productId }) {
+  if (!orgId || !productId) {
+    throw new Error("Organization ID and Product ID are required");
   }
+  const response = await apiProtected.get(`/organizations/${orgId}/products/${productId}/`);
+  return response.data;
+}
 
 export async function updateProduct({ orgId, productId, productData }) {
   const response = await apiProtected.patch(`/organizations/${orgId}/products/${productId}/`, productData);
@@ -37,203 +32,138 @@ export async function deleteProduct({ orgId, productId }) {
   await apiProtected.delete(`/organizations/${orgId}/products/${productId}/`);
 }
 
-// Функция для публикации продукта (делает его видимым в публичном каталоге)
 export async function publishProduct({ orgId, productId }) {
   const response = await apiProtected.post(`/organizations/${orgId}/products/${productId}/publish`);
   return response.data;
 }
 
-// Функция для снятия продукта с публикации (скрывает из публичного каталога)
 export async function unpublishProduct({ orgId, productId }) {
   const response = await apiProtected.post(`/organizations/${orgId}/products/${productId}/unpublish`);
   return response.data;
 }
 
-// === PUBLIC PRODUCT CATALOG ===
-
+/* ==================== PUBLIC CATALOG ==================== */
 /**
- * Search products in public catalog with advanced filters
- * @param {Object} params - Search parameters
- * @param {string} [params.q] - Search query (brand, part number, description)
- * @param {string} [params.brand] - Filter by brand
- * @param {string} [params.condition] - Filter by condition (NEW, USED, REFURBISHED)
- * @param {number} [params.price_min] - Minimum price filter
- * @param {number} [params.price_max] - Maximum price filter
- * @param {number} [params.limit=20] - Maximum number of items
- * @param {string} [params.cursor] - Cursor for pagination
+ * По новой схеме:
+ *  - make_id: number
+ *  - condition: 'new' | 'used'
+ *  - price_min/price_max: number
  */
 export async function searchProducts({
   q,
-  brand,
+  make_id,
   condition,
   price_min,
   price_max,
   limit = 20,
-  cursor
+  cursor,
 } = {}) {
   const response = await apiProtected.get('/products/catalog', {
-    params: {
-      q,
-      brand,
-      condition,
-      price_min,
-      price_max,
-      limit,
-      cursor
-    }
+    params: { q, make_id, condition, price_min, price_max, limit, cursor },
   });
   return response.data;
 }
 
-/**
- * Get products feed (For You Page) with cursor pagination
- * @param {Object} params - Feed parameters
- * @param {number} [params.limit=20] - Maximum number of items
- * @param {string} [params.cursor] - Cursor for pagination
- */
 export async function getProductsFeed({ limit = 20, cursor } = {}) {
   const response = await apiProtected.get('/products/feed', {
-    params: {
-      limit,
-      cursor
-    }
+    params: { limit, cursor },
   });
   return response.data;
 }
 
-/**
- * Get public product details by ID
- * @param {string} productId - Product ID
- */
 export async function getPublicProductDetails(productId) {
   const response = await apiProtected.get(`/products/${productId}`);
   return response.data;
 }
 
-// === GARAGE API ===
+/* ==================== GARAGE ==================== */
 
-/**
- * Add a vehicle to user's garage
- * @param {Object} vehicleData - Vehicle data
- * @param {number} vehicleData.make_id - Vehicle make ID
- * @param {number} vehicleData.model_id - Vehicle model ID  
- * @param {number} vehicleData.year - Vehicle year
- * @param {number} [vehicleData.vehicle_type_id] - Vehicle type ID
- * @param {string} [vehicleData.vin] - Vehicle VIN
- * @param {string} [vehicleData.comment] - User comment
- */
 export async function addVehicleToGarage(vehicleData) {
   const response = await apiProtected.post('/users/me/garage/add-vehicle', vehicleData);
   return response.data;
 }
 
-/**
- * Get all vehicles in user's garage
- * @param {Object} params - Search parameters
- * @param {string} [params.search] - Search query
- * @param {number} [params.limit=50] - Maximum number of vehicles
- */
 export async function getGarageVehicles({ search = "", limit = 50 } = {}) {
   const response = await apiProtected.get('/users/me/garage/vehicles', {
-    params: { search, limit }
+    params: { search, limit },
   });
   return response.data;
 }
 
-// === VEHICLES (Makes/Models/Years) ===
+/* ==================== VEHICLES (makes/models/years) ==================== */
 
-/**
- * Get vehicle makes
- * @param {Object} params
- * @param {number} [params.limit=50]
- * @param {string} [params.search]
- */
 export async function getVehicleMakes({ limit = 50, search } = {}) {
   const response = await apiPublic.get('/vehicles/makes/', {
-    params: { limit, search }
+    params: { limit, search },
   });
   return response.data;
 }
 
-/**
- * Get vehicle models
- * @param {Object} params
- * @param {number} [params.limit=50]
- * @param {number} [params.make_id]
- * @param {string} [params.search]
- */
 export async function getVehicleModels({ limit = 50, make_id, search } = {}) {
   const response = await apiPublic.get('/vehicles/models/', {
-    params: { limit, make_id, search }
+    params: { limit, make_id, search },
   });
   return response.data;
 }
 
-/**
- * Get model years
- * @param {Object} params
- * @param {number} params.model_id
- */
 export async function getVehicleYears({ model_id }) {
   if (!model_id) {
     throw new Error('model_id is required');
   }
   const response = await apiPublic.get('/vehicles/years/', {
-    params: { model_id }
+    params: { model_id },
   });
   return response.data;
 }
 
-// === PRODUCT MEDIA API ===
+/* ==================== PRODUCT MEDIA ==================== */
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+const ALLOWED_MIME = { 'image/jpeg': true, 'image/png': true };
 
 /**
- * Upload product photos
- * @param {Object} params - Upload parameters
- * @param {string} params.orgId - Organization ID
- * @param {string} params.productId - Product ID
- * @param {FileList|File[]} params.files - Files to upload (JPEG or PNG, max 10 MB each)
+ * Upload product photos (JPEG/PNG, ≤10 MB)
+ * @param {Object} params
+ * @param {string} params.orgId
+ * @param {string} params.productId
+ * @param {File[]|FileList} params.files
  */
 export async function uploadProductPhotos({ orgId, productId, files }) {
-  if (!orgId || !productId) {
-    throw new Error("Organization ID and Product ID are required");
+  const filesArr = Array.from(files || []);
+  if (!filesArr.length) {
+    const e = new Error('Нет файлов для загрузки (files пуст)');
+    e.code = 'CLIENT_VALIDATION';
+    throw e;
   }
-  
-  if (!files || files.length === 0) {
-    throw new Error("At least one file is required");
+
+  const bad = [];
+  const good = [];
+  filesArr.forEach((f, i) => {
+    if (!(f instanceof Blob)) { bad.push(`[#${i}] не Blob/File`); return; }
+    if (!ALLOWED_MIME[f.type]) { bad.push(`[#${i}] тип ${f.type || 'unknown'} не поддерживается`); return; }
+    if (f.size > MAX_FILE_SIZE) { bad.push(`[#${i}] ${(f.size/1024/1024).toFixed(2)} MB > 10 MB`); return; }
+    good.push(f);
+  });
+  if (!good.length) {
+    const e = new Error(`Все файлы отклонены: ${bad.join('; ')}`);
+    e.code = 'CLIENT_VALIDATION';
+    throw e;
   }
 
   const formData = new FormData();
-  
-  // Add all files to FormData
-  Array.from(files).forEach(file => {
-    formData.append('files', file);
-  });
+  good.forEach((file, i) => formData.append('files', file, file.name || `photo_${i}.jpg`));
 
-  const response = await apiProtected.put(
+  const { data } = await apiProtected.put(
     `/organizations/${orgId}/products/${productId}/media`,
-    formData,
-    {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    }
+    formData
   );
-  
-  return response.data;
+  return data;
 }
 
-/**
- * Delete product media file
- * @param {Object} params - Delete parameters
- * @param {string} params.orgId - Organization ID
- * @param {string} params.productId - Product ID
- * @param {string} params.mediaId - Media file ID
- */
+
 export async function deleteProductMedia({ orgId, productId, mediaId }) {
   if (!orgId || !productId || !mediaId) {
     throw new Error("Organization ID, Product ID and Media ID are required");
   }
-
   await apiProtected.delete(`/organizations/${orgId}/products/${productId}/media/${mediaId}`);
 }
-
