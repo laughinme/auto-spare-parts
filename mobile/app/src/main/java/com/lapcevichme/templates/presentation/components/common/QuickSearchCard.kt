@@ -1,4 +1,4 @@
-package com.lapcevichme.templates.presentation.components.homeTabCards
+package com.lapcevichme.templates.presentation.components.common
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.*

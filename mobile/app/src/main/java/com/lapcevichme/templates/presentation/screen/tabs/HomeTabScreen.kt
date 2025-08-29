@@ -31,7 +31,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.lapcevichme.templates.presentation.components.homeTabCards.QuickSearchCard
+import com.lapcevichme.templates.presentation.components.common.QuickSearchCard
 import com.lapcevichme.templates.presentation.components.homeTabCards.SparePartCard
 import com.lapcevichme.templates.presentation.viewmodel.HomeTabViewModel
 import com.lapcevichme.templates.presentation.viewmodel.SearchViewModel

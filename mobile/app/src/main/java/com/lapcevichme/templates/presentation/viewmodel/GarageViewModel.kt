@@ -211,10 +211,10 @@ class GarageViewModel @Inject constructor(
         }
         // --- END OF MODIFIED YEAR VALIDATION ---
 
-        if (vehicleTypeId == null) {
-            _vehicleOperationStatus.value = VehicleOperationStatus.Error("Please select a vehicle type")
-            return
-        }
+//        if (vehicleTypeId == null) {
+//            _vehicleOperationStatus.value = VehicleOperationStatus.Error("Please select a vehicle type")
+//            return
+//        }
 
         val vehicleCreate = VehicleCreate(
             makeId = makeId,

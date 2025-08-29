@@ -2,7 +2,6 @@ package com.lapcevichme.templates.presentation.screen.garage
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -10,13 +9,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.lapcevichme.templates.presentation.components.common.QuickSearchDropdown
+import com.lapcevichme.templates.presentation.components.common.SearchableDropdown
 import com.lapcevichme.templates.presentation.viewmodel.GarageEvent
 import com.lapcevichme.templates.presentation.viewmodel.GarageViewModel
+import com.lapcevichme.templates.presentation.viewmodel.SearchViewModel
 import com.lapcevichme.templates.presentation.viewmodel.VehicleOperationStatus
 import kotlinx.coroutines.launch
 
@@ -24,42 +25,52 @@ import kotlinx.coroutines.launch
 @Composable
 fun AddVehicleScreen(
     navController: NavController,
-    viewModel: GarageViewModel = hiltViewModel()
+    garageViewModel: GarageViewModel = hiltViewModel(),
+    searchViewModel: SearchViewModel = hiltViewModel() // <-- Добавляем SearchViewModel
 ) {
-    val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    val makeId by viewModel.selectedMakeId.collectAsState()
-    val modelId by viewModel.selectedModelId.collectAsState()
-    val year by viewModel.selectedYear.collectAsState()
-    val vehicleTypeId by viewModel.selectedVehicleTypeId.collectAsState()
-    val vin by viewModel.vinInput.collectAsState()
-    val comment by viewModel.commentInput.collectAsState()
+    // --- Состояния из GarageViewModel (для сохранения) ---
+    val vin by garageViewModel.vinInput.collectAsState()
+    val comment by garageViewModel.commentInput.collectAsState()
+    val operationStatus by garageViewModel.vehicleOperationStatus.collectAsState()
 
-    val operationStatus by viewModel.vehicleOperationStatus.collectAsState()
+    // --- Состояния из SearchViewModel (для полей выбора) ---
+    val makes by searchViewModel.vehiclesMakes.collectAsStateWithLifecycle()
+    val selectedMake by searchViewModel.pickedVehiclesMake.collectAsStateWithLifecycle()
+    val makeSearchQuery by searchViewModel.makeSearchQuery.collectAsStateWithLifecycle()
 
+    val models by searchViewModel.vehiclesModels.collectAsStateWithLifecycle()
+    val selectedModel by searchViewModel.pickedVehiclesModel.collectAsStateWithLifecycle()
+    val modelSearchQuery by searchViewModel.modelSearchQuery.collectAsStateWithLifecycle()
+
+    val years by searchViewModel.vehiclesYears.collectAsStateWithLifecycle()
+    val selectedYear by searchViewModel.pickedVehiclesYear.collectAsStateWithLifecycle()
+
+    // --- Локальные состояния для управления UI (раскрытие списков) ---
+    var makeExpanded by remember { mutableStateOf(false) }
+    var modelExpanded by remember { mutableStateOf(false) }
+    var yearExpanded by remember { mutableStateOf(false) }
+
+    // --- Обработка статуса операции (сохранение, ошибка) ---
     LaunchedEffect(operationStatus) {
         when (val status = operationStatus) {
             is VehicleOperationStatus.Success -> {
                 scope.launch {
-                    snackbarHostState.showSnackbar(status.message ?: "Operation successful")
+                    snackbarHostState.showSnackbar(status.message ?: "Автомобиль успешно добавлен")
                 }
-                viewModel.clearOperationStatus() // Reset status
-                navController.popBackStack() // Navigate back
+                garageViewModel.clearOperationStatus() // Сбрасываем статус
+                navController.popBackStack() // Возвращаемся назад
             }
             is VehicleOperationStatus.Error -> {
                 scope.launch {
                     snackbarHostState.showSnackbar(status.message)
                 }
-                viewModel.clearOperationStatus() // Reset status
+                garageViewModel.clearOperationStatus() // Сбрасываем статус
             }
-            is VehicleOperationStatus.Loading -> {
-                // Optionally show a loading indicator centrally
-            }
-            VehicleOperationStatus.Idle -> {
-                // Do nothing
-            }
+            is VehicleOperationStatus.Loading -> { /* Показываем индикатор загрузки */ }
+            VehicleOperationStatus.Idle -> { /* Ничего не делаем */ }
         }
     }
 
@@ -67,17 +78,17 @@ fun AddVehicleScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Add New Vehicle") },
+                title = { Text("Добавить автомобиль") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Назад")
                     }
                 }
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { viewModel.onEvent(GarageEvent.SubmitAddVehicleForm) }) {
-                Text("Add") // Or an Icon
+            FloatingActionButton(onClick = { garageViewModel.onEvent(GarageEvent.SubmitAddVehicleForm) }) {
+                Text("Добавить")
             }
         }
     ) { paddingValues ->
@@ -87,54 +98,76 @@ fun AddVehicleScreen(
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text("Enter Vehicle Details", style = MaterialTheme.typography.titleMedium)
-
-            OutlinedTextField(
-                value = makeId?.toString() ?: "",
-                onValueChange = { value -> viewModel.onMakeIdChanged(value.toIntOrNull()) },
-                label = { Text("Make ID*") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            // --- Поле выбора марки ---
+            SearchableDropdown(
+                label = "Марка*",
+                searchQuery = makeSearchQuery,
+                onSearchQueryChange = { newQuery ->
+                    searchViewModel.onMakeSearchQueryChanged(newQuery)
+                    makeExpanded = true
+                },
+                options = makes,
+                optionToString = { it.makeName },
+                onOptionSelected = { make ->
+                    searchViewModel.onBrandSelected(make) // Обновляем текст и загружаем модели
+                    garageViewModel.onMakeIdChanged(make.makeId) // Сохраняем ID
+                },
+                expanded = makeExpanded,
+                onExpandedChange = { makeExpanded = it },
                 modifier = Modifier.fillMaxWidth()
             )
 
-            OutlinedTextField(
-                value = modelId?.toString() ?: "",
-                onValueChange = { value -> viewModel.onModelIdChanged(value.toIntOrNull()) },
-                label = { Text("Model ID*") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            // --- Поле выбора модели ---
+            SearchableDropdown(
+                label = "Модель*",
+                searchQuery = modelSearchQuery,
+                onSearchQueryChange = { newQuery ->
+                    searchViewModel.onModelSearchQueryChanged(newQuery)
+                    modelExpanded = true
+                },
+                options = models,
+                optionToString = { it.modelName },
+                onOptionSelected = { model ->
+                    searchViewModel.onModelSelected(model) // Обновляем текст и загружаем годы
+                    garageViewModel.onModelIdChanged(model.modelId) // Сохраняем ID
+                },
+                expanded = modelExpanded,
+                onExpandedChange = { modelExpanded = it },
+                enabled = selectedMake != null, // Доступно только после выбора марки
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // For Year, you might want a dropdown with "Неважно" and numbers
-            // For simplicity, using TextField here.
-            OutlinedTextField(
-                value = year ?: "",
-                onValueChange = { viewModel.onYearChanged(it.ifBlank { null }) }, // Allow empty to represent "not set" before "Неважно" logic
-                label = { Text("Year* (e.g., 2023 or 'Неважно')") },
+            // --- Поле выбора года ---
+            val yearOptions = listOf("Неважно") + (years?.map { it.toString() }?.distinct()?.sortedDescending() ?: emptyList())
+            QuickSearchDropdown(
+                label = "Год*",
+                options = yearOptions,
+                selectedOption = selectedYear?.toString() ?: "Неважно",
+                onOptionSelected = { yearString ->
+                    val yearInt = yearString.toIntOrNull()
+                    searchViewModel.onYearSelected(yearInt) // Обновляем текст
+                    garageViewModel.onYearChanged(yearString.takeIf { it != "Неважно" }) // Сохраняем год или null
+                },
+                expanded = yearExpanded,
+                onExpandedChange = { yearExpanded = it },
+                enabled = selectedModel != null, // Доступно только после выбора модели
                 modifier = Modifier.fillMaxWidth()
             )
 
-            OutlinedTextField(
-                value = vehicleTypeId?.toString() ?: "",
-                onValueChange = { value -> viewModel.onVehicleTypeIdChanged(value.toIntOrNull()) },
-                label = { Text("Vehicle Type ID*") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
-            )
-
+            // --- Остальные поля ---
             OutlinedTextField(
                 value = vin,
-                onValueChange = { viewModel.onVinChanged(it) },
+                onValueChange = { garageViewModel.onVinChanged(it) },
                 label = { Text("VIN") },
                 modifier = Modifier.fillMaxWidth()
             )
 
             OutlinedTextField(
                 value = comment,
-                onValueChange = { viewModel.onCommentChanged(it) },
-                label = { Text("Comment") },
+                onValueChange = { garageViewModel.onCommentChanged(it) },
+                label = { Text("Комментарий") },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 3
             )
