@@ -1,10 +1,11 @@
 from genericpath import exists
 from uuid import UUID
-from sqlalchemy import select, delete, update, exists
+from sqlalchemy import select, delete, update, exists, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlalchemy.dialects.postgresql import insert
 
+from domain.carts import CartItemStatus
 from .cart_table import Cart, CartItem
 from ..products import Product
 
@@ -19,7 +20,7 @@ class CartInterface:
             .where(Cart.user_id == user_id)
         )
         
-    async def get_cart(self, user_id: UUID | str) -> Cart:
+    async def get_cart(self, user_id: UUID | str, include_locked: bool = False) -> Cart:
         result = await self.session.execute(
             insert(Cart)
             .values(user_id=user_id)
@@ -30,15 +31,19 @@ class CartInterface:
             .returning(Cart.id)
         )
         cart_id = result.scalar_one()
+        
+        available_statuses = [CartItemStatus.ACTIVE]
+        if include_locked:
+            available_statuses.append(CartItemStatus.LOCKED)
 
         result = await self.session.execute(
             select(Cart)
             .where(Cart.id == cart_id)
             .options(
-                selectinload(Cart.items)
+                selectinload(Cart.items.and_(CartItem.status.in_(available_statuses)))
                     .selectinload(CartItem.product)
                     .selectinload(Product.media),
-                selectinload(Cart.items)
+                selectinload(Cart.items.and_(CartItem.status.in_(available_statuses)))
                     .selectinload(CartItem.product)
                     .selectinload(Product.make)
             )
@@ -117,4 +122,19 @@ class CartItemInterface:
         await self.session.execute(
             delete(CartItem)
             .where(CartItem.id.in_(item_ids))
+        )
+
+    async def lock_items(self, order_id: UUID, user_id: UUID | str):
+        await self.session.execute(
+            update(CartItem)
+            .where(
+                CartItem.cart_id == Cart.id,
+                Cart.user_id == user_id,
+                CartItem.status == CartItemStatus.ACTIVE
+            )
+            .values(
+                status=CartItemStatus.LOCKED,
+                order_id=order_id,
+                locked_at=func.now()
+            )
         )

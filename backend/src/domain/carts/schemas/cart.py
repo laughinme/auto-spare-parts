@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 
 from ...common import CreatedAtModel
 from ...products import ProductModel, ProductBrief
+from ..enums import CartItemStatus
 
 
 class CartItemModel(CreatedAtModel):
@@ -14,6 +15,7 @@ class CartItemModel(CreatedAtModel):
     quantity: int = Field(..., ge=1, description="Quantity of this product in cart")
     unit_price: Decimal = Field(..., ge=0, description="Price per unit when added to cart (USD)")
     total_price: Decimal = Field(..., ge=0, description="Total price for this item (quantity * unit_price)")
+    status: CartItemStatus = Field(..., description="Cart item status. Only active items are returned in the cart by default.")
 
 class CartModel(BaseModel):
     """Cart model for API responses"""
@@ -29,7 +31,7 @@ class CartItemCreate(BaseModel):
     """Schema for adding item to cart"""
     
     product_id: UUID = Field(..., description="Product ID to add to cart")
-    quantity: int = Field(1, ge=1, le=99, description="Quantity to add (max 99 per item)")
+    quantity: int = Field(1, ge=1, le=99, description="Quantity to add (max 99 per item)") 
 
 class CartItemUpdate(BaseModel):
     """Schema for updating cart item quantity"""

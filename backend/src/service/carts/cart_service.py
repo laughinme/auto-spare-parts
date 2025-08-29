@@ -1,7 +1,7 @@
 from uuid import UUID
 from fastapi import HTTPException
 
-from domain.carts import CartItemCreate, CartItemUpdate
+from domain.carts import CartItemCreate, CartItemUpdate, CartItemStatus
 from domain.products import ProductStatus, StockType
 from database.relational_db import (
     UoW,
@@ -33,8 +33,8 @@ class CartService:
             return {'total_items': 0, 'total_amount': 0}
         return cart
 
-    async def get_user_cart(self, user: User) -> Cart:
-        return await self.cart_repo.get_cart(user.id)
+    async def get_user_cart(self, user: User, include_locked: bool = False) -> Cart:
+        return await self.cart_repo.get_cart(user.id, include_locked)
         
     async def add_item_to_cart(self, user: User, payload: CartItemCreate) -> Cart:
         cart = await self.cart_repo.get_cart(user.id)
@@ -102,3 +102,6 @@ class CartService:
         await self.cart_repo.clear_cart(user.id)
         
         return await self.get_user_cart(user)
+    
+    async def lock_cart_items(self, order_id: UUID, user_id: UUID | str):
+        await self.cart_item_repo.lock_items(order_id, user_id)

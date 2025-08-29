@@ -156,7 +156,7 @@ class OrderService:
             status=status,
         )
 
-    async def get_order_by_id(self, order_id: UUID, user: User) -> Order:
+    async def get_order_by_id(self, order_id: UUID | str, user: User) -> Order:
         """Get order by ID, ensuring user owns it"""
         order = await self.order_repo.get_by_id(order_id)
         if order is None:
@@ -172,6 +172,10 @@ class OrderService:
             )
         
         return order
+    
+    async def get_order(self, order_id: UUID | str) -> Order | None:
+        """Get order by ID"""
+        return await self.order_repo.get_by_id(order_id)
 
     # async def update_order_status(
     #     self,
