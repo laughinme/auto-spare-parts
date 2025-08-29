@@ -19,6 +19,7 @@ import com.lapcevichme.templates.data.remote.dto.UserPatchRequest
 import com.lapcevichme.templates.data.remote.dto.UserRegisterRequest
 import com.lapcevichme.templates.data.remote.dto.VehicleCreateDto
 import com.lapcevichme.templates.data.remote.dto.VehicleModelDto
+import com.lapcevichme.templates.data.remote.dto.VehiclePatchDto
 import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body
@@ -351,4 +352,40 @@ interface ApiService {
     @GET("/api/v1/geo/cities/")
     suspend fun listCities(): Response<List<CityModelDto>>
 
+    // --- Методы для гаража ---
+
+    /**
+     * Получение конкретного транспортного средства из гаража пользователя.
+     * Требуется авторизация.
+     * @param vehicleId ID транспортного средства.
+     * @return Модель транспортного средства.
+     */
+    @GET("/api/v1/users/me/garage/{vehicle_id}/")
+    suspend fun getVehicleFromGarage(
+        @Path("vehicle_id") vehicleId: String
+    ): Response<VehicleModelDto>
+
+    /**
+     * Обновление данных транспортного средства в гараже пользователя.
+     * Требуется авторизация.
+     * @param vehicleId ID транспортного средства.
+     * @param vehiclePatchDto Тело запроса с обновляемыми данными.
+     * @return Обновленная модель транспортного средства.
+     */
+    @PATCH("/api/v1/users/me/garage/{vehicle_id}/")
+    suspend fun updateVehicleInGarage(
+        @Path("vehicle_id") vehicleId: String,
+        @Body vehiclePatchDto: VehiclePatchDto
+    ): Response<VehicleModelDto>
+
+    /**
+     * Удаление транспортного средства из гаража пользователя.
+     * Требуется авторизация.
+     * @param vehicleId ID транспортного средства.
+     * @return Успех операции (HTTP 204 No Content).
+     */
+    @DELETE("/api/v1/users/me/garage/{vehicle_id}/")
+    suspend fun deleteVehicleFromGarage(
+        @Path("vehicle_id") vehicleId: String
+    ): Response<Unit> // OpenAPI указывает 204, так что Response<Unit> подходит
 }

@@ -6,8 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.lapcevichme.templates.domain.model.CursorPage
 import com.lapcevichme.templates.domain.model.ProductModel
 import com.lapcevichme.templates.domain.model.Resource
-import com.lapcevichme.templates.domain.model.garage.MakeModel
-import com.lapcevichme.templates.domain.model.garage.VehicleModelInfo
+import com.lapcevichme.templates.domain.model.MakeModel
+import com.lapcevichme.templates.domain.model.VehicleModelInfo
 import com.lapcevichme.templates.domain.usecase.product.ProductSearchUseCase
 import com.lapcevichme.templates.domain.usecase.vehicles.GetVehiclesMakesUseCase
 import com.lapcevichme.templates.domain.usecase.vehicles.GetVehiclesModelsUseCase

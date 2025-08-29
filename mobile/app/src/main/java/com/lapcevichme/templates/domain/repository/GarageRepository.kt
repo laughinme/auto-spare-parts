@@ -2,10 +2,11 @@ package com.lapcevichme.templates.domain.repository
 
 import com.lapcevichme.templates.domain.model.Resource
 import com.lapcevichme.templates.domain.model.CursorPage
-import com.lapcevichme.templates.domain.model.garage.MakeModel
-import com.lapcevichme.templates.domain.model.garage.VehicleCreate
-import com.lapcevichme.templates.domain.model.garage.VehicleModel
-import com.lapcevichme.templates.domain.model.garage.VehicleModelInfo
+import com.lapcevichme.templates.domain.model.MakeModel
+import com.lapcevichme.templates.domain.model.VehicleCreate
+import com.lapcevichme.templates.domain.model.VehicleModel
+import com.lapcevichme.templates.domain.model.VehicleModelInfo
+import com.lapcevichme.templates.domain.model.VehiclePatch
 import kotlinx.coroutines.flow.Flow
 
 interface GarageRepository {
@@ -21,6 +22,19 @@ interface GarageRepository {
         makeId: Int? = null,
         modelId: Int? = null
     ): Flow<Resource<CursorPage<VehicleModel>>>
+
+    fun getVehicle(
+        vehicleId: String
+    ): Flow<Resource<VehicleModel>>
+
+    fun updateVehicle(
+        vehicleId: String,
+        vehiclePatch: VehiclePatch
+    ): Flow<Resource<VehicleModel>>
+
+    fun deleteVehicle(
+        vehicleId: String
+    ): Flow<Resource<Unit>>
 
     suspend fun getVehiclesMakes(query: String? = null): Flow<Resource<List<MakeModel>>>
 

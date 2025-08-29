@@ -2,11 +2,12 @@ package com.lapcevichme.templates.data.remote.dto
 
 import com.google.gson.annotations.SerializedName
 import com.lapcevichme.templates.domain.model.CursorPage // Added import
-import com.lapcevichme.templates.domain.model.garage.MakeModel
-import com.lapcevichme.templates.domain.model.garage.VehicleCreate
-import com.lapcevichme.templates.domain.model.garage.VehicleModel
-import com.lapcevichme.templates.domain.model.garage.VehicleModelInfo
-import com.lapcevichme.templates.domain.model.garage.VehicleTypeModel
+import com.lapcevichme.templates.domain.model.MakeModel
+import com.lapcevichme.templates.domain.model.VehicleCreate
+import com.lapcevichme.templates.domain.model.VehicleModel
+import com.lapcevichme.templates.domain.model.VehicleModelInfo
+import com.lapcevichme.templates.domain.model.VehicleTypeModel
+import com.lapcevichme.templates.domain.model.VehiclePatch // Added import for VehiclePatch
 
 data class MakeModelDto(
     @SerializedName("make_id") val makeId: Int,
@@ -52,6 +53,16 @@ data class CursorPageDto<T>(
     @SerializedName("next_cursor") val nextCursor: String?
 )
 
+data class VehiclePatchDto(
+    @SerializedName("make_id") val makeId: Int? = null,
+    @SerializedName("model_id") val modelId: Int? = null,
+    @SerializedName("year") val year: Int? = null,
+    @SerializedName("vehicle_type_id") val vehicleTypeId: Int? = null,
+    @SerializedName("vin") val vin: String? = null,
+    @SerializedName("comment") val comment: String? = null
+)
+
+
 // Mappers to Domain Models
 
 fun MakeModelDto.toDomain(): MakeModel = MakeModel(
@@ -92,6 +103,15 @@ fun CursorPageDto<VehicleModelDto>.toDomain(): CursorPage<VehicleModel> = Cursor
 // Mapper from Domain Model to DTO (for request bodies)
 
 fun VehicleCreate.toDto(): VehicleCreateDto = VehicleCreateDto(
+    makeId = this.makeId,
+    modelId = this.modelId,
+    year = this.year,
+    vehicleTypeId = this.vehicleTypeId,
+    vin = this.vin,
+    comment = this.comment
+)
+
+fun VehiclePatch.toDto(): VehiclePatchDto = VehiclePatchDto(
     makeId = this.makeId,
     modelId = this.modelId,
     year = this.year,

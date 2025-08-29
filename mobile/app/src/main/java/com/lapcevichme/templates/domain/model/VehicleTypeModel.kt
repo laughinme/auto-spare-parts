@@ -1,4 +1,4 @@
-package com.lapcevichme.templates.domain.model.garage
+package com.lapcevichme.templates.domain.model
 
 data class VehicleTypeModel(
     val vehicleTypeId: Int,

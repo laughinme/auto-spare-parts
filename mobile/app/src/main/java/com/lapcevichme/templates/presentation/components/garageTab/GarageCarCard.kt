@@ -20,17 +20,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
-import com.lapcevichme.templates.domain.model.garage.MakeModel
-import com.lapcevichme.templates.domain.model.garage.VehicleModel
-import com.lapcevichme.templates.domain.model.garage.VehicleModelInfo
-import com.lapcevichme.templates.domain.model.garage.VehicleTypeModel
+import com.lapcevichme.templates.domain.model.MakeModel
+import com.lapcevichme.templates.domain.model.VehicleModel
+import com.lapcevichme.templates.domain.model.VehicleModelInfo
+import com.lapcevichme.templates.domain.model.VehicleTypeModel
 import com.lapcevichme.templates.ui.theme.PreviewTheme
 
 @Composable

@@ -6,10 +6,11 @@ import com.lapcevichme.templates.data.remote.dto.toDomain
 import com.lapcevichme.templates.data.remote.dto.toDto
 import com.lapcevichme.templates.domain.model.CursorPage
 import com.lapcevichme.templates.domain.model.Resource
-import com.lapcevichme.templates.domain.model.garage.MakeModel
-import com.lapcevichme.templates.domain.model.garage.VehicleCreate
-import com.lapcevichme.templates.domain.model.garage.VehicleModel
-import com.lapcevichme.templates.domain.model.garage.VehicleModelInfo
+import com.lapcevichme.templates.domain.model.MakeModel
+import com.lapcevichme.templates.domain.model.VehicleCreate
+import com.lapcevichme.templates.domain.model.VehicleModel
+import com.lapcevichme.templates.domain.model.VehicleModelInfo
+import com.lapcevichme.templates.domain.model.VehiclePatch
 import com.lapcevichme.templates.domain.repository.GarageRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -82,6 +83,73 @@ class GarageRepositoryImpl @Inject constructor(
             emit(Resource.Error(e.localizedMessage ?: "Network error occurred."))
         } catch (e: IOException) {
             Log.e(TAG, "getGarageVehicles IOException. Message: ${e.message}", e)
+            emit(Resource.Error("Failed to connect to the server."))
+        }
+    }
+
+    override fun getVehicle(vehicleId: String): Flow<Resource<VehicleModel>> = flow {
+        Log.d(TAG, "getVehicle called with vehicleId: $vehicleId")
+        emit(Resource.Loading())
+        try {
+            val response = apiService.getVehicleFromGarage(vehicleId = vehicleId) // Предполагаем, что этот метод есть в ApiService
+            if (response.isSuccessful && response.body() != null) {
+                Log.d(TAG, "getVehicle successful for vehicleId: $vehicleId")
+                emit(Resource.Success(response.body()!!.toDomain()))
+            } else {
+                val errorBody = response.errorBody()?.stringSafely()
+                Log.e(TAG, "getVehicle failed for vehicleId: $vehicleId. Code: ${response.code()}, Message: ${response.message()}, ErrorBody: $errorBody")
+                emit(Resource.Error(errorBody ?: "Failed to get vehicle: ${response.code()}"))
+            }
+        } catch (e: HttpException) {
+            Log.e(TAG, "getVehicle HttpException for vehicleId: $vehicleId. Message: ${e.localizedMessage}", e)
+            emit(Resource.Error(e.localizedMessage ?: "Network error occurred."))
+        } catch (e: IOException) {
+            Log.e(TAG, "getVehicle IOException for vehicleId: $vehicleId. Message: ${e.message}", e)
+            emit(Resource.Error("Failed to connect to the server."))
+        }
+    }
+
+    override fun updateVehicle(vehicleId: String, vehiclePatch: VehiclePatch): Flow<Resource<VehicleModel>> = flow {
+        Log.d(TAG, "updateVehicle called with vehicleId: $vehicleId, data: $vehiclePatch")
+        emit(Resource.Loading())
+        try {
+            // Предполагаем, что VehiclePatch (domain) имеет toDto() для VehiclePatchDto
+            val response = apiService.updateVehicleInGarage(vehicleId = vehicleId, vehiclePatchDto = vehiclePatch.toDto())
+            if (response.isSuccessful && response.body() != null) {
+                Log.d(TAG, "updateVehicle successful for vehicleId: $vehicleId")
+                emit(Resource.Success(response.body()!!.toDomain()))
+            } else {
+                val errorBody = response.errorBody()?.stringSafely()
+                Log.e(TAG, "updateVehicle failed for vehicleId: $vehicleId. Code: ${response.code()}, Message: ${response.message()}, ErrorBody: $errorBody")
+                emit(Resource.Error(errorBody ?: "Failed to update vehicle: ${response.code()}"))
+            }
+        } catch (e: HttpException) {
+            Log.e(TAG, "updateVehicle HttpException for vehicleId: $vehicleId. Message: ${e.localizedMessage}", e)
+            emit(Resource.Error(e.localizedMessage ?: "Network error occurred."))
+        } catch (e: IOException) {
+            Log.e(TAG, "updateVehicle IOException for vehicleId: $vehicleId. Message: ${e.message}", e)
+            emit(Resource.Error("Failed to connect to the server."))
+        }
+    }
+
+    override fun deleteVehicle(vehicleId: String): Flow<Resource<Unit>> = flow {
+        Log.d(TAG, "deleteVehicle called with vehicleId: $vehicleId")
+        emit(Resource.Loading())
+        try {
+            val response = apiService.deleteVehicleFromGarage(vehicleId = vehicleId)
+            if (response.isSuccessful) {
+                Log.d(TAG, "deleteVehicle successful for vehicleId: $vehicleId")
+                emit(Resource.Success(Unit))
+            } else {
+                val errorBody = response.errorBody()?.stringSafely()
+                Log.e(TAG, "deleteVehicle failed for vehicleId: $vehicleId. Code: ${response.code()}, Message: ${response.message()}, ErrorBody: $errorBody")
+                emit(Resource.Error(errorBody ?: "Failed to delete vehicle: ${response.code()}"))
+            }
+        } catch (e: HttpException) {
+            Log.e(TAG, "deleteVehicle HttpException for vehicleId: $vehicleId. Message: ${e.localizedMessage}", e)
+            emit(Resource.Error(e.localizedMessage ?: "Network error occurred."))
+        } catch (e: IOException) {
+            Log.e(TAG, "deleteVehicle IOException for vehicleId: $vehicleId. Message: ${e.message}", e)
             emit(Resource.Error("Failed to connect to the server."))
         }
     }

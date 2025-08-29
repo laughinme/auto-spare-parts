@@ -1,8 +1,4 @@
-package com.lapcevichme.templates.domain.model.garage
-
-import com.lapcevichme.templates.domain.model.garage.MakeModel
-import com.lapcevichme.templates.domain.model.garage.VehicleModelInfo
-import com.lapcevichme.templates.domain.model.garage.VehicleTypeModel
+package com.lapcevichme.templates.domain.model
 
 data class VehicleModel(
     val createdAt: String,

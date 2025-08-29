@@ -30,7 +30,8 @@ object Routes {
     const val PROFILE_TAB = "profile_tab"
 
     // Маршрут для экрана добавления
-    const val ADD = "add"
+    const val ADD = "add" // Этот уже есть, возможно, для другого? Переименую новый.
+    const val ADD_VEHICLE = "add_vehicle" // Новый маршрут
 
     // Маршрут для экрана результатов поиска
     const val SEARCH_RESULT = "search_result"

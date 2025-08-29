@@ -11,6 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import com.lapcevichme.templates.presentation.screen.ConnectOnboardingScreen
 import com.lapcevichme.templates.presentation.screen.SearchResultScreen
+import com.lapcevichme.templates.presentation.screen.garage.AddVehicleScreen
 import com.lapcevichme.templates.presentation.screen.tabs.SparePartCreateScreen
 import com.lapcevichme.templates.presentation.screen.onboardingScreens.GreetingScreen
 import com.lapcevichme.templates.presentation.screen.onboardingScreens.RolePickerScreen
@@ -107,7 +108,11 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
                     searchViewModel = searchViewModel
                 )
             }
-            composable(Routes.GARAGE_TAB) { GarageTabScreen() }
+            composable(Routes.GARAGE_TAB) {
+                GarageTabScreen(
+                    onNavigateToAddVehicle = { navController.navigate(Routes.ADD_VEHICLE) }
+                )
+            }
             composable(Routes.CHAT_TAB) { ChatTabScreen() }
             composable(Routes.PROFILE_TAB) {
                 ProfileTabScreen(
@@ -130,6 +135,13 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
                     }
                 )
             }
+
+            // --- НОВЫЙ COMPOSABLE ДЛЯ ADD_VEHICLE_SCREEN ---
+            composable(Routes.ADD_VEHICLE) {
+                AddVehicleScreen(navController = navController)
+            }
+            // --- КОНЕЦ НОВОГО COMPOSABLE ---
+
             composable(Routes.STRIPE_ONBOARDING) {
                 ConnectOnboardingScreen(
                     onOnboardingComplete = {

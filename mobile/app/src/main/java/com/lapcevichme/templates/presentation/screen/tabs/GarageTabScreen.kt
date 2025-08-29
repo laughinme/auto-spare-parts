@@ -9,8 +9,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,11 +26,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.lapcevichme.templates.domain.model.CursorPage
+import com.lapcevichme.templates.domain.model.MakeModel
 import com.lapcevichme.templates.domain.model.Resource
-import com.lapcevichme.templates.domain.model.garage.MakeModel
-import com.lapcevichme.templates.domain.model.garage.VehicleModel
-import com.lapcevichme.templates.domain.model.garage.VehicleModelInfo
-// Предполагается, что GarageCarCard принимает com.lapcevichme.templates.domain.model.garage.VehicleModel
+import com.lapcevichme.templates.domain.model.VehicleModel
+import com.lapcevichme.templates.domain.model.VehicleModelInfo
+// Предполагается, что GarageCarCard принимает com.lapcevichme.templates.domain.model.VehicleModel
 import com.lapcevichme.templates.presentation.components.garageTab.GarageCarCard
 import com.lapcevichme.templates.presentation.viewmodel.GarageEvent
 import com.lapcevichme.templates.presentation.viewmodel.GarageViewModel
@@ -34,22 +38,31 @@ import com.lapcevichme.templates.ui.theme.PreviewTheme
 
 @Composable
 fun GarageTabScreen(
-    viewModel: GarageViewModel = hiltViewModel()
+    viewModel: GarageViewModel = hiltViewModel(),
+    onNavigateToAddVehicle: () -> Unit // <-- Новый параметр
 ) {
     val vehiclesState by viewModel.vehiclesState.collectAsStateWithLifecycle()
 
     GarageTabContent(
         vehiclesState = vehiclesState,
-        onEvent = viewModel::onEvent
+        onEvent = viewModel::onEvent,
+        onNavigateToAddVehicle = onNavigateToAddVehicle // <-- Передаем дальше
     )
 }
 
 @Composable
 private fun GarageTabContent(
     vehiclesState: Resource<CursorPage<VehicleModel>>,
-    onEvent: (GarageEvent) -> Unit
+    onEvent: (GarageEvent) -> Unit,
+    onNavigateToAddVehicle: () -> Unit // <-- Новый параметр
 ) {
-    Scaffold { paddingValues ->
+    Scaffold(
+        floatingActionButton = { // <-- Добавляем FAB
+            FloatingActionButton(onClick = onNavigateToAddVehicle) {
+                Icon(Icons.Filled.Add, contentDescription = "Add Vehicle")
+            }
+        }
+    ) { paddingValues ->
         Box(
             modifier = Modifier
                 .padding(paddingValues)
@@ -92,10 +105,15 @@ private fun GarageTabContent(
                             // при его появлении на экране.
                         }
                     } else {
-                        Text(
-                            text = "Ваш гараж пуст",
-                            modifier = Modifier.align(Alignment.Center)
-                        )
+                        Column(
+                            modifier = Modifier.align(Alignment.Center).padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Text(text = "Ваш гараж пуст")
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text("Нажмите "+", чтобы добавить автомобиль")
+                        }
                     }
                 }
             }
@@ -118,7 +136,8 @@ fun GarageTabScreenPreview_Success() {
                     nextCursor = "some_next_cursor_token"
                 )
             ),
-            onEvent = {}
+            onEvent = {},
+            onNavigateToAddVehicle = {}
         )
     }
 }
@@ -134,7 +153,8 @@ fun GarageTabScreenPreview_Empty() {
                     nextCursor = null
                 )
             ),
-            onEvent = {}
+            onEvent = {},
+            onNavigateToAddVehicle = {}
         )
     }
 }
@@ -145,7 +165,8 @@ fun GarageTabScreenPreview_Error() {
     PreviewTheme {
         GarageTabContent(
             vehiclesState = Resource.Error("Произошла ошибка сети. Пожалуйста, попробуйте снова."),
-            onEvent = {}
+            onEvent = {},
+            onNavigateToAddVehicle = {}
         )
     }
 }
@@ -156,7 +177,8 @@ fun GarageTabScreenPreview_Loading() {
     PreviewTheme {
         GarageTabContent(
             vehiclesState = Resource.Loading(),
-            onEvent = {}
+            onEvent = {},
+            onNavigateToAddVehicle = {}
         )
     }
 }
