@@ -4,7 +4,6 @@ import com.lapcevichme.templates.domain.model.enums.ProductCondition
 import com.lapcevichme.templates.domain.model.enums.ProductOriginality
 import com.lapcevichme.templates.domain.model.enums.ProductStatus
 import com.lapcevichme.templates.domain.model.enums.StockType
-import com.lapcevichme.templates.domain.model.garage.MakeModel
 
 data class ProductModel(
     val createdAt: String,

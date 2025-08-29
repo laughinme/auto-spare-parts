@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.lapcevichme.templates.R
+import com.lapcevichme.templates.domain.model.MakeModel
 import com.lapcevichme.templates.domain.model.MediaModel // Предполагаемый импорт для MediaModel, если он не в ProductModel
 import com.lapcevichme.templates.domain.model.OrganizationShare // Предполагаемый импорт для OrganizationShare, если он не в ProductModel
 import com.lapcevichme.templates.domain.model.ProductModel
@@ -43,7 +44,6 @@ import com.lapcevichme.templates.domain.model.enums.ProductCondition
 import com.lapcevichme.templates.domain.model.enums.ProductOriginality
 import com.lapcevichme.templates.domain.model.enums.ProductStatus
 import com.lapcevichme.templates.domain.model.enums.StockType
-import com.lapcevichme.templates.domain.model.garage.MakeModel
 import com.lapcevichme.templates.ui.theme.PreviewTheme
 
 // It's good practice to have actual drawable resources for placeholders and errors

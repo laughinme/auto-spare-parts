@@ -34,11 +34,11 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import com.lapcevichme.templates.domain.model.MakeModel
 import com.lapcevichme.templates.domain.model.Resource
 import com.lapcevichme.templates.domain.model.enums.ProductCondition
 import com.lapcevichme.templates.domain.model.enums.ProductOriginality
 import com.lapcevichme.templates.domain.model.enums.StockType
-import com.lapcevichme.templates.domain.model.garage.MakeModel
 import com.lapcevichme.templates.presentation.viewmodel.SparePartCreateEvent
 import com.lapcevichme.templates.presentation.viewmodel.SparePartCreateViewModel
 import com.lapcevichme.templates.presentation.viewmodel.UiEvent

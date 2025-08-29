@@ -5,18 +5,17 @@ import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.lapcevichme.templates.domain.model.MakeModel
 import com.lapcevichme.templates.domain.model.OrganizationModel
-import com.lapcevichme.templates.domain.model.enums.ProductCondition
 import com.lapcevichme.templates.domain.model.ProductCreate
-import com.lapcevichme.templates.domain.model.enums.ProductStatus
 import com.lapcevichme.templates.domain.model.ProductModel
 import com.lapcevichme.templates.domain.model.Resource
-// ИМПОРТИРУЕМ НОВЫЕ ENUM
+import com.lapcevichme.templates.domain.model.enums.ProductCondition
 import com.lapcevichme.templates.domain.model.enums.ProductOriginality
+import com.lapcevichme.templates.domain.model.enums.ProductStatus
 import com.lapcevichme.templates.domain.model.enums.StockType
-import com.lapcevichme.templates.domain.model.garage.MakeModel
-import com.lapcevichme.templates.domain.usecase.user.GetMyOrganizationsUseCase
 import com.lapcevichme.templates.domain.usecase.product.CreateProductUseCase
+import com.lapcevichme.templates.domain.usecase.user.GetMyOrganizationsUseCase
 import com.lapcevichme.templates.domain.usecase.vehicles.GetVehiclesMakesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -26,7 +25,6 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
-import java.io.IOException
 import javax.inject.Inject
 
 const val SPARE_PART_CREATE_VIEWMODEL_TAG = "SparePartCreateViewModel"
@@ -293,9 +291,7 @@ class SparePartCreateViewModel @Inject constructor(
         _price.value = ""
         _quantity.value = "1"
         _condition.value = ProductCondition.NEW
-        // ИЗМЕНЕНО: Значение для очистки
         _originality.value = ProductOriginality.OEM
-        // ИЗМЕНЕНО: Значение для очистки
         _stockType.value = StockType.STOCK
         _status.value = ProductStatus.PUBLISHED
         _allowCart.value = true
