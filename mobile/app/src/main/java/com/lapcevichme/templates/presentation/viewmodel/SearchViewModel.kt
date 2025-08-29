@@ -96,7 +96,6 @@ class SearchViewModel @Inject constructor(
         }
     }
 
-    // --- НОВАЯ ФУНКЦИЯ ДЛЯ ИНИЦИАЛИЗАЦИИ ЭКРАНА РЕДАКТИРОВАНИЯ ---
     fun initializeWithVehicle(vehicle: VehicleModel) {
         // Устанавливаем выбранные значения
         _pickedVehiclesMake.value = vehicle.make
@@ -112,7 +111,27 @@ class SearchViewModel @Inject constructor(
         getVehiclesYears(vehicle.model.modelId)
     }
 
-    // --- Основная функция поиска ---
+    fun setSearchFromVehicle(vehicle: VehicleModel) {
+        // Сбрасываем другие параметры поиска
+        _searchQuery.value = null
+        _priceMin.value = null
+        _priceMax.value = null
+        _condition.value = null
+
+        // Устанавливаем значения из машины
+        _pickedVehiclesMake.value = vehicle.make
+        _pickedVehiclesModel.value = vehicle.model
+        _pickedVehiclesYear.value = vehicle.year
+
+        // Устанавливаем текст в полях для поиска/отображения
+        _makeSearchQuery.value = vehicle.make.makeName
+        _modelSearchQuery.value = vehicle.model.modelName
+
+        // Подгружаем списки, чтобы они были доступны, если пользователь захочет их изменить
+        getVehiclesModels(vehicle.make.makeId, "")
+        getVehiclesYears(vehicle.model.modelId)
+    }
+
     fun searchProducts(cursor: String? = null) {
         viewModelScope.launch {
             _loadingStatus.value = true
@@ -164,7 +183,6 @@ class SearchViewModel @Inject constructor(
         searchProducts(cursor = _lastCursor.value)
     }
 
-    // --- Обработчики UI ---
     fun onQuickSearchClicked() {
         _searchQuery.value = null // Очищаем текстовый поиск, если используется быстрый
         searchProducts(cursor = null)
@@ -180,7 +198,6 @@ class SearchViewModel @Inject constructor(
         searchProducts(cursor = null)
     }
 
-    // --- Функции для полей фильтра ---
     fun onSearchQueryChanged(query: String) { _searchQuery.value = query }
     fun onMakeSearchQueryChanged(query: String) {
         _makeSearchQuery.value = query
@@ -213,7 +230,6 @@ class SearchViewModel @Inject constructor(
     fun onPriceFromChanged(price: String) { _priceMin.value = price.toDoubleOrNull() }
     fun onPriceToChanged(price: String) { _priceMax.value = price.toDoubleOrNull() }
 
-    // --- Загрузка данных для фильтров ---
     private fun getVehiclesMakes(query: String) {
         viewModelScope.launch {
             getVehiclesMakesUseCase(query = query.ifBlank { null }).collect { result ->

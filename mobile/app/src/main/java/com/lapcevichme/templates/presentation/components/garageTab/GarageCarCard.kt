@@ -1,6 +1,7 @@
 package com.lapcevichme.templates.presentation.components.garageTab
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -36,22 +37,24 @@ import com.lapcevichme.templates.ui.theme.PreviewTheme
 @Composable
 fun GarageCarCard(
     car: VehicleModel,
-    onEditClick: () -> Unit, // <-- Новый параметр для клика по иконке редактирования
+    onEditClick: () -> Unit,
+    onCardClick: () -> Unit, // <-- Новый параметр для клика по всей карточке
     modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp), // Убрал vertical padding, т.к. Spacer лучше контролирует отступы в LazyColumn
+            .padding(horizontal = 16.dp)
+            .clickable(onClick = onCardClick), // <-- Делаем всю карточку кликабельной
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         shape = MaterialTheme.shapes.medium
     ) {
         Row(
-            modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 16.dp, end = 8.dp), // Уменьшил отступ справа для IconButton
+            modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 16.dp, end = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
-                imageVector = Icons.Default.AccountBox, // Placeholder icon
+                imageVector = Icons.Default.AccountBox,
                 contentDescription = "Car: ${car.make.makeName} ${car.model.modelName}",
                 modifier = Modifier.size(64.dp),
                 contentScale = ContentScale.Fit,
@@ -90,7 +93,6 @@ fun GarageCarCard(
                 }
             }
 
-            // --- ДОБАВЛЕНА КНОПКА РЕДАКТИРОВАНИЯ ---
             IconButton(onClick = onEditClick) {
                 Icon(
                     imageVector = Icons.Default.Edit,
@@ -118,6 +120,6 @@ fun GarageCarCardPreview() {
         updatedAt = "2023-01-01T10:00:00Z"
     )
     PreviewTheme {
-        GarageCarCard(car = sampleCar, onEditClick = {})
+        GarageCarCard(car = sampleCar, onEditClick = {}, onCardClick = {})
     }
 }

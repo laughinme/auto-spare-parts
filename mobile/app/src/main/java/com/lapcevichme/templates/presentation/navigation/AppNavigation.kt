@@ -1,4 +1,3 @@
-// AppNavigation.kt
 package com.lapcevichme.templates.presentation.navigation
 
 import androidx.compose.runtime.Composable
@@ -101,25 +100,30 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
             }
 
             composable(Routes.HOME_TAB) {
-                // Получаем общую ViewModel
                 val searchViewModel: SearchViewModel = sharedSearchViewModel()
                 HomeTabScreen(
                     onNavigateToSearch = {
                         navController.navigate(Routes.SEARCH_RESULT)
                     },
-                    onNavigateToProductDetail = { productId -> // Добавляем новый обработчик
+                    onNavigateToProductDetail = { productId ->
                         navController.navigate("${Routes.PRODUCT_DETAIL}/$productId")
                     },
-                    // Передаём общую ViewModel на экран
                     searchViewModel = searchViewModel
                 )
             }
             composable(Routes.GARAGE_TAB) {
+                val searchViewModel: SearchViewModel = sharedSearchViewModel()
                 GarageTabScreen(
                     onNavigateToAddVehicle = { navController.navigate(Routes.ADD_VEHICLE) },
-                    // --- ОБНОВЛЕННЫЙ ВЫЗОВ ---
                     onNavigateToEditVehicle = { vehicleId ->
                         navController.navigate(Routes.editVehicleRoute(vehicleId))
+                    },
+                    onNavigateToHomeWithVehicle = { vehicle ->
+                        searchViewModel.setSearchFromVehicle(vehicle)
+                        navController.navigate(Routes.HOME_TAB) {
+                            popUpTo(Routes.MAIN_GRAPH) { inclusive = false }
+                            launchSingleTop = true
+                        }
                     }
                 )
             }
@@ -129,15 +133,12 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
             ) { backStackEntry ->
                 val vehicleId = backStackEntry.arguments?.getString("vehicleId")
                 if (vehicleId != null) {
-                    // Здесь будет вызов твоего нового экрана EditVehicleScreen
                     EditVehicleScreen(
                         navController = navController,
                         vehicleId = vehicleId
                     )
                 }
             }
-
-
 
             composable(Routes.CHAT_TAB) { ChatTabScreen() }
             composable(Routes.PROFILE_TAB) {
@@ -162,11 +163,9 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
                 )
             }
 
-            // --- НОВЫЙ COMPOSABLE ДЛЯ ADD_VEHICLE_SCREEN ---
             composable(Routes.ADD_VEHICLE) {
                 AddVehicleScreen(navController = navController)
             }
-            // --- КОНЕЦ НОВОГО COMPOSABLE ---
 
             composable(Routes.STRIPE_ONBOARDING) {
                 ConnectOnboardingScreen(
@@ -179,13 +178,11 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
                 )
             }
 
-            // Экран результатов поиска теперь тоже использует общую ViewModel
             composable(route = Routes.SEARCH_RESULT) {
                 val searchViewModel: SearchViewModel = sharedSearchViewModel()
                 SearchResultScreen(viewModel = searchViewModel)
             }
 
-            // Новый composable для ProductDetailScreen
             composable(
                 route = "${Routes.PRODUCT_DETAIL}/{productId}",
                 arguments = listOf(navArgument("productId") { type = NavType.StringType })

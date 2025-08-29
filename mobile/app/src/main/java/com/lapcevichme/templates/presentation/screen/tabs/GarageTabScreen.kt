@@ -55,7 +55,8 @@ import com.lapcevichme.templates.ui.theme.PreviewTheme
 fun GarageTabScreen(
     viewModel: GarageViewModel = hiltViewModel(),
     onNavigateToAddVehicle: () -> Unit,
-    onNavigateToEditVehicle: (String) -> Unit // <-- Новый параметр для навигации на экран редактирования
+    onNavigateToEditVehicle: (String) -> Unit,
+    onNavigateToHomeWithVehicle: (VehicleModel) -> Unit // <-- Новый параметр
 ) {
     val vehiclesState by viewModel.vehiclesState.collectAsStateWithLifecycle()
 
@@ -63,7 +64,8 @@ fun GarageTabScreen(
         vehiclesState = vehiclesState,
         onEvent = viewModel::onEvent,
         onNavigateToAddVehicle = onNavigateToAddVehicle,
-        onNavigateToEditVehicle = onNavigateToEditVehicle // <-- Передаем дальше
+        onNavigateToEditVehicle = onNavigateToEditVehicle,
+        onNavigateToHomeWithVehicle = onNavigateToHomeWithVehicle // <-- Передаем дальше
     )
 }
 
@@ -73,7 +75,8 @@ private fun GarageTabContent(
     vehiclesState: Resource<CursorPage<VehicleModel>>,
     onEvent: (GarageEvent) -> Unit,
     onNavigateToAddVehicle: () -> Unit,
-    onNavigateToEditVehicle: (String) -> Unit // <-- Новый параметр
+    onNavigateToEditVehicle: (String) -> Unit,
+    onNavigateToHomeWithVehicle: (VehicleModel) -> Unit // <-- Новый параметр
 ) {
     var vehicleToDelete by remember { mutableStateOf<VehicleModel?>(null) }
 
@@ -168,10 +171,10 @@ private fun GarageTabContent(
                                         }
                                     }
                                 ) {
-                                    // --- ВЫЗОВ ОБНОВЛЕННОЙ КАРТОЧКИ ---
                                     GarageCarCard(
                                         car = car,
-                                        onEditClick = { onNavigateToEditVehicle(car.id) } // <-- Передаем ID машины для редактирования
+                                        onEditClick = { onNavigateToEditVehicle(car.id) },
+                                        onCardClick = { onNavigateToHomeWithVehicle(car) } // <-- Передаем машину
                                     )
                                 }
                                 Spacer(modifier = Modifier.height(8.dp))
@@ -214,7 +217,6 @@ private fun DeleteConfirmationDialog(
 }
 
 
-// region Previews
 @Preview(showBackground = true, name = "Success State")
 @Composable
 fun GarageTabScreenPreview_Success() {
@@ -231,7 +233,8 @@ fun GarageTabScreenPreview_Success() {
             ),
             onEvent = {},
             onNavigateToAddVehicle = {},
-            onNavigateToEditVehicle = {}
+            onNavigateToEditVehicle = {},
+            onNavigateToHomeWithVehicle = {}
         )
     }
 }
