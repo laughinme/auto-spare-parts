@@ -68,13 +68,11 @@ class ProductRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getProduct(productId: String): Flow<Resource<ProductModel>> = flow {
+    override fun getProduct(productId: String, orgId: String): Flow<Resource<ProductModel>> = flow {
         Log.d(TAG, "getProduct called with productId: $productId")
         emit(Resource.Loading())
         try {
             // Placeholder orgId - this logic might need review for a real app
-            // TODO: Resolve orgId from a more reliable source, not hardcoded.
-            val orgId = "PLACEHOLDER_ORG_ID" // This needs to be resolved from context/user session
             Log.d(TAG, "getProduct using placeholder orgId: $orgId for productId: $productId")
 
             val response = apiService.getOrganizationProductDetails(

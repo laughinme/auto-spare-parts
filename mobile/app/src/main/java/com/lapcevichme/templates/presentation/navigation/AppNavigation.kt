@@ -6,10 +6,13 @@ import androidx.compose.runtime.remember
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.lapcevichme.templates.presentation.screen.ConnectOnboardingScreen
+import com.lapcevichme.templates.presentation.screen.ProductDetailScreen
 import com.lapcevichme.templates.presentation.screen.SearchResultScreen
 import com.lapcevichme.templates.presentation.screen.garage.AddVehicleScreen
 import com.lapcevichme.templates.presentation.screen.tabs.SparePartCreateScreen
@@ -104,6 +107,9 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
                     onNavigateToSearch = {
                         navController.navigate(Routes.SEARCH_RESULT)
                     },
+                    onNavigateToProductDetail = { productId -> // Добавляем новый обработчик
+                        navController.navigate("${Routes.PRODUCT_DETAIL}/$productId")
+                    },
                     // Передаём общую ViewModel на экран
                     searchViewModel = searchViewModel
                 )
@@ -157,6 +163,15 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
             composable(route = Routes.SEARCH_RESULT) {
                 val searchViewModel: SearchViewModel = sharedSearchViewModel()
                 SearchResultScreen(viewModel = searchViewModel)
+            }
+
+            // Новый composable для ProductDetailScreen
+            composable(
+                route = "${Routes.PRODUCT_DETAIL}/{productId}",
+                arguments = listOf(navArgument("productId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val productId = backStackEntry.arguments?.getString("productId") ?: ""
+                ProductDetailScreen(productId)
             }
         }
     }

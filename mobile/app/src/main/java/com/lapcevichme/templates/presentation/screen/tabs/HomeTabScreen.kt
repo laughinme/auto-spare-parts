@@ -42,6 +42,7 @@ import com.lapcevichme.templates.ui.theme.PreviewTheme
 @Composable
 fun HomeTabScreen(
     onNavigateToSearch: () -> Unit,
+    onNavigateToProductDetail: (String) -> Unit, // Добавляем новый параметр
     viewModel: HomeTabViewModel = hiltViewModel(),
     searchViewModel: SearchViewModel // Теперь принимается как параметр
 ) {
@@ -132,10 +133,7 @@ fun HomeTabScreen(
                     SparePartCard(
                         product = product,
                         onClick = {
-                            // TODO: Реализовать навигацию на экран продукта.
-                            // Возможно, потребуется передать NavController или специальный обработчик
-                            // в HomeTabScreen, если навигация должна происходить отсюда.
-                            // Пример: onNavigateToProductDetail(product.id)
+                            onNavigateToProductDetail(product.id) // Вызываем новый обработчик
                         }
                     )
                 }
@@ -168,7 +166,7 @@ fun HomeTabScreen(
 fun HomeTabScreenLightPreview() {
     PreviewTheme {
         // Для превью создаём отдельный экземпляр, это нормально
-        HomeTabScreen(onNavigateToSearch = {}, searchViewModel = hiltViewModel())
+        HomeTabScreen(onNavigateToSearch = {}, onNavigateToProductDetail = {}, searchViewModel = hiltViewModel())
     }
 }
 
@@ -176,6 +174,6 @@ fun HomeTabScreenLightPreview() {
 @Composable
 fun HomeTabScreenDarkPreview() {
     PreviewTheme {
-        HomeTabScreen(onNavigateToSearch = {}, searchViewModel = hiltViewModel())
+        HomeTabScreen(onNavigateToSearch = {}, onNavigateToProductDetail = {}, searchViewModel = hiltViewModel())
     }
 }

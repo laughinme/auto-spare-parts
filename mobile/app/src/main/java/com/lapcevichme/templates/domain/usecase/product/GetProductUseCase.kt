@@ -10,6 +10,6 @@ class GetProductUseCase @Inject constructor(
     private val productRepository: ProductRepository
 ) {
     operator fun invoke(productId: String): Flow<Resource<ProductModel>> {
-        return productRepository.getProduct(productId)
+        return productRepository.getProductDetails(productId)
     }
 }

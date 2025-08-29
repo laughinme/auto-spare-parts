@@ -16,7 +16,7 @@ interface ProductRepository {
         orgId: String? = null
     ): Flow<Resource<Page<ProductModel>>>
 
-    fun getProduct(productId: String): Flow<Resource<ProductModel>>
+    fun getProduct(productId: String, orgId: String): Flow<Resource<ProductModel>>
 
     fun createProduct(
         orgId: String,

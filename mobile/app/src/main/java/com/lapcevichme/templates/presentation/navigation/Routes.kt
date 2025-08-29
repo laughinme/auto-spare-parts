@@ -35,4 +35,7 @@ object Routes {
 
     // Маршрут для экрана результатов поиска
     const val SEARCH_RESULT = "search_result"
+
+    // Маршрут для экрана деталей продукта
+    const val PRODUCT_DETAIL = "product_detail"
 }

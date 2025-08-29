@@ -57,7 +57,7 @@ fun SparePartCard(
     // Используем значения из product:
     val imageUrl = product.media.firstOrNull()?.url ?: "https://upload.wikimedia.org/wikipedia/commons/7/79/Operation_Upshot-Knothole_-_Badger_001.jpg" // URL заглушки, если нет изображения
     val brand = product.make.makeName
-    val productName = product.partNumber
+    val productName = product.title
     val shopName = product.organization.name // Убрал безопасный доступ, т.к. organization не nullable в ProductModel
     val price = "${product.price} ₽" // Форматирование цены
 
