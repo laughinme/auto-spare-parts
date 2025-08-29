@@ -11,8 +11,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBox
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,32 +36,20 @@ import com.lapcevichme.templates.ui.theme.PreviewTheme
 @Composable
 fun GarageCarCard(
     car: VehicleModel,
+    onEditClick: () -> Unit, // <-- Новый параметр для клика по иконке редактирования
     modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp), // Consistent padding with GarageTabScreen
+            .padding(horizontal = 16.dp), // Убрал vertical padding, т.к. Spacer лучше контролирует отступы в LazyColumn
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         shape = MaterialTheme.shapes.medium
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 16.dp, end = 8.dp), // Уменьшил отступ справа для IconButton
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // TODO: Replace with actual image loading using car.imageUrl or similar from VehicleModel if available
-            // For now, using a placeholder. If car.make.logoUrl or car.model.imageUrl becomes available, use Coil:
-            // AsyncImage(
-            //     model = ImageRequest.Builder(LocalContext.current)
-            //         .data(car.someImageUrl ?: R.drawable.ic_car_placeholder) // Replace with actual image URL
-            //         .crossfade(true)
-            //         .build(),
-            //     contentDescription = "${car.make.makeName} ${car.model.modelName}",
-            //     modifier = Modifier.size(64.dp),
-            //     contentScale = ContentScale.Crop,
-            //     // placeholder = painterResource(id = R.drawable.ic_car_placeholder), // Placeholder for Coil
-            //     // error = painterResource(id = R.drawable.ic_car_placeholder) // Error image for Coil
-            // )
             Image(
                 imageVector = Icons.Default.AccountBox, // Placeholder icon
                 contentDescription = "Car: ${car.make.makeName} ${car.model.modelName}",
@@ -72,9 +63,9 @@ fun GarageCarCard(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = "${car.make.makeName} ${car.model.modelName} (${car.year})",
-                    style = MaterialTheme.typography.titleMedium, // Adjusted for potentially longer text
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    maxLines = 2, // Allow for two lines for make and model
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
                 Spacer(modifier = Modifier.height(4.dp))
@@ -98,6 +89,15 @@ fun GarageCarCard(
                     }
                 }
             }
+
+            // --- ДОБАВЛЕНА КНОПКА РЕДАКТИРОВАНИЯ ---
+            IconButton(onClick = onEditClick) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = "Edit Vehicle",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
         }
     }
 }
@@ -117,27 +117,7 @@ fun GarageCarCardPreview() {
         createdAt = "2023-01-01T10:00:00Z",
         updatedAt = "2023-01-01T10:00:00Z"
     )
-    PreviewTheme { // Added AppTheme for consistent preview
-        GarageCarCard(car = sampleCar)
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GarageCarCardPreview_NoCommentNoVin() {
-    val sampleCar = VehicleModel(
-        id = "2",
-        userId = "user2",
-        make = MakeModel(makeId = 2, makeName = "VolksWagen"),
-        model = VehicleModelInfo(modelId = 2, makeId = 2, modelName = "Golf GTI Clubsport S 2-door"),
-        year = 2018,
-        vehicleType = null,
-        vin = null,
-        comment = null,
-        createdAt = "2023-01-01T10:00:00Z",
-        updatedAt = "2023-01-01T10:00:00Z"
-    )
     PreviewTheme {
-        GarageCarCard(car = sampleCar)
+        GarageCarCard(car = sampleCar, onEditClick = {})
     }
 }

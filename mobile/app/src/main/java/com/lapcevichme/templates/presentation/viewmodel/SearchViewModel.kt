@@ -7,6 +7,7 @@ import com.lapcevichme.templates.domain.model.CursorPage
 import com.lapcevichme.templates.domain.model.ProductModel
 import com.lapcevichme.templates.domain.model.Resource
 import com.lapcevichme.templates.domain.model.MakeModel
+import com.lapcevichme.templates.domain.model.VehicleModel
 import com.lapcevichme.templates.domain.model.VehicleModelInfo
 import com.lapcevichme.templates.domain.usecase.product.ProductSearchUseCase
 import com.lapcevichme.templates.domain.usecase.vehicles.GetVehiclesMakesUseCase
@@ -93,6 +94,22 @@ class SearchViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    // --- НОВАЯ ФУНКЦИЯ ДЛЯ ИНИЦИАЛИЗАЦИИ ЭКРАНА РЕДАКТИРОВАНИЯ ---
+    fun initializeWithVehicle(vehicle: VehicleModel) {
+        // Устанавливаем выбранные значения
+        _pickedVehiclesMake.value = vehicle.make
+        _pickedVehiclesModel.value = vehicle.model
+        _pickedVehiclesYear.value = vehicle.year
+
+        // Устанавливаем текст в полях для поиска/отображения
+        _makeSearchQuery.value = vehicle.make.makeName
+        _modelSearchQuery.value = vehicle.model.modelName
+
+        // Сразу подгружаем списки моделей и годов, чтобы они были доступны
+        getVehiclesModels(vehicle.make.makeId, "")
+        getVehiclesYears(vehicle.model.modelId)
     }
 
     // --- Основная функция поиска ---

@@ -1,5 +1,8 @@
 package com.lapcevichme.templates.presentation.screen.tabs
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,16 +14,29 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -30,7 +46,6 @@ import com.lapcevichme.templates.domain.model.MakeModel
 import com.lapcevichme.templates.domain.model.Resource
 import com.lapcevichme.templates.domain.model.VehicleModel
 import com.lapcevichme.templates.domain.model.VehicleModelInfo
-// Предполагается, что GarageCarCard принимает com.lapcevichme.templates.domain.model.VehicleModel
 import com.lapcevichme.templates.presentation.components.garageTab.GarageCarCard
 import com.lapcevichme.templates.presentation.viewmodel.GarageEvent
 import com.lapcevichme.templates.presentation.viewmodel.GarageViewModel
@@ -39,25 +54,44 @@ import com.lapcevichme.templates.ui.theme.PreviewTheme
 @Composable
 fun GarageTabScreen(
     viewModel: GarageViewModel = hiltViewModel(),
-    onNavigateToAddVehicle: () -> Unit // <-- Новый параметр
+    onNavigateToAddVehicle: () -> Unit,
+    onNavigateToEditVehicle: (String) -> Unit // <-- Новый параметр для навигации на экран редактирования
 ) {
     val vehiclesState by viewModel.vehiclesState.collectAsStateWithLifecycle()
 
     GarageTabContent(
         vehiclesState = vehiclesState,
         onEvent = viewModel::onEvent,
-        onNavigateToAddVehicle = onNavigateToAddVehicle // <-- Передаем дальше
+        onNavigateToAddVehicle = onNavigateToAddVehicle,
+        onNavigateToEditVehicle = onNavigateToEditVehicle // <-- Передаем дальше
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun GarageTabContent(
     vehiclesState: Resource<CursorPage<VehicleModel>>,
     onEvent: (GarageEvent) -> Unit,
-    onNavigateToAddVehicle: () -> Unit // <-- Новый параметр
+    onNavigateToAddVehicle: () -> Unit,
+    onNavigateToEditVehicle: (String) -> Unit // <-- Новый параметр
 ) {
+    var vehicleToDelete by remember { mutableStateOf<VehicleModel?>(null) }
+
+    vehicleToDelete?.let { vehicle ->
+        DeleteConfirmationDialog(
+            vehicleName = "${vehicle.make.makeName} ${vehicle.model.modelName}",
+            onConfirm = {
+                onEvent(GarageEvent.OnDeleteVehicle(vehicle.id))
+                vehicleToDelete = null
+            },
+            onDismiss = {
+                vehicleToDelete = null
+            }
+        )
+    }
+
     Scaffold(
-        floatingActionButton = { // <-- Добавляем FAB
+        floatingActionButton = {
             FloatingActionButton(onClick = onNavigateToAddVehicle) {
                 Icon(Icons.Filled.Add, contentDescription = "Add Vehicle")
             }
@@ -93,16 +127,55 @@ private fun GarageTabContent(
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                                .padding(vertical = 8.dp)
                         ) {
                             items(vehiclesPage.items, key = { it.id }) { car ->
-                                GarageCarCard(car = car) // Убедитесь, что GarageCarCard принимает VehicleModel
+                                val dismissState = rememberSwipeToDismissBoxState()
+
+                                if (dismissState.currentValue == SwipeToDismissBoxValue.EndToStart) {
+                                    LaunchedEffect(Unit) {
+                                        vehicleToDelete = car
+                                        dismissState.reset()
+                                    }
+                                }
+
+                                SwipeToDismissBox(
+                                    state = dismissState,
+                                    enableDismissFromStartToEnd = false,
+                                    backgroundContent = {
+                                        val color by animateColorAsState(
+                                            targetValue = if (dismissState.targetValue == SwipeToDismissBoxValue.EndToStart) Color.Red.copy(alpha = 0.8f) else Color.Transparent,
+                                            label = "background color animation"
+                                        )
+                                        val scale by animateFloatAsState(
+                                            targetValue = if (dismissState.targetValue == SwipeToDismissBoxValue.EndToStart) 1.2f else 0.8f,
+                                            label = "icon scale animation"
+                                        )
+
+                                        Box(
+                                            Modifier
+                                                .fillMaxSize()
+                                                .background(color)
+                                                .padding(horizontal = 20.dp),
+                                            contentAlignment = Alignment.CenterEnd
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Delete,
+                                                contentDescription = "Delete Icon",
+                                                modifier = Modifier.scale(scale),
+                                                tint = Color.White
+                                            )
+                                        }
+                                    }
+                                ) {
+                                    // --- ВЫЗОВ ОБНОВЛЕННОЙ КАРТОЧКИ ---
+                                    GarageCarCard(
+                                        car = car,
+                                        onEditClick = { onNavigateToEditVehicle(car.id) } // <-- Передаем ID машины для редактирования
+                                    )
+                                }
                                 Spacer(modifier = Modifier.height(8.dp))
                             }
-                            // TODO: Добавить логику для подгрузки данных, если vehiclesPage.nextCursor != null
-                            // Например, можно добавить специальный item в конце списка, который будет
-                            // вызывать onEvent(GarageEvent.LoadNextPage(vehiclesPage.nextCursor))
-                            // при его появлении на экране.
                         }
                     } else {
                         Column(
@@ -112,7 +185,7 @@ private fun GarageTabContent(
                         ) {
                             Text(text = "Ваш гараж пуст")
                             Spacer(modifier = Modifier.height(16.dp))
-                            Text("Нажмите "+", чтобы добавить автомобиль")
+                            Text("Нажмите \"+\", чтобы добавить автомобиль")
                         }
                     }
                 }
@@ -120,6 +193,26 @@ private fun GarageTabContent(
         }
     }
 }
+
+@Composable
+private fun DeleteConfirmationDialog(
+    vehicleName: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Подтвердите удаление") },
+        text = { Text("Вы уверены, что хотите удалить $vehicleName из вашего гаража?") },
+        confirmButton = {
+            TextButton(onClick = onConfirm) { Text("Удалить") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Отмена") }
+        }
+    )
+}
+
 
 // region Previews
 @Preview(showBackground = true, name = "Success State")
@@ -137,59 +230,8 @@ fun GarageTabScreenPreview_Success() {
                 )
             ),
             onEvent = {},
-            onNavigateToAddVehicle = {}
+            onNavigateToAddVehicle = {},
+            onNavigateToEditVehicle = {}
         )
     }
 }
-
-@Preview(showBackground = true, name = "Empty State")
-@Composable
-fun GarageTabScreenPreview_Empty() {
-    PreviewTheme {
-        GarageTabContent(
-            vehiclesState = Resource.Success(
-                CursorPage(
-                    items = emptyList(),
-                    nextCursor = null
-                )
-            ),
-            onEvent = {},
-            onNavigateToAddVehicle = {}
-        )
-    }
-}
-
-@Preview(showBackground = true, name = "Error State")
-@Composable
-fun GarageTabScreenPreview_Error() {
-    PreviewTheme {
-        GarageTabContent(
-            vehiclesState = Resource.Error("Произошла ошибка сети. Пожалуйста, попробуйте снова."),
-            onEvent = {},
-            onNavigateToAddVehicle = {}
-        )
-    }
-}
-
-@Preview(showBackground = true, name = "Loading State")
-@Composable
-fun GarageTabScreenPreview_Loading() {
-    PreviewTheme {
-        GarageTabContent(
-            vehiclesState = Resource.Loading(),
-            onEvent = {},
-            onNavigateToAddVehicle = {}
-        )
-    }
-}
-//
-//@Preview(showBackground = true, name = "Idle State")
-//@Composable
-//fun GarageTabScreenPreview_Idle() {
-//    PreviewTheme {
-//        GarageTabContent(
-//            vehiclesState = Resource.Idle(),
-//            onEvent = {}
-//        )
-//    }
-//}

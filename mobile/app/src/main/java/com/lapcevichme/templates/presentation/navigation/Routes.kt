@@ -33,6 +33,10 @@ object Routes {
     const val ADD = "add" // Этот уже есть, возможно, для другого? Переименую новый.
     const val ADD_VEHICLE = "add_vehicle" // Новый маршрут
 
+    const val EDIT_VEHICLE = "edit_vehicle/{vehicleId}"
+
+    fun editVehicleRoute(vehicleId: String) = "edit_vehicle/$vehicleId"
+
     // Маршрут для экрана результатов поиска
     const val SEARCH_RESULT = "search_result"
 

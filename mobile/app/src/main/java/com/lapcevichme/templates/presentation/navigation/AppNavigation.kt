@@ -4,7 +4,6 @@ package com.lapcevichme.templates.presentation.navigation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.ViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -15,7 +14,7 @@ import com.lapcevichme.templates.presentation.screen.ConnectOnboardingScreen
 import com.lapcevichme.templates.presentation.screen.ProductDetailScreen
 import com.lapcevichme.templates.presentation.screen.SearchResultScreen
 import com.lapcevichme.templates.presentation.screen.garage.AddVehicleScreen
-import com.lapcevichme.templates.presentation.screen.tabs.SparePartCreateScreen
+import com.lapcevichme.templates.presentation.screen.garage.EditVehicleScreen
 import com.lapcevichme.templates.presentation.screen.onboardingScreens.GreetingScreen
 import com.lapcevichme.templates.presentation.screen.onboardingScreens.RolePickerScreen
 import com.lapcevichme.templates.presentation.screen.onboardingScreens.SignInScreen
@@ -24,6 +23,7 @@ import com.lapcevichme.templates.presentation.screen.tabs.ChatTabScreen
 import com.lapcevichme.templates.presentation.screen.tabs.GarageTabScreen
 import com.lapcevichme.templates.presentation.screen.tabs.HomeTabScreen
 import com.lapcevichme.templates.presentation.screen.tabs.ProfileTabScreen
+import com.lapcevichme.templates.presentation.screen.tabs.SparePartCreateScreen
 import com.lapcevichme.templates.presentation.viewmodel.OnboardingViewModel
 import com.lapcevichme.templates.presentation.viewmodel.SearchViewModel
 
@@ -116,9 +116,29 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
             }
             composable(Routes.GARAGE_TAB) {
                 GarageTabScreen(
-                    onNavigateToAddVehicle = { navController.navigate(Routes.ADD_VEHICLE) }
+                    onNavigateToAddVehicle = { navController.navigate(Routes.ADD_VEHICLE) },
+                    // --- ОБНОВЛЕННЫЙ ВЫЗОВ ---
+                    onNavigateToEditVehicle = { vehicleId ->
+                        navController.navigate(Routes.editVehicleRoute(vehicleId))
+                    }
                 )
             }
+            composable(
+                route = Routes.EDIT_VEHICLE,
+                arguments = listOf(navArgument("vehicleId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val vehicleId = backStackEntry.arguments?.getString("vehicleId")
+                if (vehicleId != null) {
+                    // Здесь будет вызов твоего нового экрана EditVehicleScreen
+                    EditVehicleScreen(
+                        navController = navController,
+                        vehicleId = vehicleId
+                    )
+                }
+            }
+
+
+
             composable(Routes.CHAT_TAB) { ChatTabScreen() }
             composable(Routes.PROFILE_TAB) {
                 ProfileTabScreen(

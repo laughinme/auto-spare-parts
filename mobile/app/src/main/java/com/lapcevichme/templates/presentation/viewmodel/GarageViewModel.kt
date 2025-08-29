@@ -21,19 +21,18 @@ const val GARAGE_VIEWMODEL_TAG = "GarageViewModel"
 // --- СОБЫТИЯ ЭКРАНА ---
 sealed interface GarageEvent {
     object OnRetryLoadVehicles : GarageEvent
-    data class OnAddVehicle(val vehicleCreate: VehicleCreate) : GarageEvent // Retained for potential direct use
-    data class OnLoadVehicleDetails(val vehicleId: String) : GarageEvent
-    data class OnUpdateVehicle(val vehicleId: String, val vehiclePatch: VehiclePatch) : GarageEvent
     data class OnDeleteVehicle(val vehicleId: String) : GarageEvent
 
-    // Events for Add Vehicle Form
+    // Events for Add/Edit Vehicle Form
     object SubmitAddVehicleForm : GarageEvent
-    object ResetAddVehicleForm : GarageEvent
+    data class SubmitEditVehicleForm(val vehicleId: String) : GarageEvent
+    data class LoadVehicleForEditing(val vehicleId: String) : GarageEvent
+    object ResetForm : GarageEvent
 }
 
 // --- СТАТУС ОПЕРАЦИЙ ---
 sealed interface VehicleOperationStatus {
-    object Idle : VehicleOperationStatus // This Idle is for operation status, not Resource state.
+    object Idle : VehicleOperationStatus
     object Loading : VehicleOperationStatus
     data class Success(val message: String? = null) : VehicleOperationStatus
     data class Error(val message: String) : VehicleOperationStatus
@@ -56,19 +55,15 @@ class GarageViewModel @Inject constructor(
     private val _vehicleOperationStatus = MutableStateFlow<VehicleOperationStatus>(VehicleOperationStatus.Idle)
     val vehicleOperationStatus = _vehicleOperationStatus.asStateFlow()
 
-    // --- ADD VEHICLE FORM STATE ---
-    // These will now store IDs or simple strings, assuming UI handles fetching/displaying actual MakeModel etc.
+    // --- СОСТОЯНИЕ ФОРМЫ ADD/EDIT ---
     private val _selectedMakeId = MutableStateFlow<Int?>(null)
     val selectedMakeId = _selectedMakeId.asStateFlow()
 
     private val _selectedModelId = MutableStateFlow<Int?>(null)
     val selectedModelId = _selectedModelId.asStateFlow()
 
-    private val _selectedYear = MutableStateFlow<String?>(null) // String to include "Неважно"
+    private val _selectedYear = MutableStateFlow<String?>(null)
     val selectedYear = _selectedYear.asStateFlow()
-
-    private val _selectedVehicleTypeId = MutableStateFlow<Int?>(null)
-    val selectedVehicleTypeId = _selectedVehicleTypeId.asStateFlow()
 
     private val _vinInput = MutableStateFlow("")
     val vinInput = _vinInput.asStateFlow()
@@ -78,38 +73,57 @@ class GarageViewModel @Inject constructor(
 
     init {
         Log.d(GARAGE_VIEWMODEL_TAG, "Initialized ViewModel@${hashCode()}")
-        loadVehicles() // Load garage list
+        loadVehicles()
     }
 
     fun onEvent(event: GarageEvent) {
         when (event) {
             GarageEvent.OnRetryLoadVehicles -> loadVehicles()
-            is GarageEvent.OnAddVehicle -> addVehicle(event.vehicleCreate)
-            is GarageEvent.OnLoadVehicleDetails -> loadVehicleDetails(event.vehicleId)
-            is GarageEvent.OnUpdateVehicle -> updateVehicle(event.vehicleId, event.vehiclePatch)
             is GarageEvent.OnDeleteVehicle -> deleteVehicle(event.vehicleId)
+            is GarageEvent.LoadVehicleForEditing -> loadVehicleForEditing(event.vehicleId)
             GarageEvent.SubmitAddVehicleForm -> handleSubmitAddVehicleForm()
-            GarageEvent.ResetAddVehicleForm -> resetAddVehicleFormFields()
+            is GarageEvent.SubmitEditVehicleForm -> handleSubmitEditVehicleForm(event.vehicleId)
+            GarageEvent.ResetForm -> resetFormFields()
         }
     }
 
-    // --- Garage List Management ---
-    private fun loadVehicles(cursor: String? = null, search: String? = null, makeId: Int? = null, modelId: Int? = null) {
+    // --- Управление списком в гараже ---
+    private fun loadVehicles(cursor: String? = null) {
         if (cursor == null) {
             _vehiclesState.value = Resource.Loading()
         }
-        garageRepository.getGarageVehicles(20, cursor, search, makeId, modelId)
+        garageRepository.getGarageVehicles(limit = 20, cursor = cursor)
             .onEach { result ->
-                if (result is Resource.Success && cursor != null) {
-                    val currentItems = (_vehiclesState.value as? Resource.Success)?.data?.items ?: emptyList()
-                    val newItems = result.data?.items ?: emptyList()
-                    _vehiclesState.value = Resource.Success(
-                        CursorPage(items = currentItems + newItems, nextCursor = result.data?.nextCursor)
-                    )
-                } else {
-                    _vehiclesState.value = result
-                }
+                _vehiclesState.value = result
                 if (result is Resource.Error) Log.e(GARAGE_VIEWMODEL_TAG, "Error loading vehicles: ${result.message}")
+            }.launchIn(viewModelScope)
+    }
+
+    private fun deleteVehicle(vehicleId: String) {
+        garageRepository.deleteVehicle(vehicleId)
+            .onEach { result ->
+                if (result is Resource.Success) {
+                    loadVehicles() // Reload the list on success
+                }
+            }.launchIn(viewModelScope)
+    }
+
+    // --- Логика для формы добавления/редактирования ---
+    private fun loadVehicleForEditing(vehicleId: String) {
+        resetFormFields() // Очищаем поля перед загрузкой новых данных
+        garageRepository.getVehicle(vehicleId)
+            .onEach { result ->
+                _selectedVehicleState.value = result
+                if (result is Resource.Success) {
+                    result.data?.let { vehicle ->
+                        // Заполняем поля формы данными из загруженной машины
+                        _selectedMakeId.value = vehicle.make.makeId
+                        _selectedModelId.value = vehicle.model.modelId
+                        _selectedYear.value = vehicle.year.toString()
+                        _vinInput.value = vehicle.vin ?: ""
+                        _commentInput.value = vehicle.comment ?: ""
+                    }
+                }
             }.launchIn(viewModelScope)
     }
 
@@ -121,19 +135,12 @@ class GarageViewModel @Inject constructor(
                     is Resource.Loading -> VehicleOperationStatus.Loading
                     is Resource.Success -> {
                         loadVehicles()
-                        resetAddVehicleFormFields() // Reset form on success
-                        VehicleOperationStatus.Success("Vehicle added successfully")
+                        resetFormFields()
+                        VehicleOperationStatus.Success("Автомобиль добавлен")
                     }
-                    is Resource.Error -> VehicleOperationStatus.Error(result.message ?: "Failed to add vehicle")
-                    // Removed Resource.Idle case
+                    is Resource.Error -> VehicleOperationStatus.Error(result.message ?: "Ошибка добавления")
                 }
             }.launchIn(viewModelScope)
-    }
-
-    private fun loadVehicleDetails(vehicleId: String) {
-        garageRepository.getVehicle(vehicleId)
-            .onEach { _selectedVehicleState.value = it } // This it is Resource<VehicleModel> from repo
-            .launchIn(viewModelScope)
     }
 
     private fun updateVehicle(vehicleId: String, vehiclePatch: VehiclePatch) {
@@ -144,97 +151,87 @@ class GarageViewModel @Inject constructor(
                     is Resource.Loading -> VehicleOperationStatus.Loading
                     is Resource.Success -> {
                         loadVehicles()
-                        result.data?.let { _selectedVehicleState.value = Resource.Success(it) }
-                        VehicleOperationStatus.Success("Vehicle updated successfully")
+                        VehicleOperationStatus.Success("Изменения сохранены")
                     }
-                    is Resource.Error -> VehicleOperationStatus.Error(result.message ?: "Failed to update vehicle")
-                    // Removed Resource.Idle case
+                    is Resource.Error -> VehicleOperationStatus.Error(result.message ?: "Ошибка обновления")
                 }
             }.launchIn(viewModelScope)
     }
 
-    private fun deleteVehicle(vehicleId: String) {
-        _vehicleOperationStatus.value = VehicleOperationStatus.Loading
-        garageRepository.deleteVehicle(vehicleId)
-            .onEach { result ->
-                _vehicleOperationStatus.value = when (result) {
-                    is Resource.Loading -> VehicleOperationStatus.Loading
-                    is Resource.Success -> {
-                        loadVehicles()
-                        if ((_selectedVehicleState.value as? Resource.Success)?.data?.id == vehicleId) {
-                            _selectedVehicleState.value = null
-                        }
-                        VehicleOperationStatus.Success("Vehicle deleted successfully")
-                    }
-                    is Resource.Error -> VehicleOperationStatus.Error(result.message ?: "Failed to delete vehicle")
-                    // Removed Resource.Idle case
-                }
-            }.launchIn(viewModelScope)
-    }
 
-    // --- Add Vehicle Form Specific Functions ---
+    // --- Обработчики полей и кнопок ---
     fun onMakeIdChanged(id: Int?) { _selectedMakeId.value = id }
     fun onModelIdChanged(id: Int?) { _selectedModelId.value = id }
     fun onYearChanged(year: String?) { _selectedYear.value = year }
-    fun onVehicleTypeIdChanged(id: Int?) { _selectedVehicleTypeId.value = id }
     fun onVinChanged(vin: String) { _vinInput.value = vin }
     fun onCommentChanged(comment: String) { _commentInput.value = comment }
 
     private fun handleSubmitAddVehicleForm() {
+        val (vehicleCreate, error) = createVehicleFromState()
+        if (error != null) {
+            _vehicleOperationStatus.value = VehicleOperationStatus.Error(error)
+            return
+        }
+        addVehicle(vehicleCreate!!)
+    }
+
+    private fun handleSubmitEditVehicleForm(vehicleId: String) {
+        val (vehiclePatch, error) = createVehiclePatchFromState()
+        if (error != null) {
+            _vehicleOperationStatus.value = VehicleOperationStatus.Error(error)
+            return
+        }
+        updateVehicle(vehicleId, vehiclePatch!!)
+    }
+
+    // --- Вспомогательные функции ---
+    private fun createVehicleFromState(): Pair<VehicleCreate?, String?> {
         val makeId = _selectedMakeId.value
         val modelId = _selectedModelId.value
         val yearString = _selectedYear.value
-        val vehicleTypeId = _selectedVehicleTypeId.value
-        val vin = _vinInput.value.trim()
-        val comment = _commentInput.value.trim()
 
-        if (makeId == null) {
-            _vehicleOperationStatus.value = VehicleOperationStatus.Error("Please select a make")
-            return
-        }
-        if (modelId == null) {
-            _vehicleOperationStatus.value = VehicleOperationStatus.Error("Please select a model")
-            return
-        }
+        if (makeId == null) return Pair(null, "Выберите марку")
+        if (modelId == null) return Pair(null, "Выберите модель")
+        if (yearString.isNullOrEmpty() || yearString == "Неважно") return Pair(null, "Выберите год")
 
-        // --- MODIFIED YEAR VALIDATION ---
-        if (yearString.isNullOrEmpty() || yearString == "Неважно") {
-            _vehicleOperationStatus.value = VehicleOperationStatus.Error("Please select a valid year")
-            return
-        }
-        val yearInt: Int
-        try {
-            yearInt = yearString.toInt()
-        } catch (e: NumberFormatException) {
-            _vehicleOperationStatus.value = VehicleOperationStatus.Error("Invalid year format")
-            return
-        }
-        // --- END OF MODIFIED YEAR VALIDATION ---
+        val yearInt = yearString.toIntOrNull() ?: return Pair(null, "Некорректный год")
 
-//        if (vehicleTypeId == null) {
-//            _vehicleOperationStatus.value = VehicleOperationStatus.Error("Please select a vehicle type")
-//            return
-//        }
-
-        val vehicleCreate = VehicleCreate(
-            makeId = makeId,
-            modelId = modelId,
-            year = yearInt, // Now yearInt is guaranteed to be a non-null Int
-            vehicleTypeId = vehicleTypeId,
-            vin = vin.ifEmpty { null },
-            comment = comment.ifEmpty { null }
+        return Pair(
+            VehicleCreate(
+                makeId = makeId,
+                modelId = modelId,
+                year = yearInt,
+                vehicleTypeId = null, // Not used
+                vin = _vinInput.value.trim().ifEmpty { null },
+                comment = _commentInput.value.trim().ifEmpty { null }
+            ), null
         )
-        addVehicle(vehicleCreate)
     }
 
-    private fun resetAddVehicleFormFields() {
+    private fun createVehiclePatchFromState(): Pair<VehiclePatch?, String?> {
+        val (vehicleCreate, error) = createVehicleFromState()
+        if (error != null) {
+            return Pair(null, error)
+        }
+        return Pair(
+            VehiclePatch(
+                makeId = vehicleCreate!!.makeId,
+                modelId = vehicleCreate.modelId,
+                year = vehicleCreate.year,
+                vehicleTypeId = vehicleCreate.vehicleTypeId,
+                vin = vehicleCreate.vin,
+                comment = vehicleCreate.comment
+            ), null
+        )
+    }
+
+    private fun resetFormFields() {
         _selectedMakeId.value = null
         _selectedModelId.value = null
         _selectedYear.value = null
-        _selectedVehicleTypeId.value = null
         _vinInput.value = ""
         _commentInput.value = ""
-        // No lists to reset here anymore
+        _selectedVehicleState.value = null // Сбрасываем и загруженную машину
     }
 
     fun clearOperationStatus() {
