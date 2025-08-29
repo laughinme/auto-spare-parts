@@ -17,19 +17,18 @@ import AuthPage from "./components/auth/AuthPage.jsx";
 import LandingPage from "./components/landing/LandingPage.jsx";
 import { MOCK_PRODUCTS } from "./data/mockProducts.js";
 import { SUPPLIER_SELF_ID } from "./data/constants.js";
-import { createOrdersFromCart } from "./utils/helpers.js";
+// import { createOrdersFromCart } from "./utils/helpers.js"; // больше не используем для чекаута
+import { addItemToCart, getCart, clearCart, getCartSummary } from "./api/api.js";
 
 function App() {
-  // Получаем новое состояние isRestoringSession из контекста
   const { user, isUserLoading, logout, isRestoringSession } = useAuth();
-  
-  // Wrapper для logout с очисткой localStorage
+
   const handleLogout = () => {
     localStorage.removeItem('userRole');
-    setShowLanding(true); // Показываем лендинг после logout
+    setShowLanding(true);
     logout();
   };
-  
+
   const [route, setRoute] = useState("fyp");
   const [previousRoute, setPreviousRoute] = useState("fyp");
   const [role, setRole] = useState(null);
@@ -40,13 +39,26 @@ function App() {
   const [products, setProducts] = useState(MOCK_PRODUCTS);
   const productsById = useMemo(() => Object.fromEntries(products.map((p) => [p.id, p])), [products]);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [cart, setCart] = useState([]);
+  // === УДАЛЕНО: локальная корзина ===
+  // const [cart, setCart] = useState([]);
   const [orders, setOrders] = useState([]);
   const [activeOrderId, setActiveOrderId] = useState(null);
-  
+
+  // Сводка корзины с бэка для бейджа в топбаре
+  const [cartSummary, setCartSummary] = useState({ total_items: 0, total_amount: 0 });
+
+  const refreshCartSummary = async () => {
+    try {
+      const s = await getCartSummary();
+      setCartSummary(s || { total_items: 0, total_amount: 0 });
+    } catch {
+      setCartSummary({ total_items: 0, total_amount: 0 });
+    }
+  };
+
   // State for controlling landing page display
   const [showLanding, setShowLanding] = useState(true);
-  
+
   useEffect(() => {
     window.__setRoute = setRoute;
     return () => {
@@ -69,54 +81,39 @@ function App() {
     if (!user) {
       setHasInitializedRole(false);
       setRole(null);
-      localStorage.removeItem('userRole'); // Очищаем роль при logout
-      console.log('User logged out, resetting role and initialization flag');
+      localStorage.removeItem('userRole');
     } else {
-      setShowLanding(false); // Скрываем лендинг если пользователь вошел
+      setShowLanding(false);
+      refreshCartSummary(); // как только пользователь есть — подтянем бейдж корзины
     }
   }, [user]);
 
   useEffect(() => {
     if (user) {
-      console.log('Processing user data:', user);
-      
-      // Сначала проверяем сохраненную роль в localStorage
       const savedRole = localStorage.getItem('userRole');
       let apiRole = savedRole || user.role || user.type || user.user_type;
-      console.log('Found role - saved:', savedRole, ', from API:', user.role || user.type || user.user_type);
-      
+
       if (!apiRole) {
-        console.log('No explicit role found, trying to determine from other data');
         if (user.email && (user.email.includes('supplier') || user.email.includes('vendor') || user.email.includes('shop') || user.email.includes('seller'))) {
           apiRole = 'supplier';
-          console.log('Determined role as supplier from email:', user.email);
         } else if (user.is_supplier === true) {
           apiRole = 'supplier';
-          console.log('Determined role as supplier from is_supplier field');
         } else {
           apiRole = 'buyer';
-          console.log('Defaulting to buyer role');
         }
       }
-      
+
       if (apiRole !== role) {
-        console.log('Setting user role:', apiRole, 'for user:', user.email, 'current route:', route);
         setRole(apiRole);
-        
-        // Перенаправляем пользователя при первой инициализации роли
         if (!hasInitializedRole) {
-          console.log('First time role initialization, current route:', route);
           setHasInitializedRole(true);
           if (apiRole === "supplier") {
-            console.log('Redirecting supplier - savedRole:', savedRole);
-            // Если роль была сохранена из регистрации, направляем на onboarding
             if (savedRole === 'supplier') {
               setRoute("onboarding:supplier_stripe");
             } else {
-              setRoute("supplier:dashboard"); 
+              setRoute("supplier:dashboard");
             }
           } else {
-            console.log('Redirecting buyer to fyp');
             setRoute("fyp");
           }
         }
@@ -126,20 +123,16 @@ function App() {
 
   useEffect(() => {
     if (role === "supplier") {
-      console.log('Supplier route protection activated for route:', route);
       const buyerOnlyRoutes = ["fyp", "cart"];
       if (buyerOnlyRoutes.includes(route)) {
-        console.log('Redirecting supplier from buyer route:', route, 'to dashboard');
         setRoute("supplier:dashboard");
       }
       if (route === "chat") {
-        console.log('Redirecting supplier from general chat to supplier chat');
         setRoute("supplier:chat");
       }
     }
   }, [role, route]);
 
-  // НОВЫЙ БЛОК: Показываем экран загрузки, пока идет восстановление сессии
   if (isRestoringSession) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -148,7 +141,6 @@ function App() {
     );
   }
 
-  // Эта проверка остается на случай, если сессия восстановлена, но профиль еще грузится
   if (isUserLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -157,14 +149,13 @@ function App() {
     );
   }
 
-  // Если все загрузки завершены и пользователя нет, показываем лендинг или страницу входа
   if (!user) {
     if (showLanding) {
       return <LandingPage onGetStarted={() => setShowLanding(false)} />;
     }
     return <AuthPage />;
   }
-  
+
   const handleAddVehicle = (value) => {
     const v = String(value || "").trim();
     if (!v) return;
@@ -173,39 +164,61 @@ function App() {
   const removeVehicle = (value) => setGarage((prev) => prev.filter((x) => x !== value));
 
   const navigateTo = (newRoute) => {
-    console.log("navigateTo called:", route, "->", newRoute);
     setPreviousRoute(route);
     setRoute(newRoute);
   };
 
   const navigateBack = () => {
-    // Clear selected product when navigating back from product detail page
     if (route === "product") {
       setSelectedProduct(null);
     }
     setRoute(previousRoute);
   };
 
-  // Removed unused navigateToFYP helper to avoid linter warning
-
-  const handleAddToCart = (product, quantity = 1) => {
-    setCart((prev) => {
-      const existing = prev.find((i) => i.productId === product.id);
-      if (existing) {
-        return prev.map((i) => (i.productId === product.id ? { ...i, qty: i.qty + quantity } : i));
-      }
-      return [...prev, { productId: product.id, qty: quantity }];
-    });
+  // === Новый add-to-cart: бьём в бэкенд и обновляем бейдж ===
+  const handleAddToCart = async (product, quantity = 1) => {
+    try {
+      await addItemToCart({ product_id: product.id, quantity });
+      await refreshCartSummary();
+    } catch (e) {
+      console.error("Failed to add to cart:", e);
+      // тут можно вывести тост, если он у тебя есть
+    }
   };
 
-  const handleCheckout = () => {
-    if (cart.length === 0) return;
-    const created = createOrdersFromCart(cart, productsById);
-    if (!created.length) return;
-    setOrders((prev) => [...created, ...prev]);
-    setCart([]);
-    setActiveOrderId(created[0].id);
-    setRoute("order");
+  // === Новый checkout: читаем корзину с бэка, формируем локальный заказ и чистим корзину ===
+  const handleCheckout = async () => {
+    try {
+      const cartData = await getCart();
+      const items = cartData?.items || [];
+      if (!items.length) return;
+
+      // простой мок-заказ из серверных позиций (без разбивки по продавцам)
+      const newOrder = {
+        id: `o-${Date.now()}`,
+        status: "Новый",
+        supplierId: SUPPLIER_SELF_ID, // можно оставить для совместимости с метриками
+        items: items.map((it) => ({
+          id: it.product.id,
+          title: it.product.title || `${it.product.make?.make_name || ""} ${it.product.part_number || ""}`.trim(),
+          price: it.unit_price,
+          qty: it.quantity,
+          img: it.product.media?.[0]?.url || null,
+        })),
+        chat: [],
+        createdAt: new Date().toISOString(),
+      };
+
+      setOrders((prev) => [newOrder, ...prev]);
+      setActiveOrderId(newOrder.id);
+
+      await clearCart();
+      await refreshCartSummary();
+
+      setRoute("order");
+    } catch (e) {
+      console.error("Checkout failed:", e);
+    }
   };
 
   const sendChatMessage = (orderId, author, text) => {
@@ -240,7 +253,7 @@ function App() {
       }, 650);
     }
   };
-  
+
   const showTopbar = route !== "onboarding:supplier_stripe";
   const isSupplierRoute = route.startsWith("supplier:");
 
@@ -258,7 +271,7 @@ function App() {
             route={route}
             setRoute={setRoute}
             role={role}
-            cartCount={cart.reduce((a, b) => a + b.qty, 0)}
+            cartCount={cartSummary?.total_items || 0} // теперь из бэка
             isWorkshop={buyerType === "workshop"}
             showSupplierTab={role === "supplier"}
             onLogout={handleLogout}
@@ -297,17 +310,28 @@ function App() {
           />
         )}
         {route === "cart" && (
-          <CartPage cart={cart} productsById={productsById} setCart={setCart} onCheckout={handleCheckout} />
+          <CartPage
+            onCheckout={handleCheckout}
+            onCartChanged={refreshCartSummary}
+            onViewProduct={(product) => {
+              setSelectedProduct(product);
+              navigateTo("product");
+            }}
+          />
         )}
         {route === "chat" && role !== "supplier" && <ChatPage role={role} />}
         {route === "supplier:chat" && <SupplierChatPage />}
         {route === "order" && activeOrder && (
-          <OrderPage order={activeOrder} onBack={() => navigateBack()} onSend={(t) => sendChatMessage(activeOrder.id, role === "buyer" ? "buyer" : "seller", t)} />
+          <OrderPage
+            order={activeOrder}
+            onBack={() => navigateBack()}
+            onSend={(t) => sendChatMessage(activeOrder.id, role === "buyer" ? "buyer" : "seller", t)}
+          />
         )}
         {route === "supplier:dashboard" && (
-          <SupplierDashboard 
-            supplierProfile={supplierProfile} 
-            metrics={supplierMetrics} 
+          <SupplierDashboard
+            supplierProfile={supplierProfile}
+            metrics={supplierMetrics}
             onNavigate={setRoute}
           />
         )}
@@ -318,9 +342,9 @@ function App() {
             setProducts={setProducts}
             supplierProfile={supplierProfile}
             onCreateNavigate={() => navigateTo("supplier:products:new")}
-            onProductView={(product) => { 
-              setSelectedProduct(product); 
-              navigateTo("product"); 
+            onProductView={(product) => {
+              setSelectedProduct(product);
+              navigateTo("product");
             }}
           />
         )}
@@ -456,7 +480,7 @@ const styles = `
 .animate-slide-up { animation: slideInUp 0.8s ease-out; }
 .animate-slide-left { animation: slideInLeft 0.8s ease-out; }
 .animate-slide-right { animation: slideInRight 0.8s ease-out; }
-.animate-fade-scale { animation: fadeInScale 0.6s ease-out; }
+.animate-fade-in-scale { animation: fadeInScale 0.6s ease-out; }
 .animate-rotate-in { animation: rotateIn 0.8s ease-out; }
 .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
 .animate-text-glow { animation: text-glow 3s ease-in-out infinite; }

@@ -8,9 +8,9 @@ function StarRating({ rating = 0, totalReviews = 0, size = "sm" }) {
   const stars = [];
   const fullStars = Math.floor(rating);
   const hasHalfStar = rating % 1 !== 0;
-  
+
   const starSize = size === "sm" ? "w-3 h-3" : size === "md" ? "w-4 h-4" : "w-5 h-5";
-  
+
   for (let i = 0; i < 5; i++) {
     if (i < fullStars) {
       stars.push(
@@ -38,7 +38,7 @@ function StarRating({ rating = 0, totalReviews = 0, size = "sm" }) {
       );
     }
   }
-  
+
   return (
     <div className="flex items-center gap-1">
       <div className="flex items-center">{stars}</div>
@@ -53,8 +53,8 @@ function StarRating({ rating = 0, totalReviews = 0, size = "sm" }) {
  * Универсальный компонент карточки товара
  * Поддерживает разные варианты отображения: каталог, поставщик, корзина
  */
-export default function ProductCard({ 
-  product, 
+export default function ProductCard({
+  product,
   variant = "catalog", // "catalog", "supplier", "cart"
   quantity, // для варианта "cart"
   onView,     // для просмотра деталей товара
@@ -123,36 +123,52 @@ export default function ProductCard({
   if (variant === "cart") {
     return (
       <div className={`p-5 flex items-center gap-4 border-b last:border-0 hover:bg-slate-50 transition-colors ${className}`}>
-        <div className="relative">
-          <img 
-            src={getProductImage()} 
+        {/* Кликабельная миниатюра */}
+        <button
+          type="button"
+          onClick={() => onView && onView(product)}
+          className="relative group"
+          title="Открыть карточку товара"
+        >
+          <img
+            src={getProductImage()}
             alt={getProductTitle()}
-            className="w-24 h-20 object-cover rounded-xl shadow-sm" 
+            className="w-24 h-20 object-cover rounded-xl shadow-sm group-hover:brightness-95 transition"
           />
           <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded-full font-medium">
             {quantity}
           </div>
-        </div>
+        </button>
+
         <div className="flex-1 min-w-0">
-          <div className="font-semibold text-gray-900 line-clamp-1 mb-1">{getProductTitle()}</div>
+          {/* Кликабельный заголовок */}
+          <button
+            type="button"
+            onClick={() => onView && onView(product)}
+            className="font-semibold text-gray-900 line-clamp-1 mb-1 text-left hover:underline"
+            title="Открыть карточку товара"
+          >
+            {getProductTitle()}
+          </button>
           <div className="text-sm text-gray-600 mb-2">{product.supplierName}</div>
           <StarRating rating={product.rating || 0} totalReviews={product.reviewCount || 0} size="sm" />
         </div>
+
         <div className="flex items-center gap-3">
           <div className="flex items-center border rounded-lg">
-            <button 
+            <button
               className="px-2 py-1 hover:bg-gray-100 transition-colors text-gray-600"
               onClick={() => onUpdateQuantity && onUpdateQuantity(product.id, Math.max(1, quantity - 1))}
             >
               −
             </button>
-            <input 
-              type="number" 
-              className="w-16 text-center border-0 py-1 text-sm font-medium focus:ring-0" 
-              value={quantity} 
-              onChange={(e) => onUpdateQuantity && onUpdateQuantity(product.id, parseInt(e.target.value || "1", 10))} 
+            <input
+              type="number"
+              className="w-16 text-center border-0 py-1 text-sm font-medium focus:ring-0"
+              value={quantity}
+              onChange={(e) => onUpdateQuantity && onUpdateQuantity(product.id, parseInt(e.target.value || "1", 10))}
             />
-            <button 
+            <button
               className="px-2 py-1 hover:bg-gray-100 transition-colors text-gray-600"
               onClick={() => onUpdateQuantity && onUpdateQuantity(product.id, quantity + 1)}
             >
@@ -163,8 +179,8 @@ export default function ProductCard({
             <div className="font-bold text-lg text-gray-900">{formatPrice(product.price * quantity)} ₽</div>
             <div className="text-xs text-gray-500">{formatPrice(product.price)} ₽ за шт.</div>
           </div>
-          <button 
-            className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors" 
+          <button
+            className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
             onClick={() => onRemove && onRemove(product.id)}
             title="Удалить из корзины"
           >
@@ -180,7 +196,7 @@ export default function ProductCard({
   // Рендер варианта для поставщика
   if (variant === "supplier") {
     return (
-      <div 
+      <div
         className={`bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:border-gray-200 transition-all duration-300 group cursor-pointer ${className}`}
         onClick={() => {
           console.log('ProductCard: supplier variant clicked, onView:', !!onView, 'product:', product);
@@ -188,44 +204,44 @@ export default function ProductCard({
         }}
       >
         <div className="relative aspect-[4/3] bg-gradient-to-br from-gray-50 to-gray-100">
-          <img 
-            src={getProductImage()} 
+          <img
+            src={getProductImage()}
             alt={getProductTitle()}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
           <div className="absolute top-3 right-3 flex flex-col gap-2">
             <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-              product.condition === 'new' 
-                ? 'bg-green-100 text-green-800 border border-green-200' 
+              product.condition === 'new'
+                ? 'bg-green-100 text-green-800 border border-green-200'
                 : 'bg-blue-100 text-blue-800 border border-blue-200'
             }`}>
               {product.condition === 'new' ? '✨ Новый' : '🔧 Б/У'}
             </span>
             {/* Индикатор статуса публикации с анимацией */}
             <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border transition-all duration-500 transform ${
-              product.status === 'published' 
-                ? 'bg-emerald-100 text-emerald-800 border-emerald-200 shadow-emerald-200/50 shadow-lg' 
+              product.status === 'published'
+                ? 'bg-emerald-100 text-emerald-800 border-emerald-200 shadow-emerald-200/50 shadow-lg'
                 : product.status === 'draft'
                   ? 'bg-gray-100 text-gray-800 border-gray-200'
                   : 'bg-yellow-100 text-yellow-800 border-yellow-200'
             } ${isPublishing || isUnpublishing ? 'animate-pulse scale-105' : ''}`}>
-              {isPublishing 
-                ? '🔄 Публикуется...' 
-                : isUnpublishing 
+              {isPublishing
+                ? '🔄 Публикуется...'
+                : isUnpublishing
                   ? '🔄 Скрывается...'
-                  : product.status === 'published' 
-                    ? '🌐 Опубликован' 
-                    : product.status === 'draft' 
+                  : product.status === 'published'
+                    ? '🌐 Опубликован'
+                    : product.status === 'draft'
                       ? '📝 Черновик'
                       : '⏸️ Не активен'
               }
             </span>
             {/* Delete button - appears on hover */}
             {onDelete && (
-              <button 
+              <button
                 className={`transition-all duration-300 transform text-white p-2 rounded-full shadow-lg hover:shadow-xl ${
-                  isDeleting 
-                    ? 'opacity-100 translate-y-0 bg-gray-400 cursor-not-allowed' 
+                  isDeleting
+                    ? 'opacity-100 translate-y-0 bg-gray-400 cursor-not-allowed'
                     : 'opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 bg-red-500 hover:bg-red-600'
                 }`}
                 onClick={(e) => {
@@ -254,10 +270,10 @@ export default function ProductCard({
             <div className="bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg">
               <StarRating rating={product.rating || 0} totalReviews={product.reviewCount || 0} size="sm" />
             </div>
-            
+
             {/* Быстрая публикация для черновиков */}
             {product.status === 'draft' && onPublish && (
-              <button 
+              <button
                 className="transition-all duration-300 transform text-white p-2 rounded-full shadow-lg hover:shadow-xl bg-emerald-500 hover:bg-emerald-600 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -283,28 +299,28 @@ export default function ProductCard({
               <div className="text-xs text-gray-500">за единицу</div>
             </div>
           </div>
-          
+
           {getProductDescription() && (
             <p className="text-sm text-gray-600 line-clamp-2 mb-4 leading-relaxed">
               {getProductDescription()}
             </p>
           )}
-          
+
           <div className="flex flex-col gap-3 pt-3 border-t border-gray-100">
             {/* Статус наличия */}
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-green-400 rounded-full"></div>
               <span className="text-xs text-gray-600 font-medium">В наличии</span>
             </div>
-            
+
             {/* Кнопки управления */}
             <div className="grid grid-cols-2 gap-2">
               {/* Левый ряд кнопок - Редактировать и Удалить */}
               <div className="flex flex-col gap-1">
-                <button 
+                <button
                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-                    isEditing 
-                      ? 'text-gray-400 bg-gray-50 cursor-not-allowed' 
+                    isEditing
+                      ? 'text-gray-400 bg-gray-50 cursor-not-allowed'
                       : 'text-blue-600 hover:text-blue-700 hover:bg-blue-50'
                   }`}
                   onClick={(e) => {
@@ -327,18 +343,18 @@ export default function ProductCard({
                   ) : (
                     <>
                       <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828л8.38-8.379-2.83-2.828z"/>
                       </svg>
                       Редактировать
                     </>
                   )}
                 </button>
-                
+
                 {onDelete && (
-                  <button 
+                  <button
                     className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-                      isDeleting 
-                        ? 'text-gray-400 bg-gray-50 cursor-not-allowed' 
+                      isDeleting
+                        ? 'text-gray-400 bg-gray-50 cursor-not-allowed'
                         : 'text-red-600 hover:text-red-700 hover:bg-red-50'
                     }`}
                     onClick={(e) => {
@@ -361,7 +377,7 @@ export default function ProductCard({
                     ) : (
                       <>
                         <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd"/>
+                          <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382л-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd"/>
                         </svg>
                         Удалить
                       </>
@@ -369,16 +385,15 @@ export default function ProductCard({
                   </button>
                 )}
               </div>
-              
+
               {/* Правый ряд кнопок - Публикация/Снятие с публикации */}
               <div className="flex flex-col gap-1">
                 {product.status === 'published' ? (
-                  // Кнопка снятия с публикации (если товар опубликован)
                   onUnpublish && (
-                    <button 
+                    <button
                       className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-                        isUnpublishing 
-                          ? 'text-gray-400 bg-gray-50 cursor-not-allowed' 
+                        isUnpublishing
+                          ? 'text-gray-400 bg-gray-50 cursor-not-allowed'
                           : 'text-orange-600 hover:text-orange-700 hover:bg-orange-50'
                       }`}
                       onClick={(e) => {
@@ -401,7 +416,7 @@ export default function ProductCard({
                       ) : (
                         <>
                           <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clipRule="evenodd"/>
+                            <path fillRule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414л14 14a1 1 0 001.414-1.414л-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074л-1.78-1.781zM7.968 6.553л1.514 1.515a2.003 2.003 0 012.45 2.45л1.514 1.514a4 4 0 00-5.478-5.478z" clipRule="evenodd"/>
                             <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z"/>
                           </svg>
                           Скрыть
@@ -410,12 +425,11 @@ export default function ProductCard({
                     </button>
                   )
                 ) : (
-                  // Кнопка публикации (если товар не опубликован)
                   onPublish && (
-                    <button 
+                    <button
                       className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-                        isPublishing 
-                          ? 'text-gray-400 bg-gray-50 cursor-not-allowed' 
+                        isPublishing
+                          ? 'text-gray-400 bg-gray-50 cursor-not-allowed'
                           : 'text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50'
                       }`}
                       onClick={(e) => {
@@ -457,42 +471,42 @@ export default function ProductCard({
 
   // Рендер варианта для каталога (по умолчанию)
   return (
-    <div 
+    <div
       className={`bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow duration-300 group cursor-pointer h-full ${className}`}
       onClick={() => onView && onView(product)}
     >
       <div className="relative aspect-[16/10] bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
-        <img 
-          src={getProductImage()} 
+        <img
+          src={getProductImage()}
           alt={getProductTitle()}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
         />
-        
+
         {/* Overlay градиент для лучшей читаемости текста */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent"></div>
-        
+
         {/* Значок состояния */}
         <div className="absolute top-3 right-3">
           <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold shadow-lg ${
-            product.condition === 'new' 
-              ? 'bg-gradient-to-r from-green-400 to-green-500 text-white' 
+            product.condition === 'new'
+              ? 'bg-gradient-to-r from-green-400 to-green-500 text-white'
               : 'bg-gradient-to-r from-blue-400 to-blue-500 text-white'
           }`}>
             {product.condition === 'new' ? '✨ Новая' : '🔧 Б/у'}
           </span>
         </div>
-        
+
         {/* Рейтинг */}
         <div className="absolute top-3 left-3">
           <div className="bg-white/95 backdrop-blur-sm px-2.5 py-1.5 rounded-xl shadow-sm">
             <StarRating rating={product.rating || 0} totalReviews={product.reviewCount || 0} size="sm" />
           </div>
         </div>
-        
+
         {/* Быстрые действия при hover */}
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <div className="flex gap-2">
-            <button 
+            <button
               className="bg-white/90 backdrop-blur-sm text-gray-700 px-4 py-2 rounded-xl font-medium hover:bg-white transition-colors shadow-lg"
               onClick={(e) => {
                 e.stopPropagation();
@@ -501,7 +515,7 @@ export default function ProductCard({
             >
               👁️ Подробнее
             </button>
-            <button 
+            <button
               className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-xl font-medium hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg"
               onClick={(e) => {
                 e.stopPropagation();
@@ -513,7 +527,7 @@ export default function ProductCard({
           </div>
         </div>
       </div>
-      
+
       <div className="p-5 flex flex-col h-full">
         {/* Информация об автомобиле */}
         {product.vehicle && (
@@ -521,12 +535,12 @@ export default function ProductCard({
             🚗 {product.vehicle}
           </div>
         )}
-        
+
         {/* Название товара */}
         <h3 className="font-bold text-gray-900 line-clamp-2 leading-snug mb-2 min-h-[2.5rem]">
           {getProductTitle()}
         </h3>
-        
+
         {/* Рейтинг и отзывы */}
         <div className="flex items-center justify-between mb-3">
           <StarRating rating={product.rating || 0} totalReviews={product.reviewCount || 0} size="md" />
@@ -536,7 +550,7 @@ export default function ProductCard({
             </div>
           )}
         </div>
-        
+
         {/* Информация о поставщике */}
         {getSupplierInfo() && (
           <div className="text-sm text-gray-600 mb-3 flex items-center gap-1.5">
@@ -544,14 +558,14 @@ export default function ProductCard({
             {getSupplierInfo()}
           </div>
         )}
-        
+
         {/* Цена и действия */}
         <div className="flex items-center justify-between pt-3 border-t border-gray-100">
           <div>
             <div className="text-2xl font-bold text-gray-900">{formatPrice(product.price)} ₽</div>
             <div className="text-xs text-gray-500">включая НДС</div>
           </div>
-          <button 
+          <button
             className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 rounded-xl transition-all shadow-sm hover:shadow-md"
             onClick={(e) => {
               e.stopPropagation();

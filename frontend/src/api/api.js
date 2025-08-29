@@ -167,3 +167,38 @@ export async function deleteProductMedia({ orgId, productId, mediaId }) {
   }
   await apiProtected.delete(`/organizations/${orgId}/products/${productId}/media/${mediaId}`);
 }
+
+export async function getCart() {
+  const { data } = await apiProtected.get('/cart/');
+  return data; // CartModel
+}
+
+/** Краткая сводка корзины (для бейджа) */
+export async function getCartSummary() {
+  const { data } = await apiProtected.get('/cart/summary');
+  return data; // { total_items, total_amount }
+}
+
+/** Добавить товар в корзину (если уже есть — увеличится qty) */
+export async function addItemToCart({ product_id, quantity = 1 }) {
+  const { data } = await apiProtected.post('/cart/items/', { product_id, quantity });
+  return data; // CartModel
+}
+
+/** Обновить количество конкретной позиции корзины */
+export async function updateCartItem({ item_id, quantity }) {
+  const { data } = await apiProtected.put(`/cart/items/${item_id}`, { quantity });
+  return data; // CartModel
+}
+
+/** Удалить позицию из корзины */
+export async function removeCartItem({ item_id }) {
+  const { data } = await apiProtected.delete(`/cart/items/${item_id}`);
+  return data; // CartModel
+}
+
+/** Очистить корзину полностью */
+export async function clearCart() {
+  const { data } = await apiProtected.delete('/cart/');
+  return data; // CartModel (пустая)
+}
