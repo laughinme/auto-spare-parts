@@ -1,9 +1,10 @@
 from uuid import UUID
 from datetime import datetime
-from sqlalchemy import select, func, or_, and_
+from sqlalchemy import select, func, or_, and_, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from domain.orders import OrderStatus
+from domain.payments import PaymentStatus, OrderBy
 from .order_table import Order, OrderItem
 
 
@@ -26,22 +27,56 @@ class OrderInterface:
         self,
         user_id: UUID | str,
         *,
-        offset: int = 0,
+        search: str | None = None,
+        statuses: list[PaymentStatus],
+        order_by: OrderBy,
         limit: int = 20,
-        status: OrderStatus | None = None,
-    ) -> tuple[list[Order], int]:
-        stmt = select(Order).where(Order.buyer_id == user_id)
+        cursor_created_at: datetime | None = None,
+        cursor_id: UUID | None = None,
+    ) -> list[Order]:
+        stmt = (
+            select(Order)
+            .join(Order.items)
+            .where(Order.buyer_id == user_id)
+        )
         
-        # if status is not None:
-        #     stmt = stmt.where(Order.status == status)
+        if statuses:
+            stmt = stmt.where(Order.payment_status.in_(statuses))
+            
+        if search:
+            pattern = f"%{search}%"
+            stmt = stmt.where(
+                or_(
+                    Order.notes.ilike(pattern),
+                    OrderItem.product_make_name.ilike(pattern),
+                    OrderItem.product_part_number.ilike(pattern),
+                    OrderItem.product_description.ilike(pattern),
+                    OrderItem.product_title.ilike(pattern),
+                )
+            )
+            
+        if cursor_created_at is not None and cursor_id is not None:
+            stmt = stmt.where(
+                or_(
+                    Order.created_at < cursor_created_at,
+                    and_(Order.created_at == cursor_created_at, Order.id < cursor_id),
+                )
+            )
         
-        count_stmt = select(func.count()).select_from(stmt.subquery())
-        total = await self.session.scalar(count_stmt)
-        
-        stmt = stmt.order_by(Order.created_at.desc()).offset(offset).limit(limit)
+        # order_params = []
+        if order_by == OrderBy.CREATED_AT_ASC:
+            stmt = stmt.order_by(Order.created_at.asc())
+        elif order_by == OrderBy.CREATED_AT_DESC:
+            stmt = stmt.order_by(Order.created_at.desc())
+        elif order_by == OrderBy.PRICE_ASC:
+            stmt = stmt.order_by(Order.total_amount.asc())
+        elif order_by == OrderBy.PRICE_DESC:
+            stmt = stmt.order_by(Order.total_amount.desc())
+    
+        stmt = stmt.order_by(Order.id.desc()).limit(limit)
         rows = await self.session.scalars(stmt)
         
-        return list(rows.all()), int(total or 0)
+        return list(rows.all())
 
     async def get_organization_orders(
         self,
@@ -71,16 +106,15 @@ class OrderInterface:
         
         return list(rows.all()), int(total or 0)
 
-    async def update_status(self, order_id: UUID | str, status: OrderStatus) -> Order | None:
-        """Update order status"""
-        order = await self.get_by_id(order_id)
-        if order is None:
-            return None
+    async def update_payment_status(self, order_id: UUID | str, status: PaymentStatus) -> Order | None:
+        result = await self.session.execute(
+            update(Order)
+            .where(Order.id == order_id)
+            .values(payment_status=status)
+            .returning(Order)
+        )
         
-        # order.status = status
-        await self.session.flush()
-        return order
-
+        return result.scalar()
 
 class OrderItemInterface:
     """Interface for working with order items in database"""
@@ -98,3 +132,12 @@ class OrderItemInterface:
         return await self.session.scalar(
             select(OrderItem).where(OrderItem.id == id)
         )
+
+    async def update_status(self, order_id: UUID | str, status: OrderStatus) -> OrderItem | None:
+        result = await self.session.execute(
+            update(OrderItem)
+            .where(OrderItem.order_id == order_id)
+            .values(status=status)
+            .returning(OrderItem)
+        )
+        return result.scalar()

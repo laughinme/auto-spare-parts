@@ -5,8 +5,8 @@ from typing import Annotated
 from fastapi import APIRouter, Request, HTTPException, Depends
 from logging import getLogger
 
-from core.config import Settings
 from utils import parse_event
+from core.config import Settings
 from database.relational_db import Order
 from service.payments import StripeService, get_stripe_service
 from service.orders import OrderService, get_order_service
@@ -30,6 +30,8 @@ async def handle_test_any(
         event = await parse_event(request)
         logger.info(f"Received Stripe event {event.id} type={event.type}")
         
+        # NOTE: I'll assume that all the checkout sessions end with successful payment.
+        # We absolutely have to add payment intent events processing here.
         if event.type == "checkout.session.completed":
             logger.info(f"Checkout session completed: {event.data.object['id']}")
             
@@ -44,6 +46,7 @@ async def handle_test_any(
             order_id = metadata.get("order_id")
             buyer_id = metadata.get("buyer_id")
             if not order_id or not buyer_id: return
+            order_id = UUID(order_id)
             
             # order = await order_svc.get_order(order_id)
             # if not order:
@@ -51,12 +54,13 @@ async def handle_test_any(
             #     return
             
             # Lock cart items for the buyer
-            await cart_svc.lock_cart_items(UUID(order_id), buyer_id)
+            await cart_svc.lock_cart_items(order_id, buyer_id)
             
-        elif event.type == "checkout.session.async_payment_succeeded":
-            pass
-        elif event.type == "checkout.session.async_payment_failed":
-            pass
+            
+            # For now we'll assume that the order is already paid for.
+            await cart_svc.purchase_cart_items(order_id, buyer_id)
+            await order_svc.pay_order(order_id)
+        
         else:
             logger.warning(f"Unhandled event type: {event.type}")
     

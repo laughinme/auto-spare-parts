@@ -3,8 +3,9 @@ from uuid import UUID
 from typing import Optional
 from fastapi import HTTPException, status
 
+from utils.cursor import parse_cursor, create_cursor
 from domain.orders import OrderStatusUpdate, OrderStatus, PrepareCheckout
-from domain.payments import PaymentStatus
+from domain.payments import PaymentStatus, OrderBy
 from domain.products import ProductStatus, StockType
 from database.relational_db import (
     UoW,
@@ -144,17 +145,24 @@ class OrderService:
         self,
         user: User,
         *,
-        offset: int = 0,
+        cursor: str | None = None,
         limit: int = 20,
-        status: Optional[OrderStatus] = None,
-    ) -> tuple[list[Order], int]:
-        """Get user's orders with pagination"""
-        return await self.order_repo.get_user_orders(
+        statuses: list[PaymentStatus],
+        order_by: OrderBy,
+
+    ) -> tuple[list[Order], str | None]:
+        """Get user's orders with cursor pagination"""
+        
+        orders = await self.order_repo.get_user_orders(
             user.id,
-            offset=offset,
+            order_by=order_by,
+            statuses=statuses,
             limit=limit,
-            status=status,
+            **parse_cursor(cursor),
         )
+        
+        next_cursor = create_cursor(orders, limit)
+        return orders, next_cursor
 
     async def get_order_by_id(self, order_id: UUID | str, user: User) -> Order:
         """Get order by ID, ensuring user owns it"""
@@ -199,3 +207,12 @@ class OrderService:
     #     await self.uow.commit()
     #     await self.uow.session.refresh(order)
     #     return order
+    
+    async def pay_order(self, order_id: UUID) -> Order:
+        order = await self.order_repo.update_payment_status(order_id, PaymentStatus.PAID)
+        if order is None:
+            raise HTTPException(404, detail="Order not found")
+        
+        await self.order_item_repo.update_status(order_id, OrderStatus.CONFIRMED)
+        
+        return order

@@ -138,3 +138,18 @@ class CartItemInterface:
                 locked_at=func.now()
             )
         )
+
+    async def purchase_items(self, order_id: UUID, user_id: UUID | str):
+        await self.session.execute(
+            update(CartItem)
+            .where(
+                CartItem.cart_id == Cart.id,
+                Cart.user_id == user_id,
+                CartItem.status == CartItemStatus.LOCKED
+            )
+            .values(
+                status=CartItemStatus.PURCHASED,
+                order_id=order_id,
+                locked_at=func.now()
+            )
+        )

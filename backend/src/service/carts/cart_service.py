@@ -105,3 +105,6 @@ class CartService:
     
     async def lock_cart_items(self, order_id: UUID, user_id: UUID | str):
         await self.cart_item_repo.lock_items(order_id, user_id)
+        
+    async def purchase_cart_items(self, order_id: UUID, user_id: UUID | str):
+        await self.cart_item_repo.purchase_items(order_id, user_id)
