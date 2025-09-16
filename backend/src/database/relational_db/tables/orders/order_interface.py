@@ -21,7 +21,10 @@ class OrderInterface:
 
     async def get_by_id(self, id: UUID | str) -> Order | None:
         """Get order by ID"""
-        return await self.session.scalar(select(Order).where(Order.id == id))
+        return await self.session.scalar(
+            select(Order)
+            .where(Order.id == id)
+        )
 
     async def get_user_orders(
         self,

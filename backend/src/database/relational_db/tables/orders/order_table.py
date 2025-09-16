@@ -37,8 +37,8 @@ class Order(TimestampMixin, Base):
     # tracking_number: Mapped[str | None] = mapped_column(String, nullable=True, comment="Shipping tracking number")
 
     # Relationships
-    items: Mapped[list["OrderItem"]] = relationship('OrderItem', back_populates="order", cascade="all, delete-orphan", lazy="selectin")
-    buyer: Mapped["User"] = relationship(lazy="selectin", foreign_keys=[buyer_id])  # type: ignore
+    items: Mapped[list["OrderItem"]] = relationship('OrderItem', back_populates="order", lazy="selectin")
+    buyer: Mapped["User"] = relationship(lazy="selectin")  # type: ignore
     # checkout_session: Mapped["CheckoutSession"] = relationship(back_populates="order", lazy="selectin")  # type: ignore
 
 
@@ -47,7 +47,7 @@ class OrderItem(TimestampMixin, Base):
 
     # Primary key and relationships
     id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), default=uuid4, primary_key=True)
-    order_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("orders.id"), nullable=False, comment="Order ID")
+    order_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("orders.id", ondelete="CASCADE"), nullable=False, comment="Order ID")
     # Maybe product_id nullable and ondelete set null
     product_id: Mapped[UUID | None] = mapped_column(Uuid(as_uuid=True), ForeignKey("products.id", ondelete="SET NULL"), nullable=True, comment="Product ID")
     seller_org_id: Mapped[UUID] = mapped_column(
@@ -64,7 +64,7 @@ class OrderItem(TimestampMixin, Base):
     
     # Product snapshot (in case product details change later)
     product_make_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("makes.make_id"), nullable=False, comment="Product make ID at time of purchase"
+        Integer, ForeignKey("makes.make_id", ondelete="RESTRICT"), nullable=False, comment="Product make ID at time of purchase"
     )
     product_make_name: Mapped[str] = mapped_column(String, nullable=False, comment="Product make name at time of purchase")
     product_part_number: Mapped[str] = mapped_column(String, nullable=False, comment="Product part number at time of purchase")
