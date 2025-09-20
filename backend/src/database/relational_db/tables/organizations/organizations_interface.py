@@ -1,8 +1,9 @@
 from uuid import UUID
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .organizations_table import Organization
+from .org_memberships_table import OrgMembership
 from domain.organizations.enums import KycStatus
 
 
@@ -21,6 +22,21 @@ class OrganizationsInterface:
         rows = await self.session.scalars(
             select(Organization).where(Organization.owner_user_id == owner_user_id)
         )
+        return list(rows.all())
+
+    async def list_for_user(self, user_id: UUID | str) -> list[Organization]:
+        stmt = (
+            select(Organization)
+            .outerjoin(OrgMembership, OrgMembership.org_id == Organization.id)
+            .where(
+                or_(
+                    Organization.owner_user_id == user_id,
+                    OrgMembership.user_id == user_id,
+                )
+            )
+            .distinct()
+        )
+        rows = await self.session.scalars(stmt)
         return list(rows.all())
 
     async def get_by_stripe_account_id(self, stripe_account_id: str) -> Organization | None:

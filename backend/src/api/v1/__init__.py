@@ -11,11 +11,13 @@ def get_v1_router() -> APIRouter:
     from .products import get_products_router
     from .carts import get_carts_router
     from .orders import get_orders_router
+    from .seller import get_seller_router
     
     router = APIRouter(prefix='/v1')
 
     router.include_router(get_auth_routers())
     router.include_router(get_users_router())
+    router.include_router(get_seller_router())
     router.include_router(get_orders_router())
     router.include_router(get_carts_router())
     router.include_router(get_vehicles_router())

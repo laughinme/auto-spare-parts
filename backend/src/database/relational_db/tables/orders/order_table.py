@@ -1,8 +1,10 @@
 from uuid import UUID, uuid4
+from datetime import datetime
 from decimal import Decimal
 from sqlalchemy.orm import mapped_column, Mapped, relationship
-from sqlalchemy import String, ForeignKey, Uuid, Text, Integer, Numeric
+from sqlalchemy import String, ForeignKey, Uuid, Text, Integer, Numeric, select, func, DateTime
 from sqlalchemy.dialects.postgresql import ENUM
+from sqlalchemy.ext.hybrid import hybrid_property
 
 from domain.orders import OrderStatus
 from domain.payments import PaymentStatus
@@ -34,7 +36,22 @@ class Order(TimestampMixin, Base):
     notes: Mapped[str | None] = mapped_column(Text, nullable=True, comment="Order notes from buyer")
     
     shipping_address: Mapped[str | None] = mapped_column(Text, nullable=True, comment="Shipping address JSON")
-    # tracking_number: Mapped[str | None] = mapped_column(String, nullable=True, comment="Shipping tracking number")
+    
+    @hybrid_property
+    def order_progress(self) -> int:
+        return len([item for item in self.items if item.status in [OrderStatus.DELIVERED, OrderStatus.CANCELLED, OrderStatus.REFUNDED]])
+
+    @order_progress.expression
+    @classmethod
+    def order_progress_expr(cls):
+        return (
+            select(func.coalesce(func.count(OrderItem.product_id), 0))
+            .where(
+                OrderItem.order_id == cls.id,
+                OrderItem.status.in_([OrderStatus.DELIVERED, OrderStatus.CANCELLED, OrderStatus.REFUNDED])
+            )
+            .label("order_progress")
+        )
 
     # Relationships
     items: Mapped[list["OrderItem"]] = relationship('OrderItem', back_populates="order", lazy="selectin")
@@ -71,8 +88,12 @@ class OrderItem(TimestampMixin, Base):
     product_condition: Mapped[ProductCondition] = mapped_column(ENUM(ProductCondition), nullable=False, comment="Product condition at time of purchase")
     product_title: Mapped[str] = mapped_column(String, nullable=False, comment="Product title at time of purchase")
     product_description: Mapped[str | None] = mapped_column(Text, nullable=True, comment="Product description at time of purchase")
-    
-    # tracking_number: Mapped[str | None] = mapped_column(String, nullable=True, comment="Shipping tracking number")
+
+    carrier_code: Mapped[str | None] = mapped_column(String, nullable=True, comment="Carrier code or short name")
+    tracking_number: Mapped[str | None] = mapped_column(String, nullable=True, comment="Shipping tracking number")
+    tracking_url: Mapped[str | None] = mapped_column(Text, nullable=True, comment="Tracking URL provided by carrier")
+    shipped_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, comment="Datetime when the parcel was handed over to the carrier")
+    delivered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, comment="Datetime when the parcel was marked as delivered")
     
     status: Mapped[OrderStatus] = mapped_column(
         ENUM(OrderStatus), nullable=False, default=OrderStatus.PENDING, comment="Order status"

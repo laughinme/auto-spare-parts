@@ -144,3 +144,70 @@ class OrderItemInterface:
             .returning(OrderItem)
         )
         return result.scalar()
+
+    async def list_for_seller(
+        self,
+        org_ids: list[UUID | str],
+        *,
+        statuses: list[OrderStatus],
+        search: str | None,
+        org_id: UUID | str | None,
+        limit: int,
+        cursor_created_at: datetime | None,
+        cursor_id: UUID | None,
+    ) -> list[OrderItem]:
+        if not org_ids:
+            return []
+
+        stmt = (
+            select(OrderItem)
+            .join(Order)
+            .where(OrderItem.seller_org_id.in_(org_ids))
+        )
+
+        if org_id is not None:
+            stmt = stmt.where(OrderItem.seller_org_id == org_id)
+
+        if statuses:
+            stmt = stmt.where(OrderItem.status.in_(statuses))
+
+        if search:
+            pattern = f"%{search}%"
+            stmt = stmt.where(
+                or_(
+                    OrderItem.product_title.ilike(pattern),
+                    OrderItem.product_part_number.ilike(pattern),
+                    OrderItem.product_description.ilike(pattern),
+                )
+            )
+
+        if cursor_created_at is not None and cursor_id is not None:
+            stmt = stmt.where(
+                or_(
+                    OrderItem.created_at < cursor_created_at,
+                    and_(OrderItem.created_at == cursor_created_at, OrderItem.id < cursor_id),
+                )
+            )
+
+        stmt = stmt.order_by(OrderItem.created_at.desc(), OrderItem.id.desc()).limit(limit)
+        rows = await self.session.scalars(stmt)
+        return list(rows.all())
+
+    async def get_for_seller(
+        self,
+        item_id: UUID | str,
+        org_ids: list[UUID | str],
+    ) -> OrderItem | None:
+        if not org_ids:
+            return None
+
+        stmt = (
+            select(OrderItem)
+            .join(Order)
+            .where(
+                OrderItem.id == item_id,
+                OrderItem.seller_org_id.in_(org_ids),
+            )
+        )
+
+        return await self.session.scalar(stmt)

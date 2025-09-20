@@ -7,8 +7,10 @@ from database.relational_db import (
     OrderInterface,
     OrderItemInterface,
     CartItemInterface,
+    OrganizationsInterface,
 )
 from .order_service import OrderService
+from .seller_order_service import SellerOrderService
 
 
 async def get_order_service(
@@ -21,3 +23,14 @@ async def get_order_service(
     order_item_repo = OrderItemInterface(uow.session)
 
     return OrderService(uow, cart_repo, cart_item_repo, order_repo, order_item_repo)
+
+
+async def get_seller_order_service(
+    uow: UoW = Depends(get_uow),
+) -> SellerOrderService:
+    """Dependency to work with seller-facing order operations."""
+
+    order_item_repo = OrderItemInterface(uow.session)
+    org_repo = OrganizationsInterface(uow.session)
+
+    return SellerOrderService(uow, order_item_repo, org_repo)
