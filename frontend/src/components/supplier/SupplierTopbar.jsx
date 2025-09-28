@@ -11,6 +11,7 @@ export default function SupplierTopbar({ route, setRoute, onLogout }) {
 				</div>
 				<nav className="hidden md:flex items-center gap-2 text-sm">
 					<button className={navBtnCls(route === "supplier:dashboard")} onClick={() => setRoute("supplier:dashboard")}>Главная</button>
+					<button className={navBtnCls(route === "supplier:orders")} onClick={() => setRoute("supplier:orders")}>Заказы</button>
 					<button className={navBtnCls(route.startsWith("supplier:products"))} onClick={() => setRoute("supplier:products")}>Товары</button>
 					<button className={navBtnCls(route === "supplier:chat")} onClick={() => setRoute("supplier:chat")}>Чат</button>
 				</nav>
@@ -25,6 +26,3 @@ export default function SupplierTopbar({ route, setRoute, onLogout }) {
 function navBtnCls(active) {
 	return "px-3 py-2 rounded-xl border transition shadow-sm hover:shadow-md " + (active ? "bg-slate-900 text-white border-slate-900" : "border-slate-200 bg-white");
 }
-
-
-

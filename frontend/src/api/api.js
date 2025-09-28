@@ -202,3 +202,46 @@ export async function clearCart() {
   const { data } = await apiProtected.delete('/cart/');
   return data; // CartModel (пустая)
 }
+
+export async function listSellerOrders({ statuses, search, org_id, cursor, limit = 20 } = {}) {
+  const sp = new URLSearchParams();
+  if (Array.isArray(statuses)) statuses.forEach((s) => sp.append('statuses', s));
+  if (search) sp.set('search', search);
+  if (org_id) sp.set('org_id', org_id);
+  if (cursor) sp.set('cursor', cursor);
+  if (limit != null) sp.set('limit', String(limit));
+  const url = `/seller/orders/${sp.toString() ? `?${sp.toString()}` : ''}`;
+  const res = await apiProtected.get(url);
+  return res.data;
+}
+
+export async function getSellerOrderItem(order_item_id) {
+  const res = await apiProtected.get(`/seller/orders/${order_item_id}/`);
+  return res.data;
+}
+
+export async function acceptSellerOrderItem(order_item_id) {
+  const res = await apiProtected.post(`/seller/orders/${order_item_id}/accept`);
+  return res.data;
+}
+
+export async function rejectSellerOrderItem(order_item_id, reason) {
+  const payload = reason ? { reason } : {};
+  const res = await apiProtected.post(`/seller/orders/${order_item_id}/reject`, payload);
+  return res.data;
+}
+
+export async function shipSellerOrderItem(order_item_id, { carrier_code, tracking_number, tracking_url, shipped_at } = {}) {
+  const res = await apiProtected.post(`/seller/orders/${order_item_id}/ship`, {
+    carrier_code,
+    tracking_number,
+    tracking_url,
+    shipped_at,
+  });
+  return res.data;
+}
+
+export async function deliverSellerOrderItem(order_item_id, { delivered_at } = {}) {
+  const res = await apiProtected.post(`/seller/orders/${order_item_id}/deliver`, { delivered_at });
+  return res.data;
+}
