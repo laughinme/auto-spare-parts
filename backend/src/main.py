@@ -54,5 +54,5 @@ app.add_middleware(
     ],
     allow_methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allow_headers=['X-CSRF-Token', 'X-Requested-With', 'Accept', 'Content-Type', 'Authorization', 'X-Client'],
-    allow_credentials=True
+    allow_credentials=True,
 )

@@ -54,7 +54,8 @@ async def refresh_tokens(
         
         # set fresh cookies
         response.set_cookie(
-            "refresh_token", new_refresh,
+            "refresh_token",
+            new_refresh,
             max_age=config.REFRESH_TTL,
             httponly=True, 
             secure=True,
@@ -62,7 +63,8 @@ async def refresh_tokens(
             path='/',
         )
         response.set_cookie(
-            "csrf_token", new_csrf,
+            "csrf_token",
+            new_csrf,
             max_age=config.REFRESH_TTL,
             httponly=False, 
             secure=True, 

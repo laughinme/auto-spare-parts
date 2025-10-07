@@ -15,7 +15,6 @@ import SupplierProducts from "./components/supplier/SupplierProducts.jsx";
 import SupplierProductCreate from "./components/supplier/SupplierProductCreate.jsx";
 import AuthPage from "./components/auth/AuthPage.jsx";
 import LandingPage from "./components/landing/LandingPage.jsx";
-import { MOCK_PRODUCTS } from "./data/mockProducts.js";
 import { SUPPLIER_SELF_ID } from "./data/constants.js";
 import SupplierOrders from "./components/supplier/SupplierOrders.jsx";
 import { addItemToCart, getCart, clearCart, getCartSummary } from "./api/api.js";
