@@ -1,4 +1,3 @@
-// vite.config.js
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
@@ -19,8 +18,8 @@ export default defineConfig({
       '/api/v1': { 
         target: 'https://backend-auto-spare-parts.fly.dev',
         changeOrigin: true,
-        secure: true, // Ensure HTTPS verification
-        followRedirects: true, // Handle redirects properly
+        secure: true, 
+        followRedirects: true, 
       },
     },
   },

@@ -1,8 +1,7 @@
-// axiosInstance.js
-
 import axios from 'axios';
 
-const BASE_URL = '/api/v1';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api/v1';
+
 
 export const apiPublic = axios.create({
     baseURL: BASE_URL,
@@ -83,7 +82,7 @@ apiProtected.interceptors.response.use(
                     return apiProtected(originalRequest);
                 }
             } catch (refreshError) {
-                // ДОБАВЛЕНО ЛОГИРОВАНИЕ
+                
                 console.error('[Interceptor] КРИТИЧЕСКАЯ ОШИБКА: Не удалось обновить токен. Выход из системы.', refreshError);
                 setAccessToken(null);
             }

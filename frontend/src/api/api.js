@@ -1,4 +1,3 @@
-
 import apiProtected, { apiPublic } from './axiosInstance.js';
 
 export async function createProduct({ productData, orgId }) {

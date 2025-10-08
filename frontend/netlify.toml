@@ -1,0 +1,10 @@
+[[redirects]]
+  from = "/api/v1/*"
+  to = "https://backend-auto-spare-parts.fly.dev/api/v1/:splat"
+  status = 200
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  VITE_API_BASE_URL = "https://backend-auto-spare-parts.fly.dev/api/v1"
