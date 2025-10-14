@@ -16,7 +16,7 @@ router = APIRouter()
     response_model=OrderItemModel,
     description="Confirm the delivery of the order item."
 )
-async def place_review(
+async def confirm_delivery(
     order_id: UUID,
     item_id: UUID,
     payload: ConfirmDelivery,

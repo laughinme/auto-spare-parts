@@ -10,6 +10,6 @@ def get_order_id_router() -> APIRouter:
 
     router.include_router(get_payments_router())
     router.include_router(get_order_router)
-    router.include_router(get_items_router())
+    router.include_router(get_items_router(), tags=['New'])
     
     return router
