@@ -8,6 +8,7 @@ from database.relational_db import (
     OrderItemInterface,
     CartItemInterface,
     OrganizationsInterface,
+    ProductReviewsInterface,
 )
 from .order_service import OrderService
 from .seller_order_service import SellerOrderService
@@ -21,8 +22,9 @@ async def get_order_service(
     cart_item_repo = CartItemInterface(uow.session)
     order_repo = OrderInterface(uow.session)
     order_item_repo = OrderItemInterface(uow.session)
+    review_repo = ProductReviewsInterface(uow.session)
 
-    return OrderService(uow, cart_repo, cart_item_repo, order_repo, order_item_repo)
+    return OrderService(uow, cart_repo, cart_item_repo, order_repo, order_item_repo, review_repo)
 
 
 async def get_seller_order_service(

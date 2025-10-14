@@ -1,6 +1,6 @@
 from datetime import datetime
 from uuid import UUID
-from pydantic import BaseModel, Field, ConfigDict, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl
 
 from .order import OrderItemModel
 from ...payments import PaymentStatus
@@ -9,8 +9,6 @@ from ...payments import PaymentStatus
 class SellerBuyerPreview(BaseModel):
     """Minimal buyer information shared with sellers."""
 
-    model_config = ConfigDict(from_attributes=True)
-
     id: UUID = Field(..., description="Buyer user ID")
     email: str | None = Field(None, description="Buyer email for contact purposes")
     username: str | None = Field(None, description="Buyer display name")
@@ -18,8 +16,6 @@ class SellerBuyerPreview(BaseModel):
 
 class SellerOrderItemModel(OrderItemModel):
     """Order item representation tailored for sellers."""
-
-    model_config = ConfigDict(from_attributes=True)
 
     order_reference: str = Field(..., description="Short reference code for the parent order")
     order_created_at: datetime = Field(..., description="Datetime when the parent order was created")

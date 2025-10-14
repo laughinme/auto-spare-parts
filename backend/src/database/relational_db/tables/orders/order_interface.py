@@ -211,3 +211,21 @@ class OrderItemInterface:
         )
 
         return await self.session.scalar(stmt)
+    
+    async def load_order_and_item(self, order_id: UUID | str, item_id: UUID | str) -> tuple[Order | None, OrderItem | None] | None:
+        stmt = (
+            select(Order, OrderItem)
+            .select_from(Order)
+            .outerjoin(
+                OrderItem,
+                and_(OrderItem.order_id == Order.id, OrderItem.id == item_id),
+            )
+            .where(Order.id == order_id)
+            .limit(1)
+        )
+
+        row = (await self.session.execute(stmt)).one_or_none()
+        if row is None:
+            return None
+
+        return row[0], row[1]

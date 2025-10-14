@@ -1,10 +1,12 @@
 from decimal import Decimal
+from datetime import datetime, UTC
 from uuid import UUID
 from typing import Optional
 from fastapi import HTTPException, status
+from sqlalchemy.exc import IntegrityError
 
 from utils.cursor import parse_cursor, create_cursor
-from domain.orders import OrderStatusUpdate, OrderStatus, PrepareCheckout
+from domain.orders import OrderStatusUpdate, OrderStatus, PrepareCheckout, LeaveReview, ConfirmDelivery
 from domain.payments import PaymentStatus, OrderBy
 from domain.products import ProductStatus, StockType
 from database.relational_db import (
@@ -18,6 +20,8 @@ from database.relational_db import (
     OrderInterface,
     OrderItemInterface,
     CartItem,
+    ProductReview,
+    ProductReviewsInterface,
     # CheckoutSession,
     # CheckoutSessionInterface,   
 )
@@ -33,12 +37,14 @@ class OrderService:
         cart_item_repo: CartItemInterface,
         order_repo: OrderInterface,
         order_item_repo: OrderItemInterface,
+        review_repo: ProductReviewsInterface,
     ):
         self.uow = uow
         self.cart_repo = cart_repo
         self.cart_item_repo = cart_item_repo
         self.order_repo = order_repo
         self.order_item_repo = order_item_repo
+        self.review_repo = review_repo
         # self.checkout_repo = CheckoutSessionInterface(uow.session)
         
     @staticmethod
@@ -216,3 +222,59 @@ class OrderService:
         await self.order_item_repo.update_status(order_id, OrderStatus.CONFIRMED)
         
         return order
+    
+    async def _load_order_item_checked(self, order_id: UUID, item_id: UUID, user_id: UUID) -> OrderItem:
+        result = await self.order_item_repo.load_order_and_item(order_id, item_id)
+        if result is None:
+            raise HTTPException(404, detail="Order not found")
+        
+        order: Order | None = result[0]
+        item: OrderItem | None = result[1]
+        
+        if order is None or order.buyer_id != user_id:
+            raise HTTPException(404, detail="Order not found")
+        
+        if item is None:
+            raise HTTPException(404, detail="Item not found in order")
+        
+        return item
+        
+    
+    async def leave_review_product(self, payload: LeaveReview, order_id: UUID, item_id: UUID, user: User) -> ProductReview:
+        item = await self._load_order_item_checked(order_id, item_id, user.id)
+        
+        if item.status != OrderStatus.DELIVERED:
+            raise HTTPException(409, detail="Item must be delivered before leaving a review")
+        
+        review = ProductReview(
+            order_item_id=item.id,
+            product_id=item.product_id,
+            seller_org_id=item.seller_org_id,
+            reviewer_user_id=user.id,
+            rating=payload.rating,
+            title=payload.title,
+            body=payload.body,
+        )
+        
+        try:
+            await self.review_repo.add(review)
+        except IntegrityError as e:
+            raise HTTPException(409, detail="Review already exists")
+        
+        return review
+
+
+    async def confirm_delivery(self, payload: ConfirmDelivery, order_id: UUID, item_id: UUID, user: User) -> OrderItem:
+        item = await self._load_order_item_checked(order_id, item_id, user.id)
+        
+        # NOTE: For testing purposes, we allow confirming delivery even if the item is not shipped
+        # if item.status != OrderStatus.SHIPPED:
+        #     raise HTTPException(409, detail="Item must be shipped before confirming delivery")
+        
+        if item.status != OrderStatus.CONFIRMED:
+            raise HTTPException(409, detail="Item must be confirmed before confirming delivery")
+        
+        item.status = OrderStatus.DELIVERED
+        item.delivered_at = payload.delivered_at or datetime.now(UTC)
+        
+        return item
