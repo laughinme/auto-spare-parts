@@ -1,6 +1,9 @@
 import React from "react";
 import { formatPrice } from "../../utils/helpers.js";
 
+const DEFAULT_PRODUCT_IMAGE =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23e2e8f0'/%3E%3Ctext x='50%25' y='50%25' fill='%23678999' font-size='20' text-anchor='middle' dominant-baseline='middle'%3ENo%20image%3C/text%3E%3C/svg%3E";
+
 /**
  * Компонент звездного рейтинга
  */
@@ -75,7 +78,7 @@ export default function ProductCard({
   const getProductImage = () => {
     if (product.img) return product.img;
     if (product.media?.[0]?.url) return product.media[0].url;
-    return "https://via.placeholder.com/400x300";
+    return DEFAULT_PRODUCT_IMAGE;
   };
 
   // Функция для получения названия товара
@@ -95,10 +98,17 @@ export default function ProductCard({
 
   // Функция для получения информации о поставщике
   const getSupplierInfo = () => {
-    if (product.supplierName) {
-      const condition = product.condition === "new" ? "Новая" : "Б/у";
-      return `${product.supplierName} • ${condition}`;
+    const supplierName = product.supplierName || product.organization?.name;
+    if (supplierName) {
+      const condition =
+        product.condition === "new" || product.condition === "NEW"
+          ? "Новая"
+          : product.condition === "used" || product.condition === "USED"
+          ? "Б/у"
+          : null;
+      return condition ? `${supplierName} • ${condition}` : supplierName;
     }
+    if (product.make?.make_name) return product.make.make_name;
     return null;
   };
 

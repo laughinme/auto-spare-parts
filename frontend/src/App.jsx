@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "./context/useAuth.js";
 import Topbar from "./components/Topbar.jsx";
 import SupplierTopbar from "./components/supplier/SupplierTopbar.jsx";
@@ -15,18 +15,24 @@ import SupplierProducts from "./components/supplier/SupplierProducts.jsx";
 import SupplierProductCreate from "./components/supplier/SupplierProductCreate.jsx";
 import AuthPage from "./components/auth/AuthPage.jsx";
 import LandingPage from "./components/landing/LandingPage.jsx";
-import { MOCK_PRODUCTS } from "./data/mockProducts.js";
 import { SUPPLIER_SELF_ID } from "./data/constants.js";
+import { addCartItem, clearCart, getCart, removeCartItem, updateCartItem } from "./api/api.js";
 import { createOrdersFromCart } from "./utils/helpers.js";
 
+const EMPTY_CART = {
+  id: null,
+  items: [],
+  unique_items: 0,
+  total_items: 0,
+  total_amount: 0,
+};
+
 function App() {
-  // Получаем новое состояние isRestoringSession из контекста
   const { user, isUserLoading, logout, isRestoringSession } = useAuth();
   
-  // Wrapper для logout с очисткой localStorage
   const handleLogout = () => {
     localStorage.removeItem('userRole');
-    setShowLanding(true); // Показываем лендинг после logout
+    setShowLanding(true); 
     logout();
   };
   
@@ -37,15 +43,34 @@ function App() {
   const [buyerType] = useState(null);
   const [garage, setGarage] = useState([]);
   const [supplierProfile] = useState(null);
-  const [products, setProducts] = useState(MOCK_PRODUCTS);
+  const [products, setProducts] = useState([]);
   const productsById = useMemo(() => Object.fromEntries(products.map((p) => [p.id, p])), [products]);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [cart, setCart] = useState([]);
+  const [cart, setCart] = useState(EMPTY_CART);
+  const [isCartLoading, setIsCartLoading] = useState(false);
+  const [isCartUpdating, setIsCartUpdating] = useState(false);
   const [orders, setOrders] = useState([]);
   const [activeOrderId, setActiveOrderId] = useState(null);
   
-  // State for controlling landing page display
   const [showLanding, setShowLanding] = useState(true);
+  const normalizeCart = useCallback((cartData) => {
+    if (!cartData) return { ...EMPTY_CART };
+    const items = Array.isArray(cartData.items) ? cartData.items : [];
+    const totalAmount = Number(cartData.total_amount ?? 0);
+    const totalItems = Number(cartData.total_items ?? 0);
+    const uniqueItems = Number(cartData.unique_items ?? 0);
+    return {
+      id: cartData.id ?? null,
+      items,
+      unique_items: Number.isNaN(uniqueItems) ? 0 : uniqueItems,
+      total_items: Number.isNaN(totalItems) ? 0 : totalItems,
+      total_amount: Number.isNaN(totalAmount) ? 0 : totalAmount,
+    };
+  }, []);
+
+  const updateCartState = useCallback((cartData) => {
+    setCart(normalizeCart(cartData));
+  }, [normalizeCart]);
   
   useEffect(() => {
     window.__setRoute = setRoute;
@@ -69,47 +94,39 @@ function App() {
     if (!user) {
       setHasInitializedRole(false);
       setRole(null);
-      localStorage.removeItem('userRole'); // Очищаем роль при logout
+      localStorage.removeItem('userRole'); 
+      updateCartState(null);
+      setIsCartLoading(false);
+      setIsCartUpdating(false);
       console.log('User logged out, resetting role and initialization flag');
     } else {
-      setShowLanding(false); // Скрываем лендинг если пользователь вошел
+      setShowLanding(false); 
     }
-  }, [user]);
+  }, [user, updateCartState]);
 
   useEffect(() => {
     if (user) {
-      console.log('Processing user data:', user);
       
-      // Сначала проверяем сохраненную роль в localStorage
       const savedRole = localStorage.getItem('userRole');
       let apiRole = savedRole || user.role || user.type || user.user_type;
-      console.log('Found role - saved:', savedRole, ', from API:', user.role || user.type || user.user_type);
       
       if (!apiRole) {
-        console.log('No explicit role found, trying to determine from other data');
         if (user.email && (user.email.includes('supplier') || user.email.includes('vendor') || user.email.includes('shop') || user.email.includes('seller'))) {
           apiRole = 'supplier';
-          console.log('Determined role as supplier from email:', user.email);
         } else if (user.is_supplier === true) {
           apiRole = 'supplier';
-          console.log('Determined role as supplier from is_supplier field');
         } else {
           apiRole = 'buyer';
-          console.log('Defaulting to buyer role');
+          
         }
       }
       
       if (apiRole !== role) {
-        console.log('Setting user role:', apiRole, 'for user:', user.email, 'current route:', route);
         setRole(apiRole);
         
-        // Перенаправляем пользователя при первой инициализации роли
         if (!hasInitializedRole) {
-          console.log('First time role initialization, current route:', route);
           setHasInitializedRole(true);
           if (apiRole === "supplier") {
-            console.log('Redirecting supplier - savedRole:', savedRole);
-            // Если роль была сохранена из регистрации, направляем на onboarding
             if (savedRole === 'supplier') {
               setRoute("onboarding:supplier_stripe");
             } else {
@@ -139,7 +156,27 @@ function App() {
     }
   }, [role, route]);
 
-  // НОВЫЙ БЛОК: Показываем экран загрузки, пока идет восстановление сессии
+  useEffect(() => {
+    if (!user) return;
+    let active = true;
+    const loadCartData = async () => {
+      setIsCartLoading(true);
+      try {
+        const data = await getCart();
+        if (active) updateCartState(data);
+      } catch (err) {
+        console.error("Не удалось загрузить корзину", err);
+        if (active) updateCartState(null);
+      } finally {
+        if (active) setIsCartLoading(false);
+      }
+    };
+    loadCartData();
+    return () => {
+      active = false;
+    };
+  }, [user, updateCartState]);
+
   if (isRestoringSession) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -148,7 +185,6 @@ function App() {
     );
   }
 
-  // Эта проверка остается на случай, если сессия восстановлена, но профиль еще грузится
   if (isUserLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -157,7 +193,6 @@ function App() {
     );
   }
 
-  // Если все загрузки завершены и пользователя нет, показываем лендинг или страницу входа
   if (!user) {
     if (showLanding) {
       return <LandingPage onGetStarted={() => setShowLanding(false)} />;
@@ -179,33 +214,78 @@ function App() {
   };
 
   const navigateBack = () => {
-    // Clear selected product when navigating back from product detail page
     if (route === "product") {
       setSelectedProduct(null);
     }
     setRoute(previousRoute);
   };
 
-  // Removed unused navigateToFYP helper to avoid linter warning
 
-  const handleAddToCart = (product, quantity = 1) => {
-    setCart((prev) => {
-      const existing = prev.find((i) => i.productId === product.id);
-      if (existing) {
-        return prev.map((i) => (i.productId === product.id ? { ...i, qty: i.qty + quantity } : i));
-      }
-      return [...prev, { productId: product.id, qty: quantity }];
+  const handleAddToCart = async (product, quantity = 1) => {
+    if (!product?.id) return;
+
+    setProducts((prev) => {
+      const index = prev.findIndex((p) => p.id === product.id);
+      if (index === -1) return [...prev, product];
+      const next = [...prev];
+      next[index] = { ...next[index], ...product };
+      return next;
     });
+
+    setIsCartUpdating(true);
+    try {
+      const updated = await addCartItem({ productId: product.id, quantity });
+      updateCartState(updated);
+    } catch (err) {
+      console.error("Не удалось добавить товар в корзину", err);
+    } finally {
+      setIsCartUpdating(false);
+    }
   };
 
-  const handleCheckout = () => {
-    if (cart.length === 0) return;
-    const created = createOrdersFromCart(cart, productsById);
+  const handleUpdateCartLine = async (itemId, quantity) => {
+    if (!itemId) return;
+    setIsCartUpdating(true);
+    try {
+      const updated = await updateCartItem({ itemId, quantity });
+      updateCartState(updated);
+    } catch (err) {
+      console.error("Не удалось изменить количество в корзине", err);
+    } finally {
+      setIsCartUpdating(false);
+    }
+  };
+
+  const handleRemoveCartLine = async (itemId) => {
+    if (!itemId) return;
+    setIsCartUpdating(true);
+    try {
+      const updated = await removeCartItem(itemId);
+      updateCartState(updated);
+    } catch (err) {
+      console.error("Не удалось удалить товар из корзины", err);
+    } finally {
+      setIsCartUpdating(false);
+    }
+  };
+
+  const handleCheckout = async () => {
+    if (!cart.items.length) return;
+    const created = createOrdersFromCart(cart.items, productsById);
     if (!created.length) return;
     setOrders((prev) => [...created, ...prev]);
-    setCart([]);
     setActiveOrderId(created[0].id);
     setRoute("order");
+    setIsCartUpdating(true);
+    try {
+      const cleared = await clearCart();
+      updateCartState(cleared);
+    } catch (err) {
+      console.error("Не удалось очистить корзину после оформления", err);
+      updateCartState(null);
+    } finally {
+      setIsCartUpdating(false);
+    }
   };
 
   const sendChatMessage = (orderId, author, text) => {
@@ -258,7 +338,7 @@ function App() {
             route={route}
             setRoute={setRoute}
             role={role}
-            cartCount={cart.reduce((a, b) => a + b.qty, 0)}
+            cartCount={cart?.total_items ?? 0}
             isWorkshop={buyerType === "workshop"}
             showSupplierTab={role === "supplier"}
             onLogout={handleLogout}
@@ -297,7 +377,14 @@ function App() {
           />
         )}
         {route === "cart" && (
-          <CartPage cart={cart} productsById={productsById} setCart={setCart} onCheckout={handleCheckout} />
+          <CartPage
+            cart={cart}
+            isLoading={isCartLoading}
+            isMutating={isCartUpdating}
+            onUpdateQuantity={handleUpdateCartLine}
+            onRemoveItem={handleRemoveCartLine}
+            onCheckout={handleCheckout}
+          />
         )}
         {route === "chat" && role !== "supplier" && <ChatPage role={role} />}
         {route === "supplier:chat" && <SupplierChatPage />}
