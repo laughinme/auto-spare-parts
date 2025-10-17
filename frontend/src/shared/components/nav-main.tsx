@@ -1,3 +1,4 @@
+import type { ComponentType, SVGProps } from "react"
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -7,14 +8,13 @@ import {
   SidebarMenuItem,
 } from "@/shared/components/ui/sidebar"
 import { NavLink, useLocation } from "react-router-dom"
-import type { Icon } from "@tabler/icons-react"
 
 export type NavSection = {
   label: string
   items: {
     title: string
     path: string
-    icon?: Icon
+    icon?: ComponentType<SVGProps<SVGSVGElement>>
   }[]
 }
 

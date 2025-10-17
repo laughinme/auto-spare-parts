@@ -1,3 +1,12 @@
+import {
+  BackpackIcon,
+  BarChartIcon,
+  BoxIcon,
+  CardStackIcon,
+  ClipboardIcon,
+  StarIcon,
+} from "@radix-ui/react-icons"
+import FypPage from "@/pages/mainpages/fyp"
 import SupplierMain from "@/pages/mainpages/supplierMain"
 import type { NavSection } from "@/shared/components/nav-main"
 
@@ -27,18 +36,46 @@ export const ROUTE_SECTIONS: NavSection[] = [
   {
     label: "Buyer",
     items: [
-      { title: "FYP", path: ROUTE_PATHS.buyer.fyp },
-      { title: "Cart", path: ROUTE_PATHS.buyer.cart },
-      { title: "Garage", path: ROUTE_PATHS.buyer.garage },
-      { title: "My orders", path: ROUTE_PATHS.buyer.orders },
+      {
+        title: "FYP",
+        path: ROUTE_PATHS.buyer.fyp,
+        icon: StarIcon,
+      },
+      {
+        title: "Cart",
+        path: ROUTE_PATHS.buyer.cart,
+        icon: BackpackIcon,
+      },
+      {
+        title: "Garage",
+        path: ROUTE_PATHS.buyer.garage,
+        icon: BoxIcon,
+      },
+      {
+        title: "My orders",
+        path: ROUTE_PATHS.buyer.orders,
+        icon: ClipboardIcon,
+      },
     ],
   },
   {
     label: "Supplier",
     items: [
-      { title: "Dashboard", path: ROUTE_PATHS.supplier.dashboard },
-      { title: "My products", path: ROUTE_PATHS.supplier.products },
-      { title: "My orders", path: ROUTE_PATHS.supplier.orders },
+      {
+        title: "Dashboard",
+        path: ROUTE_PATHS.supplier.dashboard,
+        icon: BarChartIcon,
+      },
+      {
+        title: "My products",
+        path: ROUTE_PATHS.supplier.products,
+        icon: CardStackIcon,
+      },
+      {
+        title: "My orders",
+        path: ROUTE_PATHS.supplier.orders,
+        icon: ClipboardIcon,
+      },
     ],
   },
 ] as const
@@ -50,7 +87,7 @@ export const PROTECTED_ROUTES = [
   },
   {
     path: ROUTE_PATHS.buyer.fyp,
-    element: <PlaceholderPage title="FYP" />,
+    element: <FypPage />,
   },
   {
     path: ROUTE_PATHS.buyer.cart,
