@@ -1,3 +1,4 @@
+import { type ReactNode, useCallback, useState } from "react"
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom"
 
 import { useAuth } from "@/app/providers/auth/useAuth"
@@ -14,6 +15,10 @@ type ProtectedLayoutProps = {
   user: AuthUser
 }
 
+export type ProtectedOutletContext = {
+  setHeaderSearch: (node: ReactNode) => void
+}
+
 function ProtectedLayout({ user }: ProtectedLayoutProps) {
   const email = user.email ?? ""
   const rawName =
@@ -27,15 +32,22 @@ function ProtectedLayout({ user }: ProtectedLayoutProps) {
     email,
     avatar: "/avatars/shadcn.jpg",
   }
+  const [headerSearch, setHeaderSearch] = useState<ReactNode>(null)
+
+  const handleSetHeaderSearch = useCallback((node: ReactNode) => {
+    setHeaderSearch(node)
+  }, [])
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <SiteHeader
         sections={ROUTE_SECTIONS}
         user={headerUser}
         homePath={ROUTE_PATHS.supplier.dashboard}
+        searchSlot={headerSearch}
       />
       <main className="flex flex-1 flex-col">
-        <Outlet />
+        <Outlet context={{ setHeaderSearch: handleSetHeaderSearch }} />
       </main>
     </div>
   )

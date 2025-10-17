@@ -7,6 +7,7 @@ export const toProduct = (dto: ProductDto): Product => ({
   price: Number(dto.price),
   imageUrl: dto.media?.[0]?.url,
   condition: dto.condition,
+  currency: dto.currency ?? undefined,
 });
 
 export const toProductFeed = (resp: CursorPageDto<ProductDto>): ProductFeed => ({

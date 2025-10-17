@@ -1,22 +1,48 @@
-import { useEffect, useMemo, useRef } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useInfiniteQuery } from "@tanstack/react-query"
+import { useOutletContext } from "react-router-dom"
+import { Search, SlidersHorizontal } from "lucide-react"
 
+import type { ProtectedOutletContext } from "@/app/App"
 import { toProductFeed } from "@/entities/product/model/adapters"
 import { ProductCard } from "@/entities/product/ui/ProductCard"
+import { ProductFiltersForm } from "@/features/auth/product-filters/ui/ProductFiltersForm"
+import type { FilterState } from "@/features/auth/product-filters/model/types"
+import { buildParams } from "@/features/auth/product-filters/model/buildParams"
 import { Button } from "@/shared/components/ui/button"
 import {
   Card,
   CardContent,
   CardFooter,
 } from "@/shared/components/ui/card"
+import { Input } from "@/shared/components/ui/input"
 import { Skeleton } from "@/shared/components/ui/skeleton"
-import { getProductsFeed } from "@/shared/api/products"
+import { getProductsCatalog } from "@/shared/api/products"
 
-const PAGE_SIZE = 12
-const INITIAL_SKELETON_ITEMS = 8
-const LOADING_MORE_SKELETON_ITEMS = 3
+const CATALOG_PAGE_SIZE = 20
+
+const createDefaultFilters = (): FilterState => ({
+  q: "",
+  make_id: null,
+  condition: null,
+  originality: null,
+  price_min: "",
+  price_max: "",
+})
 
 export function FeedProducts() {
+  const { setHeaderSearch } = useOutletContext<ProtectedOutletContext>()
+
+  const [draftFilters, setDraftFilters] = useState<FilterState>(createDefaultFilters)
+  const [appliedFilters, setAppliedFilters] = useState<FilterState>(createDefaultFilters)
+  const [areFiltersVisible, setFiltersVisible] = useState(true)
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const queryParams = useMemo(
+    () => buildParams(appliedFilters),
+    [appliedFilters]
+  )
+
   const {
     data,
     fetchNextPage,
@@ -26,11 +52,11 @@ export function FeedProducts() {
     isLoading,
     refetch,
   } = useInfiniteQuery({
-    queryKey: ["products", "feed"],
+    queryKey: ["products", "catalog", queryParams],
     initialPageParam: undefined as string | undefined,
     queryFn: async ({ pageParam }) => {
-      const response = await getProductsFeed({
-        limit: PAGE_SIZE,
+      const response = await getProductsCatalog({
+        ...queryParams,
         cursor: pageParam,
       })
 
@@ -44,7 +70,64 @@ export function FeedProducts() {
     [data]
   )
 
+  const currentPageSize = queryParams.limit ?? CATALOG_PAGE_SIZE
+  const initialSkeletonCount = Math.max(4, Math.min(12, currentPageSize))
+  const loadingMoreSkeletonCount = Math.max(2, Math.min(6, Math.ceil(currentPageSize / 4)))
+
   const loaderRef = useRef<HTMLDivElement | null>(null)
+
+  const handleFiltersChange = useCallback((patch: Partial<FilterState>) => {
+    setDraftFilters((prev) => {
+      const nextDraft = {
+        ...prev,
+        ...patch,
+      }
+
+      if ("q" in patch) {
+        if (searchDebounceRef.current) {
+          clearTimeout(searchDebounceRef.current)
+        }
+        searchDebounceRef.current = setTimeout(() => {
+          setAppliedFilters((prevApplied) => {
+            const nextApplied = {
+              ...nextDraft,
+            }
+            const isSame =
+              JSON.stringify(prevApplied ?? {}) === JSON.stringify(nextApplied ?? {})
+            return isSame ? prevApplied : nextApplied
+          })
+        }, 350)
+      }
+
+      return nextDraft
+    })
+  }, [])
+
+  const handleApply = useCallback(() => {
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current)
+      searchDebounceRef.current = null
+    }
+    setAppliedFilters((prev) => {
+      const next = {
+        ...draftFilters,
+      }
+      const isSame =
+        JSON.stringify(prev ?? {}) === JSON.stringify(next ?? {})
+      return isSame ? prev : next
+    })
+  }, [draftFilters])
+
+  const handleReset = useCallback(() => {
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current)
+      searchDebounceRef.current = null
+    }
+    const resetDraft = createDefaultFilters()
+    const resetApplied = createDefaultFilters()
+    setDraftFilters(resetDraft)
+    setAppliedFilters(resetApplied)
+  }, [])
 
   useEffect(() => {
     if (!hasNextPage) {
@@ -77,17 +160,88 @@ export function FeedProducts() {
   const isEmpty = !isLoading && products.length === 0 && !isError
 
   const skeletonCount = isInitialLoading
-    ? INITIAL_SKELETON_ITEMS
+    ? initialSkeletonCount
     : isFetchingNextPage
-      ? LOADING_MORE_SKELETON_ITEMS
+      ? loadingMoreSkeletonCount
       : 0
+
+  const searchNode = useMemo(() => {
+    const value = draftFilters.q ?? ""
+    return (
+      <form
+        className="flex items-center gap-2"
+        onSubmit={(event) => {
+          event.preventDefault()
+          handleApply()
+        }}
+      >
+        <div className="relative flex items-center">
+          <Search className="absolute left-3 size-4 text-muted-foreground" />
+          <Input
+            value={value}
+            onChange={(event) =>
+              handleFiltersChange({ q: event.target.value })
+            }
+            placeholder="Поиск по каталогу"
+            className="w-52 pl-9"
+            autoComplete="off"
+            spellCheck={false}
+          />
+        </div>
+        <Button
+          type="submit"
+          size="sm"
+          variant="secondary"
+          disabled={isLoading}
+        >
+          Найти
+        </Button>
+      </form>
+    )
+  }, [draftFilters.q, handleApply, handleFiltersChange, isLoading])
+
+  useEffect(() => {
+    setHeaderSearch(searchNode)
+  }, [searchNode, setHeaderSearch])
+
+  useEffect(
+    () => () => {
+      setHeaderSearch(null)
+    },
+    [setHeaderSearch]
+  )
 
   return (
     <div className="flex flex-col gap-6">
+      <div className="flex items-center justify-end">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => setFiltersVisible((prev) => !prev)}
+          className="gap-2"
+          aria-expanded={areFiltersVisible}
+        >
+          <SlidersHorizontal className="size-4" />
+          {areFiltersVisible ? "Скрыть фильтры" : "Показать фильтры"}
+        </Button>
+      </div>
+
+      {areFiltersVisible && (
+        <ProductFiltersForm
+          state={draftFilters}
+          onChange={handleFiltersChange}
+          onReset={handleReset}
+          onApply={handleApply}
+          disabled={isLoading || isFetchingNextPage}
+          isLoading={isLoading || isFetchingNextPage}
+        />
+      )}
+
       {isError && (
         <div className="flex items-start justify-between gap-4 rounded-xl border border-destructive/40 bg-destructive/10 px-5 py-4 text-sm text-destructive">
           <span className="leading-snug">
-            Не удалось загрузить подборку товаров. Попробуйте ещё раз.
+            Не удалось загрузить каталог товаров. Попробуйте ещё раз.
           </span>
           <Button
             variant="outline"

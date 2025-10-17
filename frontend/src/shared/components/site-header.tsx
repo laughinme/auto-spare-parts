@@ -1,3 +1,4 @@
+import type { ReactNode } from "react"
 import { IconInnerShadowTop } from "@tabler/icons-react"
 import { Link } from "react-router-dom"
 
@@ -13,12 +14,14 @@ type SiteHeaderProps = {
     avatar: string
   }
   homePath?: string
+  searchSlot?: ReactNode
 }
 
 export function SiteHeader({
   sections,
   user,
   homePath = "/",
+  searchSlot,
 }: SiteHeaderProps) {
   return (
     <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -30,7 +33,7 @@ export function SiteHeader({
           <IconInnerShadowTop className="size-5" />
           <span>AutoSpareParts</span>
         </Link>
-        <NavMain sections={sections} />
+        <NavMain sections={sections} searchSlot={searchSlot} />
         <div className="ml-auto flex items-center gap-3">
           <NavUser user={user} />
         </div>
