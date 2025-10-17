@@ -12,3 +12,4 @@ from .models import *
 from .garage import *
 # from .checkouts import *
 from .reviews import *
+from .listings import *
