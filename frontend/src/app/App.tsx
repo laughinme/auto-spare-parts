@@ -1,36 +1,43 @@
-import type { CSSProperties } from "react"
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom"
 
 import { useAuth } from "@/app/providers/auth/useAuth"
 import AuthPage from "@/pages/auth/ui/AuthPage"
 import { SiteHeader } from "@/shared/components/site-header"
-import {
-  SidebarInset,
-  SidebarProvider,
-} from "@/shared/components/ui/sidebar"
-import { AppSidebar } from "@/widgets/sidebar/app-sidebar"
+import type { AuthUser } from "@/entities/auth/model"
 import {
   PROTECTED_ROUTES,
   ROUTE_PATHS,
   ROUTE_SECTIONS,
 } from "./routes"
 
-function ProtectedLayout() {
-  const layoutStyle = {
-    "--sidebar-width": "calc(var(--spacing) * 72)",
-    "--header-height": "calc(var(--spacing) * 12)",
-  } as CSSProperties
+type ProtectedLayoutProps = {
+  user: AuthUser
+}
 
+function ProtectedLayout({ user }: ProtectedLayoutProps) {
+  const email = user.email ?? ""
+  const rawName =
+    "name" in user && typeof user.name === "string" ? user.name : undefined
+  const name =
+    rawName?.trim() ||
+    (email ? email.split("@")[0] : undefined) ||
+    "User"
+  const headerUser = {
+    name,
+    email,
+    avatar: "/avatars/shadcn.jpg",
+  }
   return (
-    <SidebarProvider style={layoutStyle}>
-      <AppSidebar sections={ROUTE_SECTIONS} variant="inset" />
-      <SidebarInset>
-        <SiteHeader />
-        <div className="flex flex-1 flex-col">
-          <Outlet />
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+    <div className="flex min-h-screen flex-col bg-background">
+      <SiteHeader
+        sections={ROUTE_SECTIONS}
+        user={headerUser}
+        homePath={ROUTE_PATHS.supplier.dashboard}
+      />
+      <main className="flex flex-1 flex-col">
+        <Outlet />
+      </main>
+    </div>
   )
 }
 
@@ -75,7 +82,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route element={<ProtectedLayout />}>
+        <Route element={<ProtectedLayout user={user} />}>
           <Route
             index
             element={

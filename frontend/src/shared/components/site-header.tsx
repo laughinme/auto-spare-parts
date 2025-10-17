@@ -1,18 +1,38 @@
-import { Button } from "@/shared/components/ui/button"
-import { Separator } from "@/shared/components/ui/separator"
-import { SidebarTrigger } from "@/shared/components/ui/sidebar"
+import { IconInnerShadowTop } from "@tabler/icons-react"
+import { Link } from "react-router-dom"
 
-export function SiteHeader() {
+import type { NavSection } from "@/shared/components/nav-main"
+import { NavMain } from "@/shared/components/nav-main"
+import { NavUser } from "@/shared/components/nav-user"
+
+type SiteHeaderProps = {
+  sections: NavSection[]
+  user: {
+    name: string
+    email: string
+    avatar: string
+  }
+  homePath?: string
+}
+
+export function SiteHeader({
+  sections,
+  user,
+  homePath = "/",
+}: SiteHeaderProps) {
   return (
-    <header className="flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
-      <div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
-        <SidebarTrigger className="-ml-1" />
-        <Separator
-          orientation="vertical"
-          className="mx-2 data-[orientation=vertical]:h-4"
-        />
-        <h1 className="text-base font-medium">Documents</h1>
-        <div className="ml-auto flex items-center gap-2">
+    <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="flex h-16 w-full items-center gap-4 px-4 sm:px-6">
+        <Link
+          to={homePath}
+          className="flex items-center gap-2 rounded-md px-2 py-1 text-base font-semibold tracking-tight text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+        >
+          <IconInnerShadowTop className="size-5" />
+          <span>AutoSpareParts</span>
+        </Link>
+        <NavMain sections={sections} />
+        <div className="ml-auto flex items-center gap-3">
+          <NavUser user={user} />
         </div>
       </div>
     </header>

@@ -1,13 +1,6 @@
 import type { ComponentType, SVGProps } from "react"
-import {
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from "@/shared/components/ui/sidebar"
-import { NavLink, useLocation } from "react-router-dom"
+import { NavLink } from "react-router-dom"
+import { cn } from "@/shared/lib/utils"
 
 export type NavSection = {
   label: string
@@ -23,36 +16,35 @@ export function NavMain({
 }: {
   sections: NavSection[]
 }) {
-  const location = useLocation()
-
   return (
-    <>
+    <nav className="flex flex-1 flex-wrap items-center gap-6">
       {sections.map((section) => (
-        <SidebarGroup key={section.label}>
-          <SidebarGroupLabel>{section.label}</SidebarGroupLabel>
-          <SidebarGroupContent className="flex flex-col gap-2">
-            <SidebarMenu>
-              {section.items.map((item) => {
-                const isActive = location.pathname === item.path
-                return (
-                  <SidebarMenuItem key={item.path}>
-                    <SidebarMenuButton
-                      asChild
-                      tooltip={item.title}
-                      isActive={isActive}
-                    >
-                      <NavLink to={item.path} end>
-                        {item.icon && <item.icon />}
-                        <span>{item.title}</span>
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        <div key={section.label} className="flex flex-wrap items-center gap-3">
+          <span className="text-[0.7rem] font-semibold uppercase tracking-wide text-muted-foreground">
+            {section.label}
+          </span>
+          <div className="flex flex-wrap items-center gap-1">
+            {section.items.map((item) => (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                end
+                className={({ isActive }) =>
+                  cn(
+                    "inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                    isActive
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  )
+                }
+              >
+                {item.icon && <item.icon className="size-4 shrink-0" />}
+                <span>{item.title}</span>
+              </NavLink>
+            ))}
+          </div>
+        </div>
       ))}
-    </>
+    </nav>
   )
 }
