@@ -9,6 +9,7 @@ import {
 import FypPage from "@/pages/mainpages/fyp"
 import SupplierMain from "@/pages/mainpages/supplierMain"
 import type { NavSection } from "@/shared/components/nav-main"
+import ProductDetailsPage from "@/pages/mainpages/ProductDetailsPage"
 
 const PlaceholderPage = ({ title }: { title: string }) => (
   <div className="flex flex-1 flex-col">
@@ -21,6 +22,7 @@ const PlaceholderPage = ({ title }: { title: string }) => (
 export const ROUTE_PATHS = {
   buyer: {
     fyp: "/buyer/fyp",
+    productDetails: "/buyer/products/:productId",
     cart: "/buyer/cart",
     garage: "/buyer/garage",
     orders: "/buyer/orders",
@@ -31,6 +33,9 @@ export const ROUTE_PATHS = {
     orders: "/supplier/orders",
   },
 } as const
+
+export const buildProductDetailsPath = (productId: string) =>
+  ROUTE_PATHS.buyer.productDetails.replace(":productId", productId)
 
 export const ROUTE_SECTIONS: NavSection[] = [
   {
@@ -88,6 +93,10 @@ export const PROTECTED_ROUTES = [
   {
     path: ROUTE_PATHS.buyer.fyp,
     element: <FypPage />,
+  },
+  {
+    path: ROUTE_PATHS.buyer.productDetails,
+    element: <ProductDetailsPage />,
   },
   {
     path: ROUTE_PATHS.buyer.cart,

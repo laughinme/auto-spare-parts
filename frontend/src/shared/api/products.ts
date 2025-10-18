@@ -11,7 +11,7 @@ export type ProductDto = {
   title: string
   price: number
   condition: string
-  currency?: string | null
+  currency?: string
   media: {
     id: string
     url: string
@@ -53,4 +53,13 @@ export async function getProductsCatalog(params: CatalogParams = {}) {
     { params: cleaned }         
   );
   return data;  
+}
+
+export type ProductDetailsDto = ProductDto & {
+  description: string;
+};
+
+export async function getProductDetails(productId:string){
+    const response = await apiProtected.get<ProductDetailsDto>(`/products/${productId}`);
+    return response.data;
 }
