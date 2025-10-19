@@ -1,4 +1,3 @@
-import axios from "axios";
 import apiProtected, { apiPublic } from "./axiosInstance";
 
 export type ProductsFeedParams = {

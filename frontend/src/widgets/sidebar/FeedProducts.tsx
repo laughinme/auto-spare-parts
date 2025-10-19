@@ -6,9 +6,9 @@ import { Search, SlidersHorizontal } from "lucide-react"
 import type { ProtectedOutletContext } from "@/app/App"
 import { toProductFeed } from "@/entities/product/model/adapters"
 import { ProductCard } from "@/entities/product/ui/ProductCard"
-import { ProductFiltersForm } from "@/features/auth/product-filters/ui/ProductFiltersForm"
-import type { FilterState } from "@/features/auth/product-filters/model/types"
-import { buildParams } from "@/features/auth/product-filters/model/buildParams"
+import { ProductFiltersForm } from "@/features/product-filters/ui/ProductFiltersForm"
+import type { FilterState } from "@/features//product-filters/model/types"
+import { buildParams } from "@/features//product-filters/model/buildParams"
 import { Button } from "@/shared/components/ui/button"
 import {
   Card,

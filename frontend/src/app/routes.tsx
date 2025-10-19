@@ -10,6 +10,7 @@ import FypPage from "@/pages/mainpages/fyp"
 import SupplierMain from "@/pages/mainpages/supplierMain"
 import type { NavSection } from "@/shared/components/nav-main"
 import ProductDetailsPage from "@/pages/mainpages/ProductDetailsPage"
+import CartPage from "@/pages/mainpages/CartPage"
 
 const PlaceholderPage = ({ title }: { title: string }) => (
   <div className="flex flex-1 flex-col">
@@ -100,7 +101,7 @@ export const PROTECTED_ROUTES = [
   },
   {
     path: ROUTE_PATHS.buyer.cart,
-    element: <PlaceholderPage title="Cart" />,
+    element: <CartPage />,
   },
   {
     path: ROUTE_PATHS.buyer.garage,

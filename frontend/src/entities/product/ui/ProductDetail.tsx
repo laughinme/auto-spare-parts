@@ -70,9 +70,6 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                   {conditionLabel}
                 </Badge>
               )}
-              <span className="text-xs text-muted-foreground">
-                ID: {product.id}
-              </span>
             </div>
             <CardTitle className="text-2xl font-bold leading-tight">
               {product.title}
