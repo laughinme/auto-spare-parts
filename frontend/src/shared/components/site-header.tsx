@@ -15,6 +15,7 @@ type SiteHeaderProps = {
   }
   homePath?: string
   searchSlot?: ReactNode
+  navItemCounters?: Record<string, number>
 }
 
 export function SiteHeader({
@@ -22,6 +23,7 @@ export function SiteHeader({
   user,
   homePath = "/",
   searchSlot,
+  navItemCounters,
 }: SiteHeaderProps) {
   return (
     <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -33,7 +35,11 @@ export function SiteHeader({
           <IconInnerShadowTop className="size-5" />
           <span>AutoSpareParts</span>
         </Link>
-        <NavMain sections={sections} searchSlot={searchSlot} />
+        <NavMain
+          sections={sections}
+          searchSlot={searchSlot}
+          itemCounters={navItemCounters}
+        />
         <div className="ml-auto flex items-center gap-3">
           <NavUser user={user} />
         </div>

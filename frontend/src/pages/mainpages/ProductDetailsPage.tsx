@@ -2,11 +2,11 @@ import { useNavigate, useParams } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import { ArrowLeft, RefreshCcw } from "lucide-react"
 
-import { ProductDetails } from "@/entities/product/ui/ProductDetail"
 import { toProductDetails } from "@/entities/product/model/adapters"
 import { getProductDetails } from "@/shared/api/products"
 import { Button } from "@/shared/components/ui/button"
 import { Skeleton } from "@/shared/components/ui/skeleton"
+import { ProductDetailsWidget } from "@/widgets/product/ProductDetailsWidget"
 
 export default function ProductDetailsPage() {
   const { productId } = useParams<{ productId: string }>()
@@ -64,7 +64,7 @@ export default function ProductDetailsPage() {
         )}
 
         {!isLoading && !isError && data && (
-          <ProductDetails product={data} />
+          <ProductDetailsWidget product={data} />
         )}
       </div>
     </div>

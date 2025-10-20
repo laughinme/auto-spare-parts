@@ -1,6 +1,8 @@
 import type { ComponentType, ReactNode, SVGProps } from "react"
 import { NavLink } from "react-router-dom"
+
 import { cn } from "@/shared/lib/utils"
+import { Badge } from "@/shared/components/ui/badge"
 
 export type NavSection = {
   label: string
@@ -14,9 +16,11 @@ export type NavSection = {
 export function NavMain({
   sections,
   searchSlot,
+  itemCounters,
 }: {
   sections: NavSection[]
   searchSlot?: ReactNode
+  itemCounters?: Record<string, number>
 }) {
   const nodes: ReactNode[] = []
 
@@ -45,7 +49,17 @@ export function NavMain({
               }
             >
               {item.icon && <item.icon className="size-4 shrink-0" />}
-              <span>{item.title}</span>
+              <span className="flex items-center gap-1">
+                {item.title}
+                {itemCounters?.[item.path] && itemCounters[item.path]! > 0 ? (
+                  <Badge
+                    variant="secondary"
+                    className="px-1.5 py-0 text-[0.65rem] font-semibold leading-none"
+                  >
+                    {itemCounters[item.path]}
+                  </Badge>
+                ) : null}
+              </span>
             </NavLink>
           ))}
         </div>

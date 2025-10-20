@@ -1,4 +1,4 @@
-import { ImageIcon } from "lucide-react"
+import { ImageIcon, Loader2 } from "lucide-react"
 
 import type { ProductDetail } from "@/entities/product/model/types"
 import { Badge } from "@/shared/components/ui/badge"
@@ -13,9 +13,15 @@ import { Separator } from "@/shared/components/ui/separator"
 
 type ProductDetailsProps = {
   product: ProductDetail
+  onAddToCart?: () => void
+  isAddToCartLoading?: boolean
 }
 
-export function ProductDetails({ product }: ProductDetailsProps) {
+export function ProductDetails({
+  product,
+  onAddToCart,
+  isAddToCartLoading = false,
+}: ProductDetailsProps) {
   const priceLabel = formatPrice(product.price, product.currency)
   const conditionLabel = formatCondition(product.condition)
 
@@ -83,7 +89,14 @@ export function ProductDetails({ product }: ProductDetailsProps) {
               <p className="text-3xl font-semibold">{priceLabel}</p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
-              <Button className="flex-1">
+              <Button
+                className="flex-1"
+                onClick={onAddToCart}
+                disabled={!onAddToCart || isAddToCartLoading}
+              >
+                {isAddToCartLoading && (
+                  <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
+                )}
                 Добавить в корзину
               </Button>
               <Button variant="outline" className="flex-1">

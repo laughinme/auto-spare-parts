@@ -31,6 +31,16 @@ export type CartDto = {
 }
 
 export async function getCart(params: GetCartParams = {}) {
-  const response = await apiProtected.get<CartDto>("/cart/", { params })
-  return response.data
+  const response = await apiProtected.get<CartDto>("/cart/", { params });
+  return response.data;
+}
+
+export type AddCartItemBody = {
+    product_id: string
+    quantity: number
+}
+
+export async function AddToCart(body: AddCartItemBody) {
+    const response = await apiProtected.post<CartDto>('cart/items/', body );
+    return response.data;
 }

@@ -5,6 +5,7 @@ import { useAuth } from "@/app/providers/auth/useAuth"
 import AuthPage from "@/pages/auth/ui/AuthPage"
 import { SiteHeader } from "@/shared/components/site-header"
 import type { AuthUser } from "@/entities/auth/model"
+import { useCartQuery } from "@/entities/cart/model/useCartQuery"
 import {
   PROTECTED_ROUTES,
   ROUTE_PATHS,
@@ -33,6 +34,10 @@ function ProtectedLayout({ user }: ProtectedLayoutProps) {
     avatar: "/avatars/shadcn.jpg",
   }
   const [headerSearch, setHeaderSearch] = useState<ReactNode>(null)
+  const { data: cart } = useCartQuery()
+  const cartCount = cart?.totalItems ?? 0
+  const navItemCounters =
+    cartCount > 0 ? { [ROUTE_PATHS.buyer.cart]: cartCount } : undefined
 
   const handleSetHeaderSearch = useCallback((node: ReactNode) => {
     setHeaderSearch(node)
@@ -45,6 +50,7 @@ function ProtectedLayout({ user }: ProtectedLayoutProps) {
         user={headerUser}
         homePath={ROUTE_PATHS.supplier.dashboard}
         searchSlot={headerSearch}
+        navItemCounters={navItemCounters}
       />
       <main className="flex flex-1 flex-col">
         <Outlet context={{ setHeaderSearch: handleSetHeaderSearch }} />
