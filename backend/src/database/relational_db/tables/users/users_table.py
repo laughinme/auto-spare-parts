@@ -1,7 +1,7 @@
 from uuid import UUID, uuid4
-from datetime import datetime, date
+from datetime import datetime
 from sqlalchemy.orm import mapped_column, Mapped, relationship
-from sqlalchemy import ForeignKey, Uuid, String, Boolean, DateTime, false, Text, Index
+from sqlalchemy import ForeignKey, Uuid, String, Boolean, DateTime, Text, Index, Integer
 from sqlalchemy.dialects.postgresql import ENUM
 
 from ..table_base import Base
@@ -27,10 +27,11 @@ class User(TimestampMixin, Base):
     )
     
     # Service
-    # role: Mapped[Role] = mapped_column(Enum(Role), nullable=False, default=Role.GUEST)
-    is_admin: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default=false())
     is_onboarded: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     banned: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    auth_version: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=1, server_default="1"
+    )
 
     __table_args__ = (
         # GIN trigram indexes for fast text search
@@ -50,3 +51,23 @@ class User(TimestampMixin, Base):
     
     organization: Mapped["Organization"] = relationship(back_populates="owner", lazy="selectin") # type: ignore
     garage: Mapped[list["GarageVehicle"]] = relationship(back_populates="user", lazy="selectin") # type: ignore
+    roles: Mapped[list["Role"]] = relationship(  # pyright: ignore[reportUndefinedVariable]
+        "Role",
+        secondary="user_roles",
+        back_populates="users",
+        lazy="selectin",
+    )
+    
+    @property
+    def role_slugs(self) -> list[str]:
+        return [role.slug for role in self.roles]
+
+    def has_roles(self, *slugs: str) -> bool:
+        if not slugs:
+            return True
+        owned = set(self.role_slugs)
+        return all(slug in owned for slug in slugs)
+
+
+    def bump_auth_version(self) -> None:
+        self.auth_version = (self.auth_version or 0) + 1

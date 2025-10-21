@@ -1,10 +1,12 @@
 from uuid import UUID
-from sqlalchemy import select, or_
+from sqlalchemy import select, or_, func
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.dialects.postgresql import insert
 
 from .organizations_table import Organization
 from .org_memberships_table import OrgMembership
 from domain.organizations.enums import KycStatus
+from domain.organizations.enums import MembershipRole
 
 
 class OrganizationsInterface:
@@ -41,7 +43,8 @@ class OrganizationsInterface:
 
     async def get_by_stripe_account_id(self, stripe_account_id: str) -> Organization | None:
         return await self.session.scalar(
-            select(Organization).where(Organization.stripe_account_id == stripe_account_id)
+            select(Organization)
+            .where(Organization.stripe_account_id == stripe_account_id)
         )
 
     async def update_fields(self, org_id: UUID | str, **updates) -> None:
@@ -58,3 +61,23 @@ class OrganizationsInterface:
             return
         org.kyc_status = KycStatus.PENDING
         await self.session.flush()
+
+    async def ensure_membership(
+        self,
+        org_id: UUID | str,
+        user_id: UUID | str,
+        role: MembershipRole,
+    ) -> None:
+        stmt = insert(OrgMembership).values(
+            org_id=org_id,
+            user_id=user_id,
+            role=role,
+            accepted_at=func.now(),
+        )
+
+        stmt = stmt.on_conflict_do_update(
+            index_elements=[OrgMembership.__table__.c.org_id, OrgMembership.__table__.c.user_id],
+            set_={"role": role},
+        )
+
+        await self.session.execute(stmt)
