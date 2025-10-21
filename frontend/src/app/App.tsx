@@ -5,7 +5,7 @@ import { useAuth } from "@/app/providers/auth/useAuth"
 import AuthPage from "@/pages/auth/ui/AuthPage"
 import { SiteHeader } from "@/shared/components/site-header"
 import type { AuthUser } from "@/entities/auth/model"
-import { useGetCartSummary } from "@/hooks/useGetCartSummary"
+import { useGetCartSummary } from "@/hooks/cart/useGetCartSummary"
 import {
   PROTECTED_ROUTES,
   ROUTE_PATHS,

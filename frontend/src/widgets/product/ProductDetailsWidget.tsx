@@ -1,8 +1,8 @@
 import type { ProductDetail } from "@/entities/product/model/types"
 import { ProductDetails } from "@/entities/product/ui/ProductDetail"
-import { useAddToCart } from "@/hooks/useAddToCart"
-import { useUpdateCart } from "@/hooks/useUpdateCart"
-import { useRemoveCartItem } from "@/hooks/useRemoveCartItem"
+import { useAddToCart } from "@/hooks/cart/useAddToCart"
+import { useUpdateCart } from "@/hooks/cart/useUpdateCart"
+import { useRemoveCartItem } from "@/hooks/cart/useRemoveCartItem"
 import { useCartQuery } from "@/entities/cart/model/useCartQuery"
 
 type ProductDetailsWidgetProps = {

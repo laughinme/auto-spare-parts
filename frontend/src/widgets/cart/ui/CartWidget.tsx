@@ -6,8 +6,8 @@ import { ReloadIcon, TrashIcon } from "@radix-ui/react-icons";
 import { ROUTE_PATHS, buildProductDetailsPath } from "@/app/routes";
 import { useCartQuery } from "@/entities/cart/model/useCartQuery";
 import { CartItemCard } from "@/entities/cart/ui/CartItemCard";
-import { useRemoveCartItem } from "@/hooks/useRemoveCartItem";
-import { useClearCart } from "@/hooks/useClearCart";
+import { useRemoveCartItem } from "@/hooks/cart/useRemoveCartItem";
+import { useClearCart } from "@/hooks/cart/useClearCart";
 import { Button } from "@/shared/components/ui/button";
 import {
   Card,
