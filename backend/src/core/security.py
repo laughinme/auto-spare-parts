@@ -1,12 +1,10 @@
 import jwt
 import json
-from uuid import UUID
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-
-from core.rbac import PERMISSIONS_CACHE_TTL_SECONDS, permissions_cache_key, ROLES_CACHE_TTL_SECONDS, roles_cache_key
+from core.rbac import ROLES_CACHE_TTL_SECONDS, roles_cache_key
 from database.redis import CacheRepo, get_redis
 from database.relational_db import User
 from service.auth import TokenService, get_token_service
@@ -46,7 +44,7 @@ async def auth_user(
     if payload is None:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Bad access token passed")
 
-    user_id = payload["sub"]
+    user_id = str(payload["sub"])
     user = await user_svc.get_user(user_id)
     if user is None:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Not Authorized")
@@ -71,13 +69,12 @@ async def load_cached_roles(user: User) -> list[str]:
 
     roles = await cache_repo.get(roles_cache_key(user.id, user.auth_version))
     
-    if roles is None:
-        roles_slugs = user.role_slugs
-    else:
-        roles_slugs = json.loads(roles)
-        
-        await cache_repo.set(roles_cache_key(user.id, user.auth_version), json.dumps(roles_slugs), ttl=ROLES_CACHE_TTL_SECONDS)
-        
+    if roles is not None:
+        return json.loads(roles)
+    
+    roles_slugs = user.role_slugs
+    await cache_repo.set(roles_cache_key(user.id, user.auth_version), json.dumps(roles_slugs), ttl=ROLES_CACHE_TTL_SECONDS)
+
     return roles_slugs
 
 

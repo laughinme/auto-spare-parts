@@ -63,7 +63,7 @@ class CredentialsService:
         except IntegrityError as e:
             raise AlreadyExists()
         
-        access, refresh, csrf = await self.token_service.issue_tokens(user.id, src)
+        access, refresh, csrf = await self.token_service.issue_tokens(user, src)
         return access, refresh, csrf
     
     
@@ -81,7 +81,7 @@ class CredentialsService:
         if await needs_rehash(user.password_hash):
             user.password_hash = await self._hash_password(payload.password)
         
-        access, refresh, csrf = await self.token_service.issue_tokens(user.id, src)
+        access, refresh, csrf = await self.token_service.issue_tokens(user, src)
         return access, refresh, csrf
     
     
