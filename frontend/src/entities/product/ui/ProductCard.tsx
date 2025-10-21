@@ -1,9 +1,8 @@
-import { ImageIcon, Loader2 } from "lucide-react"
+import { ImageIcon, Loader2, Minus, Plus } from "lucide-react"
 import { Link } from "react-router-dom"
 
 import { buildProductDetailsPath } from "@/app/routes"
 import type { Product } from "@/entities/product/model/types"
-import { useAddToCart } from "@/hooks/useAddToCart"
 import { Badge } from "@/shared/components/ui/badge"
 import { Button } from "@/shared/components/ui/button"
 import {
@@ -14,11 +13,21 @@ import {
 
 type ProductCardProps = {
   product: Product
+  quantity?: number
+  onAddToCart?: () => void
+  onIncrement?: () => void
+  onDecrement?: () => void
+  isMutating?: boolean
 }
 
-export function ProductCard({ product }: ProductCardProps) {
-  const { mutate: addToCart, isPending } = useAddToCart()
-
+export function ProductCard({
+  product,
+  quantity = 0,
+  onAddToCart,
+  onIncrement,
+  onDecrement,
+  isMutating = false,
+}: ProductCardProps) {
   const priceLabel = (() => {
     if (!Number.isFinite(product.price)) {
       return "—"
@@ -39,12 +48,10 @@ export function ProductCard({ product }: ProductCardProps) {
     ? product.condition.replace(/_/g, " ")
     : null
 
-  const handleAddToCart = () => {
-    addToCart({
-      product_id: product.id,
-      quantity: 1,
-    })
-  }
+  const isInCart = quantity > 0
+  const isMinusDisabled = isMutating || quantity <= 0 || !onDecrement
+  const isPlusDisabled = isMutating || !onIncrement
+  const isAddDisabled = isMutating || !onAddToCart
 
   return (
     <Card className="group overflow-hidden transition-shadow hover:shadow-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background">
@@ -92,18 +99,52 @@ export function ProductCard({ product }: ProductCardProps) {
             {priceLabel}
           </span>
         </div>
-        <Button
-          type="button"
-          size="sm"
-          className="shrink-0"
-          onClick={handleAddToCart}
-          disabled={isPending}
-        >
-          {isPending && (
-            <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
-          )}
-          В корзину
-        </Button>
+        {isInCart ? (
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="size-8"
+              onClick={onDecrement}
+              disabled={isMinusDisabled}
+              aria-label="Уменьшить количество"
+            >
+              <Minus className="size-4" aria-hidden />
+            </Button>
+            <div className="flex h-9 w-12 items-center justify-center rounded-md border bg-muted text-sm font-semibold">
+              {isMutating ? (
+                <Loader2 className="size-4 animate-spin" aria-hidden />
+              ) : (
+                quantity
+              )}
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="size-8"
+              onClick={onIncrement}
+              disabled={isPlusDisabled}
+              aria-label="Увеличить количество"
+            >
+              <Plus className="size-4" aria-hidden />
+            </Button>
+          </div>
+        ) : (
+          <Button
+            type="button"
+            size="sm"
+            className="shrink-0"
+            onClick={onAddToCart}
+            disabled={isAddDisabled}
+          >
+            {isMutating && (
+              <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
+            )}
+            В корзину
+          </Button>
+        )}
       </CardFooter>
     </Card>
   )

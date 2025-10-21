@@ -1,15 +1,13 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import {
-  AlertTriangle,
-  Loader2,
-  Package2,
-  ShoppingCart,
-} from "lucide-react";
+import { AlertTriangle, Loader2, Package2, ShoppingCart } from "lucide-react";
+import { ReloadIcon, TrashIcon } from "@radix-ui/react-icons";
 
 import { ROUTE_PATHS, buildProductDetailsPath } from "@/app/routes";
 import { useCartQuery } from "@/entities/cart/model/useCartQuery";
 import { CartItemCard } from "@/entities/cart/ui/CartItemCard";
+import { useRemoveCartItem } from "@/hooks/useRemoveCartItem";
+import { useClearCart } from "@/hooks/useClearCart";
 import { Button } from "@/shared/components/ui/button";
 import {
   Card,
@@ -36,6 +34,8 @@ export function CartWidget() {
     isError,
     refetch,
   } = useCartQuery({ includeLocked: showLocked });
+  const removeMutation = useRemoveCartItem();
+  const clearMutation = useClearCart();
 
   const hasLockedItems =
     cart?.items.some((item) => item.status === "locked" || !item.product.allowCart) ??
@@ -116,22 +116,29 @@ export function CartWidget() {
 
     return (
       <div className="space-y-4">
-        {cart.items.map((item) => (
-          <CartItemCard
-            key={item.id}
-            item={item}
-            actions={
-              <Button asChild size="sm" variant="outline">
-                <Link to={buildProductDetailsPath(item.product.id)}>
-                  Подробнее
-                </Link>
-              </Button>
-            }
-          />
-        ))}
+        {cart.items.map((item) => {
+          const isRemoving =
+            removeMutation.isPending && removeMutation.variables === item.id;
+
+          return (
+            <CartItemCard
+              key={item.id}
+              item={item}
+              onRemove={() => removeMutation.mutate(item.id)}
+              isRemoving={isRemoving}
+              actions={
+                <Button asChild size="sm" variant="outline">
+                  <Link to={buildProductDetailsPath(item.product.id)}>
+                    Подробнее
+                  </Link>
+                </Button>
+              }
+            />
+          );
+        })}
       </div>
     );
-  }, [cart, isError, isLoading, refetch]);
+  }, [cart, isError, isLoading, refetch, removeMutation]);
 
   const checkoutDisabled =
     isLoading || !cart || cart.items.length === 0 || hasLockedItems;
@@ -150,17 +157,41 @@ export function CartWidget() {
             </CardDescription>
           </div>
           <CardAction>
-            <Label
-              htmlFor="cart-include-locked"
-              className="cursor-pointer rounded-md border bg-background/80 px-3 py-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground"
-            >
-              <Checkbox
-                id="cart-include-locked"
-                checked={showLocked}
-                onCheckedChange={(value) => setShowLocked(value === true)}
-              />
-              Показывать недоступные
-            </Label>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2 border-destructive/50 bg-destructive/10 text-xs text-destructive hover:bg-destructive/20"
+                onClick={() => clearMutation.mutate()}
+                disabled={
+                  clearMutation.isPending || !cart || cart.items.length === 0
+                }
+              >
+                {clearMutation.isPending ? (
+                  <>
+                    <ReloadIcon className="size-3.5 animate-spin" aria-hidden />
+                    Очистка…
+                  </>
+                ) : (
+                  <>
+                    <TrashIcon className="size-3.5" aria-hidden />
+                    Очистить
+                  </>
+                )}
+              </Button>
+              <Label
+                htmlFor="cart-include-locked"
+                className="cursor-pointer rounded-md border bg-background/80 px-3 py-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground"
+              >
+                <Checkbox
+                  id="cart-include-locked"
+                  checked={showLocked}
+                  onCheckedChange={(value) => setShowLocked(value === true)}
+                />
+                Показывать недоступные
+              </Label>
+            </div>
           </CardAction>
         </CardHeader>
         <CardContent className="space-y-4">

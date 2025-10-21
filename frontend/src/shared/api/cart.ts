@@ -36,11 +36,41 @@ export async function getCart(params: GetCartParams = {}) {
 }
 
 export type AddCartItemBody = {
-    product_id: string
-    quantity: number
+  product_id: string
+  quantity: number
 }
 
 export async function AddToCart(body: AddCartItemBody) {
-    const response = await apiProtected.post<CartDto>('cart/items/', body );
-    return response.data;
+  const response = await apiProtected.post<CartDto>('cart/items/', body );
+  return response.data;
+}
+
+export type UpdateCart = {
+  item_id: string
+  quantity: number
+}
+export async function updateCart({item_id, quantity}: UpdateCart) {
+  const response = await apiProtected.put<CartDto>(`/cart/items/${item_id}`, {quantity});
+  return response.data;
+}
+
+export type CartSummary = {
+  total_items: number
+  total_amount: string
+}
+
+export async function getCartSummary() {
+  const response = await apiProtected.get<CartSummary>('/cart/summary');
+  return response.data;
+}
+
+export async function removeCartItem(item_id: string) {
+  const response = await apiProtected.delete<CartDto>(`/cart/items/${item_id}`);
+  return response.data;
+}
+
+export async function clearCart(){
+  const response = await apiProtected.delete<CartDto>('/cart/');
+  return response.data;
+
 }

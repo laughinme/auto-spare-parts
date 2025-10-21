@@ -1,4 +1,5 @@
 import { ImageIcon, LockIcon } from "lucide-react";
+import { Cross2Icon, ReloadIcon } from "@radix-ui/react-icons";
 import type { ReactNode } from "react";
 
 import type { CartItem } from "@/entities/cart/model/types";
@@ -13,10 +14,11 @@ import { Separator } from "@/shared/components/ui/separator";
 type CartItemCardProps = {
   item: CartItem;
   onRemove?: () => void;
+  isRemoving?: boolean;
   actions?: ReactNode;
 };
 
-export function CartItemCard({ item, onRemove, actions }: CartItemCardProps) {
+export function CartItemCard({ item, onRemove, isRemoving, actions }: CartItemCardProps) {
   const {
     product: { title, partNumber, make, media, allowCart },
   } = item;
@@ -112,12 +114,23 @@ export function CartItemCard({ item, onRemove, actions }: CartItemCardProps) {
 
           {onRemove && (
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
-              className="mt-1 text-xs text-muted-foreground hover:text-destructive"
+              className="mt-1 flex items-center gap-1 border-destructive/50 bg-destructive/10 text-xs text-destructive hover:bg-destructive/20"
               onClick={onRemove}
+              disabled={isRemoving}
             >
-              Удалить
+              {isRemoving ? (
+                <>
+                  <ReloadIcon className="size-3.5 animate-spin" aria-hidden />
+                  Удаляем…
+                </>
+              ) : (
+                <>
+                  <Cross2Icon className="size-3.5" aria-hidden />
+                  Удалить
+                </>
+              )}
             </Button>
           )}
         </div>

@@ -5,7 +5,7 @@ import { useAuth } from "@/app/providers/auth/useAuth"
 import AuthPage from "@/pages/auth/ui/AuthPage"
 import { SiteHeader } from "@/shared/components/site-header"
 import type { AuthUser } from "@/entities/auth/model"
-import { useCartQuery } from "@/entities/cart/model/useCartQuery"
+import { useGetCartSummary } from "@/hooks/useGetCartSummary"
 import {
   PROTECTED_ROUTES,
   ROUTE_PATHS,
@@ -34,8 +34,8 @@ function ProtectedLayout({ user }: ProtectedLayoutProps) {
     avatar: "/avatars/shadcn.jpg",
   }
   const [headerSearch, setHeaderSearch] = useState<ReactNode>(null)
-  const { data: cart } = useCartQuery()
-  const cartCount = cart?.totalItems ?? 0
+  const { data: cartSummary } = useGetCartSummary()
+  const cartCount = cartSummary?.totalItems ?? 0
   const navItemCounters =
     cartCount > 0 ? { [ROUTE_PATHS.buyer.cart]: cartCount } : undefined
 

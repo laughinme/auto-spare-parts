@@ -6,6 +6,10 @@ import { Search, SlidersHorizontal } from "lucide-react"
 import type { ProtectedOutletContext } from "@/app/App"
 import { toProductFeed } from "@/entities/product/model/adapters"
 import { ProductCard } from "@/entities/product/ui/ProductCard"
+import { useCartQuery } from "@/entities/cart/model/useCartQuery"
+import { useAddToCart } from "@/hooks/useAddToCart"
+import { useUpdateCart } from "@/hooks/useUpdateCart"
+import { useRemoveCartItem } from "@/hooks/useRemoveCartItem"
 import { ProductFiltersForm } from "@/features/product-filters/ui/ProductFiltersForm"
 import type { FilterState } from "@/features//product-filters/model/types"
 import { buildParams } from "@/features//product-filters/model/buildParams"
@@ -37,6 +41,10 @@ export function FeedProducts() {
   const [appliedFilters, setAppliedFilters] = useState<FilterState>(createDefaultFilters)
   const [areFiltersVisible, setFiltersVisible] = useState(true)
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const { data: cart } = useCartQuery()
+  const addMutation = useAddToCart()
+  const updateMutation = useUpdateCart()
+  const removeMutation = useRemoveCartItem()
 
   const queryParams = useMemo(
     () => buildParams(appliedFilters),
@@ -254,9 +262,62 @@ export function FeedProducts() {
       )}
 
       <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-        {products.map((product) => (
-          <ProductCard key={product.id} product={product} />
-        ))}
+        {products.map((product) => {
+          const cartItem = cart?.items.find(
+            (item) => item.product.id === product.id
+          )
+          const quantity = cartItem?.quantity ?? 0
+          const isAddPending =
+            addMutation.isPending &&
+            addMutation.variables?.product_id === product.id
+          const isUpdatePending =
+            updateMutation.isPending &&
+            updateMutation.variables?.item_id === cartItem?.id
+          const isRemovePending =
+            removeMutation.isPending && removeMutation.variables === cartItem?.id
+          const isMutating = isAddPending || isUpdatePending || isRemovePending
+
+          return (
+            <ProductCard
+              key={product.id}
+              product={product}
+              quantity={quantity}
+              onAddToCart={() =>
+                addMutation.mutate({
+                  product_id: product.id,
+                  quantity: 1,
+                })
+              }
+              onIncrement={() => {
+                if (!cartItem) {
+                  addMutation.mutate({
+                    product_id: product.id,
+                    quantity: 1,
+                  })
+                  return
+                }
+                updateMutation.mutate({
+                  item_id: cartItem.id,
+                  quantity: cartItem.quantity + 1,
+                })
+              }}
+              onDecrement={() => {
+                if (!cartItem) {
+                  return
+                }
+                if (cartItem.quantity <= 1) {
+                  removeMutation.mutate(cartItem.id)
+                  return
+                }
+                updateMutation.mutate({
+                  item_id: cartItem.id,
+                  quantity: cartItem.quantity - 1,
+                })
+              }}
+              isMutating={isMutating}
+            />
+          )
+        })}
 
         {Array.from({ length: skeletonCount }).map((_, index) => (
           <ProductCardSkeleton key={`product-skeleton-${index}`} />

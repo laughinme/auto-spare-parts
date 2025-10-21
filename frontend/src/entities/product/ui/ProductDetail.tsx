@@ -1,4 +1,4 @@
-import { ImageIcon, Loader2 } from "lucide-react"
+import { ImageIcon, Loader2, Minus, Plus } from "lucide-react"
 
 import type { ProductDetail } from "@/entities/product/model/types"
 import { Badge } from "@/shared/components/ui/badge"
@@ -15,15 +15,27 @@ type ProductDetailsProps = {
   product: ProductDetail
   onAddToCart?: () => void
   isAddToCartLoading?: boolean
+  cartQuantity?: number
+  onIncrement?: () => void
+  onDecrement?: () => void
+  isCartUpdating?: boolean
 }
 
 export function ProductDetails({
   product,
   onAddToCart,
   isAddToCartLoading = false,
+  cartQuantity = 0,
+  onIncrement,
+  onDecrement,
+  isCartUpdating = false,
 }: ProductDetailsProps) {
   const priceLabel = formatPrice(product.price, product.currency)
   const conditionLabel = formatCondition(product.condition)
+  const isInCart = cartQuantity > 0
+  const isMinusDisabled = isCartUpdating || !onDecrement || cartQuantity <= 0
+  const isPlusDisabled = isCartUpdating || !onIncrement
+  const isAddDisabled = isAddToCartLoading || !onAddToCart
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
@@ -89,16 +101,48 @@ export function ProductDetails({
               <p className="text-3xl font-semibold">{priceLabel}</p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
-              <Button
-                className="flex-1"
-                onClick={onAddToCart}
-                disabled={!onAddToCart || isAddToCartLoading}
-              >
-                {isAddToCartLoading && (
-                  <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
-                )}
-                Добавить в корзину
-              </Button>
+              {isInCart ? (
+                <div className="flex flex-1 items-center justify-between gap-4 rounded-lg border bg-muted/20 px-4 py-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="size-10"
+                    onClick={onDecrement}
+                    disabled={isMinusDisabled}
+                    aria-label="Уменьшить количество"
+                  >
+                    <Minus className="size-5" aria-hidden />
+                  </Button>
+                  <div className="flex h-12 w-16 items-center justify-center rounded-md border bg-background text-lg font-semibold">
+                    {isCartUpdating ? (
+                      <Loader2 className="size-5 animate-spin" aria-hidden />
+                    ) : (
+                      cartQuantity
+                    )}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="size-10"
+                    onClick={onIncrement}
+                    disabled={isPlusDisabled}
+                    aria-label="Увеличить количество"
+                  >
+                    <Plus className="size-5" aria-hidden />
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  className="flex-1"
+                  onClick={onAddToCart}
+                  disabled={isAddDisabled}
+                >
+                  {isAddToCartLoading && (
+                    <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
+                  )}
+                  Добавить в корзину
+                </Button>
+              )}
               <Button variant="outline" className="flex-1">
                 Оставить отзыв
               </Button>
