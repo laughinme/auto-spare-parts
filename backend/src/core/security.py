@@ -35,30 +35,28 @@ async def extract_jti(request: Request) -> str:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Bad refresh token passed")
     return jti
 
-async def auth_user(
+async def parse_token(
     creds: Annotated[HTTPAuthorizationCredentials, Depends(security)],
     token_svc: Annotated[TokenService, Depends(get_token_service)],
-    user_svc: Annotated[UserService, Depends(get_user_service)],
-) -> User:
+) -> dict[str, int | str]:
     payload = await token_svc.verify_access(creds.credentials)
     if payload is None:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Bad access token passed")
+    
+    return payload
 
+async def auth_user(
+    payload: Annotated[dict[str, int | str], Depends(parse_token)],
+    svc: Annotated[UserService, Depends(get_user_service)],
+) -> User:
     user_id = str(payload["sub"])
-    user = await user_svc.get_user(user_id)
+    user = await svc.get_user(user_id)
     if user is None:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Not Authorized")
     if user.banned:
         raise HTTPException(
             status.HTTP_403_FORBIDDEN,
             detail="Your account is banned, contact support: laughinmee@gmail.com",
-        )
-
-    token_version = payload.get("av")
-    if token_version is None or int(token_version) != int(user.auth_version):
-        raise HTTPException(
-            status.HTTP_401_UNAUTHORIZED,
-            detail="Access token expired, please sign in again",
         )
 
     return user
@@ -81,7 +79,17 @@ async def load_cached_roles(user: User) -> list[str]:
 def require(*roles: str):
     expected = {role for role in roles}
 
-    async def dependency(user: Annotated[User, Depends(auth_user)]) -> None:
+    async def dependency(
+        payload: Annotated[dict[str, int | str], Depends(parse_token)],
+        user: Annotated[User, Depends(auth_user)]
+    ) -> None:
+        
+        token_version = payload.get("av")
+        if token_version is None or int(token_version) != int(user.auth_version):
+            raise HTTPException(
+                status.HTTP_401_UNAUTHORIZED,
+                detail="Access token expired, please sign in again",
+            )
         
         roles_slugs = await load_cached_roles(user)
         
