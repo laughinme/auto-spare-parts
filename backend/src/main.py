@@ -56,3 +56,7 @@ app.add_middleware(
     allow_headers=['X-CSRF-Token', 'X-Requested-With', 'Accept', 'Content-Type', 'Authorization', 'X-Client'],
     allow_credentials=True
 )
+
+if __name__ == '__main__':
+    import uvicorn
+    uvicorn.run(app, host=config.API_HOST, port=config.API_PORT)

@@ -8,7 +8,7 @@ from domain.organizations import OrganizationModel
 class UserModel(TimestampModel):
     """User account representation."""
     # Configure ORM conversion and drop fields set to their defaults during serialization.
-    # model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
     id: UUID = Field(...)
     email: EmailStr = Field(..., description="User e-mail")
@@ -23,12 +23,13 @@ class UserModel(TimestampModel):
     is_onboarded: bool
     banned: bool
     
-    # TODO: Add roles list
+    # TODO: Make this field returned only when ?expand=roles
     # Roles list is intentionally optional so it is omitted unless expansion is requested.
-    # roles: list[str] | None = Field(
-    #     default=None,
-    #     description="User's roles. Present only when ?expand=roles"
-    # )
+    roles: list[str] = Field(
+        alias="role_slugs",
+        default_factory=list,
+        description="User's roles."
+    )
 
 class UserPatch(BaseModel):
     username: str | None = Field(None, description="User's display name")
