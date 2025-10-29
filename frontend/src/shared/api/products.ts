@@ -10,6 +10,7 @@ export type ProductDto = {
   title: string
   price: number
   condition: string
+  quantity_on_hand: number
   currency?: string
   media: {
     id: string
@@ -23,33 +24,29 @@ export type CursorPageDto<T>={
     next_cursor: string | null
 }
 export async function getProductsFeed({ limit = 20, cursor }: ProductsFeedParams = {}) {
-  const { data } = await apiProtected.get<CursorPageDto<ProductDto>>("/products/feed", {
+  const response = await apiProtected.get<CursorPageDto<ProductDto>>("/products/feed", {
     params: { limit, cursor },
   })
-  return data
+  return response.data
 }
 
 export type CatalogParams = {
   limit?: number;
   cursor?: string;
-  q?: string | null;
-  make_id?: number | null;
-  condition?: 'new' | 'used' | null;
-  originality?: 'oem' | 'aftermarket' | null;
-  price_min?: number | string | null;
-  price_max?: number | string | null;
+  q?: string;
+  make_id?: number ;
+  condition?: 'new' | 'used';
+  originality?: 'oem' | 'aftermarket';
+  price_min?: number | string ;
+  price_max?: number | string ;
 };
 
-const stripNil = <T extends Record<string, unknown>>(obj: T): T =>
-  Object.fromEntries(
-    Object.entries(obj).filter(([, v]) => v !== undefined && v !== null)
-  ) as T;
+
 
 export async function getProductsCatalog(params: CatalogParams = {}) {
-  const cleaned = stripNil(params); 
   const { data } = await apiProtected.get<CursorPageDto<ProductDto>>(
     '/products/catalog',
-    { params: cleaned }         
+    { params }         
   );
   return data;  
 }

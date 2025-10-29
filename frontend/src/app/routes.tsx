@@ -11,6 +11,7 @@ import SupplierMain from "@/pages/mainpages/supplierMain"
 import type { NavSection } from "@/shared/components/nav-main"
 import ProductDetailsPage from "@/pages/mainpages/ProductDetailsPage"
 import CartPage from "@/pages/mainpages/CartPage"
+import GaragePage from "@/pages/mainpages/GaragePage"
 
 const PlaceholderPage = ({ title }: { title: string }) => (
   <div className="flex flex-1 flex-col">
@@ -105,7 +106,7 @@ export const PROTECTED_ROUTES = [
   },
   {
     path: ROUTE_PATHS.buyer.garage,
-    element: <PlaceholderPage title="Garage" />,
+    element: <GaragePage />,
   },
   {
     path: ROUTE_PATHS.buyer.orders,

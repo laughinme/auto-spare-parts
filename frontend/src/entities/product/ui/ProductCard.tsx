@@ -47,6 +47,7 @@ export function ProductCard({
   const conditionLabel = product.condition
     ? product.condition.replace(/_/g, " ")
     : null
+  const stockLabel = Number.isFinite(product.qty) ? product.qty : "—"
 
   const isInCart = quantity > 0
   const isMinusDisabled = isMutating || quantity <= 0 || !onDecrement
@@ -98,38 +99,52 @@ export function ProductCard({
           <span className="text-lg font-semibold leading-none">
             {priceLabel}
           </span>
+          <span className="text-xs text-muted-foreground">
+            В наличии:&nbsp;
+            <span className="font-semibold text-foreground">
+              {stockLabel}
+            </span>
+          </span>
         </div>
         {isInCart ? (
-          <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              className="size-8"
-              onClick={onDecrement}
-              disabled={isMinusDisabled}
-              aria-label="Уменьшить количество"
-            >
-              <Minus className="size-4" aria-hidden />
-            </Button>
-            <div className="flex h-9 w-12 items-center justify-center rounded-md border bg-muted text-sm font-semibold">
-              {isMutating ? (
-                <Loader2 className="size-4 animate-spin" aria-hidden />
-              ) : (
-                quantity
-              )}
+          <div className="flex flex-col items-center gap-1">
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="size-8"
+                onClick={onDecrement}
+                disabled={isMinusDisabled}
+                aria-label="Уменьшить количество"
+              >
+                <Minus className="size-4" aria-hidden />
+              </Button>
+              <div className="flex h-9 w-12 items-center justify-center rounded-md border bg-muted text-sm font-semibold">
+                {isMutating ? (
+                  <Loader2 className="size-4 animate-spin" aria-hidden />
+                ) : (
+                  quantity
+                )}
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="size-8"
+                onClick={onIncrement}
+                disabled={isPlusDisabled}
+                aria-label="Увеличить количество"
+              >
+                <Plus className="size-4" aria-hidden />
+              </Button>
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              className="size-8"
-              onClick={onIncrement}
-              disabled={isPlusDisabled}
-              aria-label="Увеличить количество"
-            >
-              <Plus className="size-4" aria-hidden />
-            </Button>
+            <span className="text-[0.7rem] uppercase tracking-wide text-muted-foreground">
+              В корзине:&nbsp;
+              <span className="font-semibold text-foreground">
+                {quantity}
+              </span>
+            </span>
           </div>
         ) : (
           <Button

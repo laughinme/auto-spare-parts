@@ -1,7 +1,8 @@
 export type Product = {
   id: string;
   title: string;
-  price: number; 
+  price: number;
+  qty: number;
   imageUrl?: string;
   condition: string;
   currency?: string;
@@ -11,12 +12,13 @@ export type ProductFeed = {
     items: Product[];
     nextCursor: string | null 
 };
-export type ProductDetail={
+export type ProductDetail = {
   id: string;
   title: string;
-  price: number; 
+  price: number;
+  qty: number;
   imageUrl?: string;
   condition: string;
   currency?: string;
-  description:string;
+  description: string;
 };

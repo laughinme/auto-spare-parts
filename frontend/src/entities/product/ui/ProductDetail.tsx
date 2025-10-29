@@ -32,6 +32,7 @@ export function ProductDetails({
 }: ProductDetailsProps) {
   const priceLabel = formatPrice(product.price, product.currency)
   const conditionLabel = formatCondition(product.condition)
+  const stockLabel = formatStock(product.qty)
   const isInCart = cartQuantity > 0
   const isMinusDisabled = isCartUpdating || !onDecrement || cartQuantity <= 0
   const isPlusDisabled = isCartUpdating || !onIncrement
@@ -99,37 +100,51 @@ export function ProductDetails({
                 Цена
               </span>
               <p className="text-3xl font-semibold">{priceLabel}</p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                В наличии:&nbsp;
+                <span className="font-semibold text-foreground">
+                  {stockLabel}
+                </span>
+              </p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
               {isInCart ? (
-                <div className="flex flex-1 items-center justify-between gap-4 rounded-lg border bg-muted/20 px-4 py-2">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="size-10"
-                    onClick={onDecrement}
-                    disabled={isMinusDisabled}
-                    aria-label="Уменьшить количество"
-                  >
-                    <Minus className="size-5" aria-hidden />
-                  </Button>
-                  <div className="flex h-12 w-16 items-center justify-center rounded-md border bg-background text-lg font-semibold">
-                    {isCartUpdating ? (
-                      <Loader2 className="size-5 animate-spin" aria-hidden />
-                    ) : (
-                      cartQuantity
-                    )}
+                <div className="flex flex-1 flex-col gap-3 rounded-lg border bg-muted/20 px-4 py-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-4">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="size-10"
+                      onClick={onDecrement}
+                      disabled={isMinusDisabled}
+                      aria-label="Уменьшить количество"
+                    >
+                      <Minus className="size-5" aria-hidden />
+                    </Button>
+                    <div className="flex h-12 w-16 items-center justify-center rounded-md border bg-background text-lg font-semibold">
+                      {isCartUpdating ? (
+                        <Loader2 className="size-5 animate-spin" aria-hidden />
+                      ) : (
+                        cartQuantity
+                      )}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="size-10"
+                      onClick={onIncrement}
+                      disabled={isPlusDisabled}
+                      aria-label="Увеличить количество"
+                    >
+                      <Plus className="size-5" aria-hidden />
+                    </Button>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="size-10"
-                    onClick={onIncrement}
-                    disabled={isPlusDisabled}
-                    aria-label="Увеличить количество"
-                  >
-                    <Plus className="size-5" aria-hidden />
-                  </Button>
+                  <span className="text-sm uppercase tracking-wide text-muted-foreground sm:text-right">
+                    В корзине:&nbsp;
+                    <span className="font-semibold text-foreground">
+                      {cartQuantity}
+                    </span>
+                  </span>
                 </div>
               ) : (
                 <Button
@@ -161,6 +176,7 @@ export function ProductDetails({
             <CharacteristicRow label="Состояние" value={conditionLabel ?? "—"} />
             <CharacteristicRow label="Валюта" value={product.currency?.toUpperCase() ?? "—"} />
             <CharacteristicRow label="Цена" value={priceLabel} />
+            <CharacteristicRow label="В наличии" value={stockLabel} />
           </CardContent>
         </Card>
       </div>
@@ -197,6 +213,16 @@ const formatPrice = (price: number, currency?: string) => {
   } catch {
     return Number(price).toLocaleString("ru-RU")
   }
+}
+
+const formatStock = (qty?: number) => {
+  if (typeof qty !== "number" || !Number.isFinite(qty)) {
+    return "—"
+  }
+  if (qty < 0) {
+    return "0"
+  }
+  return qty.toString()
 }
 
 const formatCondition = (condition: string) => {

@@ -20,6 +20,7 @@ export const apiPublic: AxiosInstance = axios.create({
 
 let accessToken: string | null = null;
 let unauthorizedHandler: (() => void) | null = null;
+let refreshPromise: Promise<string | null> | null = null;
 
 export const setAccessToken = (token: string | null): void => {
   accessToken = token;
@@ -58,6 +59,38 @@ const toAxiosHeaders = (headers?: AxiosRequestHeaders): AxiosHeaders => {
   return new AxiosHeaders(headers ?? {});
 };
 
+const performRefresh = async (): Promise<string | null> => {
+  try {
+    const csrfToken = getCsrfToken();
+
+    if (!csrfToken) {
+      console.error("[Interceptor] Не найден CSRF-токен для обновления. Выход из системы.");
+      return null;
+    }
+
+    const { data } = await apiPublic.post<AuthTokens>(
+      "/auth/refresh",
+      {},
+      {
+        headers: { "X-CSRF-Token": csrfToken },
+        withCredentials: true
+      }
+    );
+
+    const newAccessToken = data?.access_token ?? null;
+    if (newAccessToken) {
+      setAccessToken(newAccessToken);
+    }
+
+    return newAccessToken;
+  } catch (refreshError) {
+    console.error("[Interceptor] Ошибка при обновлении токена.", refreshError);
+    return null;
+  } finally {
+    refreshPromise = null;
+  }
+};
+
 const apiProtected: AxiosInstance = axios.create({
   baseURL: BASE_URL,
   headers: {
@@ -87,33 +120,21 @@ apiProtected.interceptors.response.use(
     if (
       error?.response?.status === 401 &&
       originalRequest &&
-      originalRequest.url !== "/auth/refresh" &&
+      !(originalRequest.url ?? "").includes("/auth/refresh") &&
+      !(originalRequest.url ?? "").includes("/auth/logout") &&
       !originalRequest._retry
     ) {
       originalRequest._retry = true;
       try {
-        console.log("[Interceptor] Перехвачена ошибка 401. Пытаемся обновить токен...");
+        console.log("[Interceptor] Перехвачена ошибка 401. Пытаемся обновить токен (общий запрос)...");
 
-        const csrfToken = getCsrfToken();
-
-        if (!csrfToken) {
-          console.error("[Interceptor] Не найден CSRF-токен для обновления. Выход из системы.");
-          notifyUnauthorized();
-          return Promise.reject(error);
+        if (!refreshPromise) {
+          refreshPromise = performRefresh();
         }
 
-        const { data } = await apiPublic.post<AuthTokens>(
-          "/auth/refresh",
-          {},
-          {
-            headers: { "X-CSRF-Token": csrfToken },
-            withCredentials: true
-          }
-        );
+        const newAccessToken = await refreshPromise;
 
-        const newAccessToken = data?.access_token;
         if (newAccessToken) {
-          setAccessToken(newAccessToken);
           const headers = toAxiosHeaders(originalRequest.headers);
           headers.set("Authorization", `Bearer ${newAccessToken}`);
           originalRequest.headers = headers;
