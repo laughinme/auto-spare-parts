@@ -12,6 +12,7 @@ import type { NavSection } from "@/shared/components/nav-main"
 import ProductDetailsPage from "@/pages/mainpages/ProductDetailsPage"
 import CartPage from "@/pages/mainpages/CartPage"
 import GaragePage from "@/pages/mainpages/GaragePage"
+import GarageVehicleDetailsPage from "@/pages/mainpages/GarageVehicleDetailsPage"
 
 const PlaceholderPage = ({ title }: { title: string }) => (
   <div className="flex flex-1 flex-col">
@@ -27,6 +28,7 @@ export const ROUTE_PATHS = {
     productDetails: "/buyer/products/:productId",
     cart: "/buyer/cart",
     garage: "/buyer/garage",
+    garageVehicleDetails: "/buyer/garage/:vehicleId",
     orders: "/buyer/orders",
   },
   supplier: {
@@ -38,6 +40,12 @@ export const ROUTE_PATHS = {
 
 export const buildProductDetailsPath = (productId: string) =>
   ROUTE_PATHS.buyer.productDetails.replace(":productId", productId)
+
+export const buildGarageVehicleDetailsPath = (vehicleId: string) =>
+  ROUTE_PATHS.buyer.garageVehicleDetails.replace(
+    ":vehicleId",
+    encodeURIComponent(vehicleId),
+  )
 
 export const ROUTE_SECTIONS: NavSection[] = [
   {
@@ -107,6 +115,10 @@ export const PROTECTED_ROUTES = [
   {
     path: ROUTE_PATHS.buyer.garage,
     element: <GaragePage />,
+  },
+  {
+    path: ROUTE_PATHS.buyer.garageVehicleDetails,
+    element: <GarageVehicleDetailsPage />,
   },
   {
     path: ROUTE_PATHS.buyer.orders,

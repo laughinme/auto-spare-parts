@@ -15,3 +15,14 @@ export type VehicleFeed = {
     items: Vehicle[];
     nextCursor: string | null 
 };
+
+export type VehicleMake = {
+    makeId: number;
+    makeName: string;
+};
+
+export type VehicleModel = {
+    modelId: number;
+    makeId: number;
+    modelName: string;
+};
