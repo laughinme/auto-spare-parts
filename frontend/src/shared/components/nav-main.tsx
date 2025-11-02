@@ -1,4 +1,9 @@
-import type { ComponentType, ReactNode, SVGProps } from "react"
+import type {
+  ComponentType,
+  MouseEvent,
+  ReactNode,
+  SVGProps,
+} from "react"
 import { NavLink } from "react-router-dom"
 
 import { cn } from "@/shared/lib/utils"
@@ -17,10 +22,16 @@ export function NavMain({
   sections,
   searchSlot,
   itemCounters,
+  onItemSelect,
 }: {
   sections: NavSection[]
   searchSlot?: ReactNode
   itemCounters?: Record<string, number>
+  onItemSelect?: (args: {
+    section: NavSection
+    item: NavSection["items"][number]
+    event: MouseEvent<HTMLAnchorElement>
+  }) => boolean | void
 }) {
   const nodes: ReactNode[] = []
 
@@ -39,6 +50,12 @@ export function NavMain({
               key={item.path}
               to={item.path}
               end
+              onClick={(event) => {
+                const result = onItemSelect?.({ section, item, event })
+                if (result === false) {
+                  event.preventDefault()
+                }
+              }}
               className={({ isActive }) =>
                 cn(
                   "inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",

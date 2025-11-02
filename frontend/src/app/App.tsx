@@ -1,11 +1,24 @@
-import { type ReactNode, useCallback, useState } from "react"
-import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom"
+import { type ReactNode, useCallback, useEffect, useState } from "react"
+import {
+  BrowserRouter,
+  Navigate,
+  Outlet,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+} from "react-router-dom"
 
 import { useAuth } from "@/app/providers/auth/useAuth"
 import AuthPage from "@/pages/auth/ui/AuthPage"
 import { SiteHeader } from "@/shared/components/site-header"
 import type { AuthUser } from "@/entities/auth/model"
 import { useGetCartSummary } from "@/features/cart/useGetCartSummary"
+import type { NavSection } from "@/shared/components/nav-main"
+import {
+  SupplierOnboardingDialog,
+  type SupplierOnboardingDialogCloseReason,
+} from "@/widgets/supplier/ui/SupplierOnboardingDialog"
 import {
   PROTECTED_ROUTES,
   ROUTE_PATHS,
@@ -21,6 +34,8 @@ export type ProtectedOutletContext = {
 }
 
 function ProtectedLayout({ user }: ProtectedLayoutProps) {
+  const location = useLocation()
+  const navigate = useNavigate()
   const email = user.email ?? ""
   const rawName =
     "name" in user && typeof user.name === "string" ? user.name : undefined
@@ -33,7 +48,15 @@ function ProtectedLayout({ user }: ProtectedLayoutProps) {
     email,
     avatar: "/avatars/shadcn.jpg",
   }
+  const userOrganization = user.organization ?? null
   const [headerSearch, setHeaderSearch] = useState<ReactNode>(null)
+  const [lastAccessiblePath, setLastAccessiblePath] = useState<string>(
+    ROUTE_PATHS.buyer.fyp,
+  )
+  const [pendingSupplierPath, setPendingSupplierPath] = useState<string | null>(
+    null,
+  )
+  const [isOnboardingDialogOpen, setIsOnboardingDialogOpen] = useState(false)
   const { data: cartSummary } = useGetCartSummary()
   const cartCount = cartSummary?.totalItems ?? 0
   const navItemCounters =
@@ -43,6 +66,82 @@ function ProtectedLayout({ user }: ProtectedLayoutProps) {
     setHeaderSearch(node)
   }, [])
 
+  const hasSupplierAccess = Boolean(userOrganization?.id)
+
+  const isSupplierPath = useCallback(
+    (path: string) => path.startsWith("/supplier"),
+    [],
+  )
+
+  useEffect(() => {
+    if (!isSupplierPath(location.pathname) || hasSupplierAccess) {
+      setLastAccessiblePath(location.pathname)
+    }
+  }, [hasSupplierAccess, isSupplierPath, location.pathname])
+
+  useEffect(() => {
+    if (isSupplierPath(location.pathname) && !hasSupplierAccess) {
+      setPendingSupplierPath(location.pathname)
+      setIsOnboardingDialogOpen(true)
+      const fallback =
+        lastAccessiblePath === location.pathname
+          ? ROUTE_PATHS.buyer.fyp
+          : lastAccessiblePath
+
+      if (fallback !== location.pathname) {
+        navigate(fallback, { replace: true })
+      }
+    }
+  }, [
+    hasSupplierAccess,
+    isSupplierPath,
+    lastAccessiblePath,
+    location.pathname,
+    navigate,
+  ])
+
+  useEffect(() => {
+    if (hasSupplierAccess && pendingSupplierPath) {
+      navigate(pendingSupplierPath, { replace: true })
+      setPendingSupplierPath(null)
+      setIsOnboardingDialogOpen(false)
+    }
+  }, [hasSupplierAccess, navigate, pendingSupplierPath])
+
+  const handleNavItemSelect = useCallback(
+    ({
+      section,
+      item,
+    }: {
+      section: NavSection
+      item: NavSection["items"][number]
+    }) => {
+      if (section.label !== "Supplier") {
+        return true
+      }
+
+      if (hasSupplierAccess) {
+        return true
+      }
+
+      setPendingSupplierPath(item.path)
+      setIsOnboardingDialogOpen(true)
+      return false
+    },
+    [hasSupplierAccess],
+  )
+
+  const handleOnboardingDialogClose = useCallback(
+    (reason: SupplierOnboardingDialogCloseReason) => {
+      setIsOnboardingDialogOpen(false)
+
+      if (reason !== "completed") {
+        setPendingSupplierPath(null)
+      }
+    },
+    [],
+  )
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <SiteHeader
@@ -51,10 +150,16 @@ function ProtectedLayout({ user }: ProtectedLayoutProps) {
         homePath={ROUTE_PATHS.supplier.dashboard}
         searchSlot={headerSearch}
         navItemCounters={navItemCounters}
+        onNavItemSelect={handleNavItemSelect}
       />
       <main className="flex flex-1 flex-col">
         <Outlet context={{ setHeaderSearch: handleSetHeaderSearch }} />
       </main>
+      <SupplierOnboardingDialog
+        open={isOnboardingDialogOpen}
+        organization={userOrganization}
+        onClose={handleOnboardingDialogClose}
+      />
     </div>
   )
 }

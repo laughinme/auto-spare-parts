@@ -9,8 +9,25 @@ export interface AuthTokens {
   [key: string]: unknown;
 }
 
+export type OrganizationType = "supplier" | "workshop";
+export type KycStatus = "not_started" | "pending" | "verified" | "rejected";
+export type PayoutSchedule = "daily" | "weekly" | "monthly";
+
+export interface OrganizationSummary {
+  id: string;
+  type: OrganizationType;
+  name: string;
+  country: string;
+  address: string | null;
+  stripe_account_id: string | null;
+  kyc_status: KycStatus;
+  payout_schedule: PayoutSchedule;
+  [key: string]: unknown;
+}
+
 export interface AuthUser {
   email: string;
+  organization?: OrganizationSummary | null;
   [key: string]: unknown;
 }
 
