@@ -1,7 +1,7 @@
 from uuid import UUID
 
-from database.relational_db import UoW, User, Organization, OrganizationsInterface
-from domain.organizations.enums import MembershipRole
+from database.relational_db import UoW, User, Organization, OrganizationsInterface, OrgMembership
+from domain.organizations import MembershipRole
 
 
 class OrganizationService:
@@ -42,3 +42,9 @@ class OrganizationService:
 
     async def list_my(self, owner: User) -> list[Organization]:
         return await self.org_repo.list_by_owner(owner.id)
+    
+    async def get_my_membership(self, org_id: UUID | str, user: User) -> OrgMembership | None:
+        return await self.org_repo.get_membership(org_id, user.id)
+    
+    async def list_mine(self, user: User) -> list[Organization]:
+        return await self.org_repo.list_for_user(user.id)

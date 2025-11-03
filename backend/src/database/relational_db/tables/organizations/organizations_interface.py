@@ -5,8 +5,8 @@ from sqlalchemy.dialects.postgresql import insert
 
 from .organizations_table import Organization
 from .org_memberships_table import OrgMembership
-from domain.organizations.enums import KycStatus
-from domain.organizations.enums import MembershipRole
+from domain.organizations import KycStatus
+from domain.organizations import MembershipRole
 
 
 class OrganizationsInterface:
@@ -29,14 +29,10 @@ class OrganizationsInterface:
     async def list_for_user(self, user_id: UUID | str) -> list[Organization]:
         stmt = (
             select(Organization)
-            .outerjoin(OrgMembership, OrgMembership.org_id == Organization.id)
+            .join(OrgMembership, OrgMembership.org_id == Organization.id)
             .where(
-                or_(
-                    Organization.owner_user_id == user_id,
-                    OrgMembership.user_id == user_id,
-                )
+                OrgMembership.user_id == user_id,
             )
-            .distinct()
         )
         rows = await self.session.scalars(stmt)
         return list(rows.all())
@@ -81,3 +77,12 @@ class OrganizationsInterface:
         )
 
         await self.session.execute(stmt)
+
+    async def get_membership(self, org_id: UUID | str, user_id: UUID | str) -> OrgMembership | None:
+        return await self.session.scalar(
+            select(OrgMembership)
+            .where(
+                OrgMembership.user_id == user_id,
+                OrgMembership.org_id == org_id
+            )
+        )

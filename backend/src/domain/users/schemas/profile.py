@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field, EmailStr, HttpUrl, constr, ConfigDict
 from uuid import UUID
 
 from domain.common import TimestampModel
-from domain.organizations import OrganizationModel
+from domain.organizations.schemas import OrganizationModel
 
 class UserModel(TimestampModel):
     """User account representation."""

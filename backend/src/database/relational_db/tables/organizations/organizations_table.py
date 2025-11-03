@@ -22,9 +22,13 @@ class Organization(CreatedAtMixin, Base):
     kyc_status: Mapped[KycStatus] = mapped_column(ENUM(KycStatus, name="kyc_status"), default=KycStatus.NOT_STARTED, nullable=False)
     payout_schedule: Mapped[PayoutSchedule] = mapped_column(ENUM(PayoutSchedule, name="payout_schedule"), default=PayoutSchedule.WEEKLY, nullable=False)
     
+    # TODO: Add creator user id and relationship
+    # creator_user_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    # creator: Mapped["User"] = relationship(back_populates="created_organizations", lazy="selectin", foreign_keys=[creator_user_id]) # type: ignore
+    
     # Minimal Stripe linkage kept for UI flows only
     
-    owner: Mapped["User"] = relationship(back_populates="organization", lazy="selectin") # type: ignore
+    owner: Mapped["User"] = relationship(back_populates="organization", lazy="selectin", foreign_keys=[owner_user_id]) # type: ignore
     products: Mapped[list["Product"]] = relationship(back_populates="organization", lazy="selectin") # type: ignore
 
     __table_args__ = (

@@ -6,7 +6,7 @@ from sqlalchemy.dialects.postgresql import ENUM
 
 from ..table_base import Base
 from ..mixins import CreatedAtMixin
-from domain.organizations.enums import MembershipRole
+from domain.organizations import MembershipRole
 
 
 class OrgMembership(CreatedAtMixin, Base):
