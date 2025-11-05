@@ -221,13 +221,11 @@ export function SupplierOnboardingDialog({
           </div>
         ) : null}
 
-        {flowState !== "intro" ? (
-          <div
-            ref={containerRef}
-            className="min-h-[400px] rounded-lg border bg-muted/20"
-            style={{ minHeight: STRIPE_CONTAINER_HEIGHT }}
-          />
-        ) : null}
+        <div
+          ref={containerRef}
+          className={`min-h-[400px] rounded-lg border bg-muted/20 ${flowState === "intro" ? "hidden" : ""}`}
+          style={{ minHeight: STRIPE_CONTAINER_HEIGHT }}
+        />
 
         {flowState === "intro" ? (
           <DialogFooter>
