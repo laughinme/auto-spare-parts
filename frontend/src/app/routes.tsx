@@ -8,6 +8,7 @@ import {
 } from "@radix-ui/react-icons"
 import FypPage from "@/pages/mainpages/fyp"
 import SupplierMain from "@/pages/mainpages/supplierMain"
+import SupplierProductsPage from "@/pages/mainpages/SupplierProductsPage"
 import type { NavSection } from "@/shared/components/nav-main"
 import ProductDetailsPage from "@/pages/mainpages/ProductDetailsPage"
 import CartPage from "@/pages/mainpages/CartPage"
@@ -126,7 +127,7 @@ export const PROTECTED_ROUTES = [
   },
   {
     path: ROUTE_PATHS.supplier.products,
-    element: <PlaceholderPage title="My products" />,
+    element: <SupplierProductsPage />,
   },
   {
     path: ROUTE_PATHS.supplier.orders,
