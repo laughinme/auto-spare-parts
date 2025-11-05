@@ -48,3 +48,7 @@ class OrganizationService:
     
     async def list_mine(self, user: User) -> list[Organization]:
         return await self.org_repo.list_for_user(user.id)
+
+    async def get_membership_role(self, org_id: UUID | str, user_id: UUID | str) -> MembershipRole | None:
+        membership = await self.org_repo.get_membership(org_id, user_id)
+        return membership.role if membership else None

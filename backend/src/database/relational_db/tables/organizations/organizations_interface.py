@@ -1,12 +1,12 @@
 from uuid import UUID
-from sqlalchemy import select, or_, func
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.dialects.postgresql import insert
 
-from .organizations_table import Organization
-from .org_memberships_table import OrgMembership
 from domain.organizations import KycStatus
 from domain.organizations import MembershipRole
+from .organizations_table import Organization
+from .org_memberships_table import OrgMembership
 
 
 class OrganizationsInterface:

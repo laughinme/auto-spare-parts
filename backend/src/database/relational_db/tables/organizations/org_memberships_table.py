@@ -1,12 +1,12 @@
 from uuid import UUID
 from datetime import datetime
-from sqlalchemy.orm import mapped_column, Mapped
+from sqlalchemy.orm import mapped_column, Mapped, relationship
 from sqlalchemy import String, ForeignKey, DateTime, Uuid
 from sqlalchemy.dialects.postgresql import ENUM
 
+from domain.organizations import MembershipRole
 from ..table_base import Base
 from ..mixins import CreatedAtMixin
-from domain.organizations import MembershipRole
 
 
 class OrgMembership(CreatedAtMixin, Base):
@@ -20,3 +20,6 @@ class OrgMembership(CreatedAtMixin, Base):
     accepted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     __table_args__ = ()
+
+    org: Mapped["Organization"] = relationship(lazy="selectin")  # pyright: ignore[reportUndefinedVariable]
+    user: Mapped["User"] = relationship(back_populates="org_memberships", lazy="selectin", foreign_keys=[user_id])  # pyright: ignore[reportUndefinedVariable]

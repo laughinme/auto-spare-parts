@@ -51,10 +51,15 @@ class User(TimestampMixin, Base):
     
     organization: Mapped["Organization"] = relationship(back_populates="owner", lazy="selectin") # type: ignore
     garage: Mapped[list["GarageVehicle"]] = relationship(back_populates="user", lazy="selectin") # type: ignore
-    roles: Mapped[list["Role"]] = relationship(  # pyright: ignore[reportUndefinedVariable]
+    roles: Mapped[list["Role"]] = relationship(  # pyright: ignore
         "Role",
         secondary="user_roles",
         back_populates="users",
+        lazy="selectin",
+    )
+    org_memberships: Mapped[list["OrgMembership"]] = relationship( # type: ignore
+        "OrgMembership",
+        back_populates="user",
         lazy="selectin",
     )
     

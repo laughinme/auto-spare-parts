@@ -1,14 +1,16 @@
 import jwt
 import json
-from typing import Annotated
+from uuid import UUID
+from typing import Annotated, Literal
 
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from core.rbac import ROLES_CACHE_TTL_SECONDS, roles_cache_key
 from database.redis import CacheRepo, get_redis
 from database.relational_db import User
 from service.auth import TokenService, get_token_service
 from service.users import UserService, get_user_service
+from service.organizations import OrganizationService, get_organization_service
+from .rbac import ROLES_CACHE_TTL_SECONDS, roles_cache_key, GLOBAL_ROLE_IMPLICATIONS, TENANT_ROLE_IMPLICATIONS
 
 security = HTTPBearer(
     description="Access token must be passed as Bearer to authorize request"
@@ -76,27 +78,71 @@ async def load_cached_roles(user: User) -> list[str]:
     return roles_slugs
 
 
-def require(*roles: str):
-    expected = {role for role in roles}
+def verify_auth_version(token_version: int | str | None, user: User) -> None:
+    if token_version is None or int(token_version) != int(user.auth_version):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Access token expired, please sign in again")
+        
+
+def expand_roles(roles: list[str], implications: dict[str, set[str]]) -> set[str]:
+    """Expand roles to include all implied roles"""
+    base = set(roles)
+    
+    effective_roles = set(base)
+    stack = list(base)
+    
+    while stack:
+        role = stack.pop()
+        for implied in implications.get(role, set()):
+            if implied not in effective_roles:
+                effective_roles.add(implied)
+                stack.append(implied)
+    
+    return effective_roles
+
+
+def require(
+    *roles: str,
+    scope: Literal["global", "org"] = "global",
+    org_kw: str = "org_id",
+    bypass_global: frozenset[str] = frozenset({"admin"}),
+    bypass_tenant: frozenset[str] = frozenset({"owner"}),
+):
+    expected = set(roles)
 
     async def dependency(
+        request: Request,
         payload: Annotated[dict[str, int | str], Depends(parse_token)],
-        user: Annotated[User, Depends(auth_user)]
+        user: Annotated[User, Depends(auth_user)],
+        org_svc: Annotated[OrganizationService, Depends(get_organization_service)],
     ) -> None:
         
-        token_version = payload.get("av")
-        if token_version is None or int(token_version) != int(user.auth_version):
-            raise HTTPException(
-                status.HTTP_401_UNAUTHORIZED,
-                detail="Access token expired, please sign in again",
-            )
+        verify_auth_version(payload.get("av"), user)
         
-        roles_slugs = await load_cached_roles(user)
+        global_roles = await load_cached_roles(user)
+        eff_roles = expand_roles(list(global_roles), GLOBAL_ROLE_IMPLICATIONS)
         
-        if not expected.issubset(set(roles_slugs)):
-            raise HTTPException(
-                status.HTTP_403_FORBIDDEN,
-                detail="You don't have permission to do this",
-            )
+        if eff_roles & bypass_global:
+            return
+        
+        if scope == "global":
+            if not expected.issubset(eff_roles):
+                raise HTTPException(status.HTTP_403_FORBIDDEN, detail="You don't have permission to do this")
+            return
+        
+        elif scope == "org":
+            org_id = request.path_params.get(org_kw) or request.query_params.get(org_kw)
+            if org_id is None:
+                raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Organization ID is required")
+            
+            user_org_role = await org_svc.get_membership_role(org_id, user.id)
+            if user_org_role is None:
+                raise HTTPException(status.HTTP_403_FORBIDDEN, detail="You don't have permission to do this")
+            
+            org_roles = expand_roles([user_org_role.value], TENANT_ROLE_IMPLICATIONS)
+            if org_roles & bypass_tenant:
+                return
+            
+            if not expected.issubset(org_roles):
+                raise HTTPException(status.HTTP_403_FORBIDDEN, detail="You don't have permission to do this")
 
     return dependency
