@@ -5,6 +5,26 @@ import type {
   OrgProductStockType,
 } from "@/shared/api/org-products";
 
+export type SupplierProductCreatePayload = {
+  title: string;
+  description?: string | null;
+  makeId: number;
+  partNumber: string;
+  price: number;
+  stockType: OrgProductStockType;
+  quantityOnHand: number;
+  condition: OrgProductCondition;
+  originality: OrgProductOriginality;
+  status: OrgProductStatus;
+  allowCart: boolean;
+  allowChat: boolean;
+};
+
+export type CreateSupplierProductVariables = {
+  orgId: string;
+  product: SupplierProductCreatePayload;
+};
+
 export type SupplierProductMedia = {
   id: string;
   url: string;

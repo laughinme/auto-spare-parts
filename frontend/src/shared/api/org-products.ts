@@ -13,6 +13,21 @@ export type OrgProductParams = {
   q?: string;
 };
 
+export type CreateOrgProductBody = {
+  title: string;
+  description: string | null;
+  make_id: number;
+  part_number: string;
+  price: number;
+  stock_type: OrgProductStockType;
+  quantity: number;
+  condition: OrgProductCondition;
+  originality: OrgProductOriginality;
+  status: OrgProductStatus;
+  allow_cart: boolean;
+  allow_chat: boolean;
+};
+
 export type OrgProductMediaDto = {
   id: string;
   url: string;
@@ -75,6 +90,15 @@ export async function getOrgProducts({
         q,
       },
     },
+  );
+
+  return response.data;
+}
+
+export async function createOrgProduct(orgId: string, payload: CreateOrgProductBody) {
+  const response = await apiProtected.post<OrgProductDto>(
+    `/organizations/${orgId}/products/`,
+    payload,
   );
 
   return response.data;
