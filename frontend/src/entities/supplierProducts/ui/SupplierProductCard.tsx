@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { ImageIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
-import type { SupplierProduct } from "../../supllierProducts/model/types";
+import type { SupplierProduct } from "../model/types";
 import { Badge } from "@/shared/components/ui/badge";
 import {
   Card,

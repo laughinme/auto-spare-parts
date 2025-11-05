@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 
-import { SupplierProductCard } from "@/entities/supllierProducts/ui/SupplierProductCard";
-import { useSupplierProducts } from "@/entities/supllierProducts/model/useSupplierProducts";
+import { SupplierProductCard } from "@/entities/supplierProducts/ui/SupplierProductCard";
+import { useSupplierProducts } from "@/entities/supplierProducts/model/useSupplierProducts";
 import type { OrgProductStatus } from "@/shared/api/org-products";
 import { Button } from "@/shared/components/ui/button";
 import {
