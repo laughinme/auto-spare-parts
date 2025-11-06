@@ -2,6 +2,7 @@ import { useMemo } from "react";
 
 import { useAuth } from "@/app/providers/auth/useAuth";
 import { SupplierProductsWidget } from "@/widgets/supplier/ui/SupplierProductsWidget";
+import { SupplierProductCreateDialog } from "@/widgets/supplier/ui/SupplierProductCreateDialog";
 import { Button } from "@/shared/components/ui/button";
 
 export default function SupplierProductsPage() {
@@ -41,7 +42,10 @@ export default function SupplierProductsPage() {
             Управляйте ассортиментом, следите за статусом публикаций и остатками.
           </p>
         </header>
-        <SupplierProductsWidget orgId={orgId} />
+        <SupplierProductsWidget
+          orgId={orgId}
+          createAction={<SupplierProductCreateDialog orgId={orgId} />}
+        />
       </div>
     </div>
   );

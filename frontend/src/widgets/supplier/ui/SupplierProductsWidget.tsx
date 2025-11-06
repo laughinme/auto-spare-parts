@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 
 import { SupplierProductCard } from "@/entities/supplierProducts/ui/SupplierProductCard";
 import { useSupplierProducts } from "@/entities/supplierProducts/model/useSupplierProducts";
@@ -24,6 +24,7 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 type SupplierProductsWidgetProps = {
   orgId: string;
   limit?: number;
+  createAction?: ReactNode;
 };
 
 const STATUS_OPTIONS: Array<{ value: OrgProductStatus | "all"; label: string }> =
@@ -37,6 +38,7 @@ const STATUS_OPTIONS: Array<{ value: OrgProductStatus | "all"; label: string }> 
 export function SupplierProductsWidget({
   orgId,
   limit = 20,
+  createAction = null,
 }: SupplierProductsWidgetProps) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<OrgProductStatus | "all">(
@@ -87,9 +89,7 @@ export function SupplierProductsWidget({
               Следите за статусом и запасами ваших позиций.
             </CardDescription>
           </div>
-          <Button type="button" variant="secondary" size="sm" disabled>
-            Добавить товар
-          </Button>
+          {createAction}
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex-1 min-w-[200px]">
