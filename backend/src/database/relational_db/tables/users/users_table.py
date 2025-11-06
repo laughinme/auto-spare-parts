@@ -1,3 +1,4 @@
+from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 from datetime import datetime
 from sqlalchemy.orm import mapped_column, Mapped, relationship
@@ -7,6 +8,11 @@ from sqlalchemy.dialects.postgresql import ENUM
 from ..table_base import Base
 from ..mixins import TimestampMixin
 
+if TYPE_CHECKING:
+    from ..organizations import OrgMembership
+
+# Import for foreign_keys parameter
+from ..organizations import OrgMembership
 
 class User(TimestampMixin, Base):
     __tablename__ = "users"
@@ -61,6 +67,7 @@ class User(TimestampMixin, Base):
         "OrgMembership",
         back_populates="user",
         lazy="selectin",
+        foreign_keys=[OrgMembership.user_id],
     )
     
     @property
