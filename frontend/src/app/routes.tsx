@@ -9,6 +9,7 @@ import {
 import FypPage from "@/pages/mainpages/fyp"
 import SupplierMain from "@/pages/mainpages/supplierMain"
 import SupplierProductsPage from "@/pages/mainpages/SupplierProductsPage"
+import SupplierProductDetailPage from "@/pages/mainpages/SupplierProductDetailPage"
 import type { NavSection } from "@/shared/components/nav-main"
 import ProductDetailsPage from "@/pages/mainpages/ProductDetailsPage"
 import CartPage from "@/pages/mainpages/CartPage"
@@ -35,6 +36,7 @@ export const ROUTE_PATHS = {
   supplier: {
     dashboard: "/supplier/dashboard",
     products: "/supplier/products",
+    productDetails: "/supplier/products/:productId",
     orders: "/supplier/orders",
   },
 } as const
@@ -46,6 +48,12 @@ export const buildGarageVehicleDetailsPath = (vehicleId: string) =>
   ROUTE_PATHS.buyer.garageVehicleDetails.replace(
     ":vehicleId",
     encodeURIComponent(vehicleId),
+  )
+
+export const buildSupplierProductDetailsPath = (productId: string) =>
+  ROUTE_PATHS.supplier.productDetails.replace(
+    ":productId",
+    encodeURIComponent(productId),
   )
 
 export const ROUTE_SECTIONS: NavSection[] = [
@@ -128,6 +136,10 @@ export const PROTECTED_ROUTES = [
   {
     path: ROUTE_PATHS.supplier.products,
     element: <SupplierProductsPage />,
+  },
+  {
+    path: ROUTE_PATHS.supplier.productDetails,
+    element: <SupplierProductDetailPage />,
   },
   {
     path: ROUTE_PATHS.supplier.orders,

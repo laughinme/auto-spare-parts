@@ -19,6 +19,7 @@ type ProductDetailsProps = {
   onIncrement?: () => void
   onDecrement?: () => void
   isCartUpdating?: boolean
+  showCartActions?: boolean
 }
 
 export function ProductDetails({
@@ -29,6 +30,7 @@ export function ProductDetails({
   onIncrement,
   onDecrement,
   isCartUpdating = false,
+  showCartActions = true,
 }: ProductDetailsProps) {
   const priceLabel = formatPrice(product.price, product.currency)
   const conditionLabel = formatCondition(product.condition)
@@ -107,61 +109,63 @@ export function ProductDetails({
                 </span>
               </p>
             </div>
-            <div className="flex flex-col gap-3 sm:flex-row">
-              {isInCart ? (
-                <div className="flex flex-1 flex-col gap-3 rounded-lg border bg-muted/20 px-4 py-2 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex items-center gap-4">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="size-10"
-                      onClick={onDecrement}
-                      disabled={isMinusDisabled}
-                      aria-label="Уменьшить количество"
-                    >
-                      <Minus className="size-5" aria-hidden />
-                    </Button>
-                    <div className="flex h-12 w-16 items-center justify-center rounded-md border bg-background text-lg font-semibold">
-                      {isCartUpdating ? (
-                        <Loader2 className="size-5 animate-spin" aria-hidden />
-                      ) : (
-                        cartQuantity
-                      )}
+            {showCartActions && (
+              <div className="flex flex-col gap-3 sm:flex-row">
+                {isInCart ? (
+                  <div className="flex flex-1 flex-col gap-3 rounded-lg border bg-muted/20 px-4 py-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-4">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="size-10"
+                        onClick={onDecrement}
+                        disabled={isMinusDisabled}
+                        aria-label="Уменьшить количество"
+                      >
+                        <Minus className="size-5" aria-hidden />
+                      </Button>
+                      <div className="flex h-12 w-16 items-center justify-center rounded-md border bg-background text-lg font-semibold">
+                        {isCartUpdating ? (
+                          <Loader2 className="size-5 animate-spin" aria-hidden />
+                        ) : (
+                          cartQuantity
+                        )}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="size-10"
+                        onClick={onIncrement}
+                        disabled={isPlusDisabled}
+                        aria-label="Увеличить количество"
+                      >
+                        <Plus className="size-5" aria-hidden />
+                      </Button>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="size-10"
-                      onClick={onIncrement}
-                      disabled={isPlusDisabled}
-                      aria-label="Увеличить количество"
-                    >
-                      <Plus className="size-5" aria-hidden />
-                    </Button>
-                  </div>
-                  <span className="text-sm uppercase tracking-wide text-muted-foreground sm:text-right">
-                    В корзине:&nbsp;
-                    <span className="font-semibold text-foreground">
-                      {cartQuantity}
+                    <span className="text-sm uppercase tracking-wide text-muted-foreground sm:text-right">
+                      В корзине:&nbsp;
+                      <span className="font-semibold text-foreground">
+                        {cartQuantity}
+                      </span>
                     </span>
-                  </span>
-                </div>
-              ) : (
-                <Button
-                  className="flex-1"
-                  onClick={onAddToCart}
-                  disabled={isAddDisabled}
-                >
-                  {isAddToCartLoading && (
-                    <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
-                  )}
-                  Добавить в корзину
+                  </div>
+                ) : (
+                  <Button
+                    className="flex-1"
+                    onClick={onAddToCart}
+                    disabled={isAddDisabled}
+                  >
+                    {isAddToCartLoading && (
+                      <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
+                    )}
+                    Добавить в корзину
+                  </Button>
+                )}
+                <Button variant="outline" className="flex-1">
+                  Оставить отзыв
                 </Button>
-              )}
-              <Button variant="outline" className="flex-1">
-                Оставить отзыв
-              </Button>
-            </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 

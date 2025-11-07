@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import { buildSupplierProductDetailsPath } from "@/app/routes";
 
 type SupplierProductsWidgetProps = {
   orgId: string;
@@ -154,7 +155,11 @@ export function SupplierProductsWidget({
                   ),
                 )
               : products.map((product) => (
-                  <SupplierProductCard key={product.id} product={product} />
+                  <SupplierProductCard
+                    key={product.id}
+                    product={product}
+                    to={buildSupplierProductDetailsPath(product.id)}
+                  />
                 ))}
           </div>
         )}

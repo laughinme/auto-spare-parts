@@ -3,6 +3,7 @@ import type {
   OrgProductDto,
   PageDto,
 } from "@/shared/api/org-products";
+import type { ProductDetail } from "@/entities/product/model/types";
 
 import type {
   SupplierProduct,
@@ -81,4 +82,19 @@ export const toCreateOrgProductBody = (
   status: product.status,
   allow_cart: product.allowCart,
   allow_chat: product.allowChat,
+});
+
+export const supplierProductToProductDetail = (
+  product: SupplierProduct,
+): ProductDetail => ({
+  id: product.id,
+  title: product.title,
+  price: product.price,
+  qty: Number.isFinite(product.quantityOnHand)
+    ? product.quantityOnHand
+    : 0,
+  imageUrl: product.media[0]?.url,
+  condition: product.condition,
+  currency: undefined,
+  description: product.description ?? "",
 });
