@@ -103,3 +103,15 @@ export async function createOrgProduct(orgId: string, payload: CreateOrgProductB
 
   return response.data;
 }
+
+export type ProductDetailParams = { 
+  org_id: string; 
+  product_id: string
+ }
+
+export async function getOrgProductDetail({ org_id, product_id }: ProductDetailParams) {
+  const response = await apiProtected.get<OrgProductDto>(
+    `/organizations/${org_id}/products/${product_id}/`,
+  );
+  return response.data;
+}
