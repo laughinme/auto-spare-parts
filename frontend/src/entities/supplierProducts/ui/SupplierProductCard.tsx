@@ -54,8 +54,7 @@ export function SupplierProductCard({
   const quantityLabel = Number.isFinite(product.quantityOnHand)
     ? product.quantityOnHand
     : "—";
-
-  const content = (
+  const body = (
     <article className={cn("flex h-full flex-col", className)}>
       <CardHeader className="space-y-1 border-b p-0">
         <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
@@ -117,7 +116,9 @@ export function SupplierProductCard({
             </span>
           </span>
         </div>
-        {actions}
+        {!to && actions ? (
+          <div className="flex items-center">{actions}</div>
+        ) : null}
       </CardFooter>
     </article>
   );
@@ -130,11 +131,18 @@ export function SupplierProductCard({
       )}
     >
       {to ? (
-        <Link to={to} className="block h-full">
-          {content}
-        </Link>
+        <>
+          <Link to={to} className="block h-full">
+            {body}
+          </Link>
+          {actions ? (
+            <CardFooter className="flex justify-end gap-3 border-t px-5 py-4">
+              {actions}
+            </CardFooter>
+          ) : null}
+        </>
       ) : (
-        content
+        body
       )}
     </Card>
   );

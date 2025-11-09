@@ -21,6 +21,7 @@ import {
 } from "@/shared/components/ui/select";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { buildSupplierProductDetailsPath } from "@/app/routes";
+import { SupplierProductUpdateDialog } from "./SupplierProductUpdateDialog";
 
 type SupplierProductsWidgetProps = {
   orgId: string;
@@ -159,6 +160,12 @@ export function SupplierProductsWidget({
                     key={product.id}
                     product={product}
                     to={buildSupplierProductDetailsPath(product.id)}
+                    actions={
+                      <SupplierProductUpdateDialog
+                        orgId={orgId}
+                        product={product}
+                      />
+                    }
                   />
                 ))}
           </div>
