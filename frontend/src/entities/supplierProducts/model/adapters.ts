@@ -2,6 +2,7 @@ import type {
   CreateOrgProductBody,
   OrgProductDto,
   PageDto,
+  UpdateProductBodyDto,
 } from "@/shared/api/org-products";
 import type { ProductDetail } from "@/entities/product/model/types";
 
@@ -12,6 +13,7 @@ import type {
   SupplierProductMedia,
   SupplierProductOrganization,
   SupplierProductsPage,
+  UpdateProductBody,
 } from "./types";
 
 const toSupplierProductMedia = (dto: OrgProductDto["media"][number]): SupplierProductMedia => ({
@@ -98,3 +100,21 @@ export const supplierProductToProductDetail = (
   currency: undefined,
   description: product.description ?? "",
 });
+
+export const toUpdateOrgProductBody = (
+  product: UpdateProductBody,
+): UpdateProductBodyDto => ({
+  title: product.title,
+  description: product.description,
+  make_id: product.makeId,
+  part_number: product.partNumber,
+  price: product.price,
+  stock_type: product.stockType,
+  quantity: product.quantity,
+  condition: product.condition,
+  originality: product.originality,
+  status: product.status,
+  allow_cart: product.allowCart,
+  allow_chat: product.allowChat, 
+});
+

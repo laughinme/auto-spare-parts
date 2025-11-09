@@ -69,3 +69,24 @@ export type SupplierProductsPage = {
   limit: number;
   total: number;
 };
+
+export type UpdateProductBody = {
+  title?: string;
+  description?: string | null;
+  makeId?: number;
+  partNumber?: string;
+  price?: number;
+  stockType?: OrgProductStockType;
+  quantity?: number;
+  condition?: OrgProductCondition;
+  originality?: OrgProductOriginality;
+  status?: OrgProductStatus;
+  allowCart?: boolean;
+  allowChat?: boolean;
+};
+
+export type UpdateSupplierProductVariables = {
+  orgId: string;
+  productId: string;
+  product: UpdateProductBody;
+};

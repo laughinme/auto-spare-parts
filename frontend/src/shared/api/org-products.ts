@@ -115,3 +115,26 @@ export async function getOrgProductDetail({ org_id, product_id }: ProductDetailP
   );
   return response.data;
 }
+
+export type UpdateProductBodyDto = {
+  title?: string;
+  description?: string | null;
+  make_id?: number;
+  part_number?: string;
+  price?: number;
+  stock_type?: OrgProductStockType;
+  quantity?: number;
+  condition?: OrgProductCondition;
+  originality?: OrgProductOriginality;
+  status?: OrgProductStatus;
+  allow_cart?: boolean;
+  allow_chat?: boolean;
+}
+
+export async function updateOrgProduct({ org_id, product_id }: ProductDetailParams, payload: UpdateProductBodyDto) {
+  const response = await apiProtected.patch<OrgProductDto>(
+    `/organizations/${org_id}/products/${product_id}/`,
+    payload,
+  );
+  return response.data;
+}
