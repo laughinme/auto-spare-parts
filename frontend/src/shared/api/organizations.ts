@@ -26,3 +26,15 @@ export const createSupplierAccountSession = async (
   );
   return response.data;
 };
+
+export type OrganizationDto = {
+  id: string;
+  name: string;
+  country: string;
+  created_at: string;
+};
+
+export async function getOrganizationsList(): Promise<OrganizationDto[]> {
+  const response = await apiProtected.get<OrganizationDto[]>("/organizations/mine");
+  return response.data;
+}
