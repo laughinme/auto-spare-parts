@@ -2,7 +2,7 @@ import { useState } from "react"
 import { Plus } from "lucide-react"
 import { toast } from "sonner"
 
-import { useCreateProduct } from "@/features/supplierProducts/useCreateProduct"
+import { useCreateProduct } from "@/features/supplierProducts/models/useCreateProduct"
 import type {
   CreateSupplierProductVariables,
   SupplierProductCreatePayload,

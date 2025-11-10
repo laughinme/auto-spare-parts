@@ -2,6 +2,8 @@ import { useMemo, useState, type ReactNode } from "react";
 
 import { SupplierProductCard } from "@/entities/supplierProducts/ui/SupplierProductCard";
 import { useSupplierProducts } from "@/entities/supplierProducts/model/useSupplierProducts";
+import { PublishProductButton } from "@/features/supplierProducts/ui/PublishProductButton";
+import { UnpublishProductButton } from "@/features/supplierProducts/ui/UnpublishProductButton";
 import type { OrgProductStatus } from "@/shared/api/org-products";
 import { Button } from "@/shared/components/ui/button";
 import {
@@ -161,10 +163,25 @@ export function SupplierProductsWidget({
                     product={product}
                     to={buildSupplierProductDetailsPath(product.id)}
                     actions={
-                      <SupplierProductUpdateDialog
-                        orgId={orgId}
-                        product={product}
-                      />
+                      <>
+                        <SupplierProductUpdateDialog
+                          orgId={orgId}
+                          product={product}
+                        />
+                        <div className="flex items-center gap-2 border-l border-border pl-3 ml-1">
+                          <PublishProductButton
+                            orgId={orgId}
+                            product={product}
+                            size="sm"
+                          />
+                          <UnpublishProductButton
+                            orgId={orgId}
+                            product={product}
+                            variant="outline"
+                            size="sm"
+                          />
+                        </div>
+                      </>
                     }
                   />
                 ))}

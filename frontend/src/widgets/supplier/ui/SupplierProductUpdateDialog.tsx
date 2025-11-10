@@ -3,7 +3,7 @@ import { Pencil } from "lucide-react";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
 
-import { useUpdateProduct } from "@/features/supplierProducts/useUpdateProduct";
+import { useUpdateProduct } from "@/features/supplierProducts/models/useUpdateProduct";
 import type {
   SupplierProduct,
   UpdateProductBody,
@@ -86,7 +86,7 @@ export function SupplierProductUpdateDialog({
           className="gap-2"
         >
           <Pencil className="size-4" aria-hidden />
-          Редактировать
+          edit
         </Button>
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">

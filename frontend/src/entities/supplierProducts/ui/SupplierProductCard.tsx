@@ -101,7 +101,7 @@ export function SupplierProductCard({
           </p>
         )}
       </CardContent>
-      <CardFooter className="flex items-end justify-between gap-3 border-t px-5 py-4">
+      <CardFooter className="flex flex-col gap-4 border-t px-5 py-4">
         <div className="flex flex-col gap-1">
           <span className="text-xs uppercase tracking-wide text-muted-foreground">
             Цена
@@ -117,7 +117,9 @@ export function SupplierProductCard({
           </span>
         </div>
         {!to && actions ? (
-          <div className="flex items-center">{actions}</div>
+          <div className="flex w-full flex-wrap items-center justify-between gap-3">
+            {actions}
+          </div>
         ) : null}
       </CardFooter>
     </article>
@@ -136,8 +138,10 @@ export function SupplierProductCard({
             {body}
           </Link>
           {actions ? (
-            <CardFooter className="flex justify-end gap-3 border-t px-5 py-4">
-              {actions}
+            <CardFooter className="border-t px-5 py-4">
+              <div className="flex w-full flex-wrap items-center justify-between gap-3">
+                {actions}
+              </div>
             </CardFooter>
           ) : null}
         </>

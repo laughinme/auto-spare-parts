@@ -146,7 +146,7 @@ export type PublishProductParams = {
 
 export async function publishProduct ({ org_id, product_id }: PublishProductParams) {
   const response = await apiProtected.post<OrgProductDto>(
-    `/organizations/${org_id}/products/${product_id}/publish/`,
+    `/organizations/${org_id}/products/${product_id}/publish`,
   );
   return response.data;
   
@@ -154,7 +154,7 @@ export async function publishProduct ({ org_id, product_id }: PublishProductPara
 
 export async function unpublishProduct ({ org_id, product_id }: PublishProductParams) {
   const response = await apiProtected.post<OrgProductDto>(
-    `/organizations/${org_id}/products/${product_id}/unpublish/`,
+    `/organizations/${org_id}/products/${product_id}/unpublish`,
   );
   return response.data;
   
