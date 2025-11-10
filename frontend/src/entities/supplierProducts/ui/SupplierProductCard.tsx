@@ -79,10 +79,38 @@ export function SupplierProductCard({
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="flex flex-1 flex-col gap-3 px-5 py-4">
-        <CardTitle className="line-clamp-2 text-base font-semibold leading-tight">
-          {product.title}
-        </CardTitle>
+      <CardContent className="flex flex-1 flex-col gap-4 px-5 py-4">
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <CardTitle className="line-clamp-2 text-base font-semibold leading-tight">
+              {product.title}
+            </CardTitle>
+            <div className="flex min-w-[140px] flex-col gap-1 text-right sm:text-left">
+              <span className="text-xs uppercase tracking-wide text-muted-foreground">
+                Цена
+              </span>
+              <span className="text-lg font-semibold leading-none">
+                {priceLabel}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                Остаток:&nbsp;
+                <span className="font-semibold text-foreground">
+                  {quantityLabel}
+                </span>
+              </span>
+            </div>
+          </div>
+
+          {product.description ? (
+            <p className="line-clamp-3 text-sm text-muted-foreground">
+              {product.description}
+            </p>
+          ) : (
+            <span className="text-sm text-muted-foreground">
+              Описание отсутствует
+            </span>
+          )}
+        </div>
         <dl className="grid grid-cols-[auto,1fr] gap-x-2 gap-y-1 text-sm">
           <dt className="text-muted-foreground">Бренд:</dt>
           <dd className="font-medium text-foreground">{product.make.name}</dd>
@@ -95,33 +123,14 @@ export function SupplierProductCard({
             {conditionLabel[product.condition] ?? product.condition}
           </dd>
         </dl>
-        {product.description && (
-          <p className="line-clamp-3 text-sm text-muted-foreground">
-            {product.description}
-          </p>
-        )}
       </CardContent>
-      <CardFooter className="flex flex-col gap-4 border-t px-5 py-4">
-        <div className="flex flex-col gap-1">
-          <span className="text-xs uppercase tracking-wide text-muted-foreground">
-            Цена
-          </span>
-          <span className="text-lg font-semibold leading-none">
-            {priceLabel}
-          </span>
-          <span className="text-xs text-muted-foreground">
-            Остаток:&nbsp;
-            <span className="font-semibold text-foreground">
-              {quantityLabel}
-            </span>
-          </span>
-        </div>
-        {!to && actions ? (
+      {!to && actions ? (
+        <CardFooter className="border-t px-5 py-4">
           <div className="flex w-full flex-wrap items-center justify-between gap-3">
             {actions}
           </div>
-        ) : null}
-      </CardFooter>
+        </CardFooter>
+      ) : null}
     </article>
   );
 
