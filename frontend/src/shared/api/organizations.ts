@@ -1,5 +1,9 @@
 import apiProtected from "./axiosInstance";
 
+export type OrganizationType = "supplier" | "workshop";
+export type KycStatus = "not_started" | "pending" | "verified" | "rejected";
+export type PayoutSchedule = "daily" | "weekly" | "monthly";
+
 export type StripeAccountResponse = {
   account: string;
 };
@@ -31,10 +35,17 @@ export type OrganizationDto = {
   id: string;
   name: string;
   country: string;
+  address: string | null;
   created_at: string;
 };
 
 export async function getOrganizationsList(): Promise<OrganizationDto[]> {
   const response = await apiProtected.get<OrganizationDto[]>("/organizations/mine");
+  return response.data;
+}
+
+export async function getOrganizationDetails(orgId: string): Promise<OrganizationDto> {
+  const encodedOrgId = encodeURIComponent(orgId);
+  const response = await apiProtected.get<OrganizationDto>(`/organizations/${encodedOrgId}/`);
   return response.data;
 }

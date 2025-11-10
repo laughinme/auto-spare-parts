@@ -46,12 +46,6 @@ export function OrganizationCard({
       <CardContent className="space-y-3 text-sm">
         <dl className="grid gap-2 text-muted-foreground">
           <div className="flex items-center justify-between gap-3">
-            <dt className="font-medium text-foreground">ID</dt>
-            <dd className="font-mono text-xs text-muted-foreground">
-              {organization.id}
-            </dd>
-          </div>
-          <div className="flex items-center justify-between gap-3">
             <dt className="font-medium text-foreground">
               Страна регистрации
             </dt>

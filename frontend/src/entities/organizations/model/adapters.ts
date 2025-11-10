@@ -5,6 +5,7 @@ export const toOrganization = (dto: OrganizationDto): Organization => ({
   id: dto.id,
   name: dto.name,
   country: dto.country,
+  address: dto.address,
   createdAt: dto.created_at,
 });
 
