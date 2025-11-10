@@ -16,7 +16,6 @@ import CartPage from "@/pages/mainpages/CartPage"
 import GaragePage from "@/pages/mainpages/GaragePage"
 import GarageVehicleDetailsPage from "@/pages/mainpages/GarageVehicleDetailsPage"
 import AccountPage from "@/pages/mainpages/AccountPage"
-import OrganizationsPage from "@/pages/mainpages/OrganizationsPage"
 import OrganizationDetailsPage from "@/pages/mainpages/OrganizationDetailsPage"
 
 const PlaceholderPage = ({ title }: { title: string }) => (
@@ -30,7 +29,6 @@ const PlaceholderPage = ({ title }: { title: string }) => (
 export const ROUTE_PATHS = {
   account: {
     profile: "/account",
-    organizations: "/account/organizations",
     organizationDetails: "/account/organizations/:organizationId",
   },
   buyer: {
@@ -123,10 +121,6 @@ export const PROTECTED_ROUTES = [
   {
     path: ROUTE_PATHS.account.profile,
     element: <AccountPage />,
-  },
-  {
-    path: ROUTE_PATHS.account.organizations,
-    element: <OrganizationsPage />,
   },
   {
     path: ROUTE_PATHS.account.organizationDetails,

@@ -3,6 +3,7 @@ import {
   IconBuilding,
   IconDotsVertical,
   IconLogout,
+  IconRefresh,
   IconUserCircle,
 } from "@tabler/icons-react"
 import { Link } from "react-router-dom"
@@ -19,12 +20,20 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/shared/components/ui/dropdown-menu"
 import { Button } from "@/shared/components/ui/button"
 import { useAuth } from "@/app/providers/auth/useAuth"
-import { ROUTE_PATHS, SUPPLIER_NAV_SECTION } from "@/app/routes"
+import {
+  ROUTE_PATHS,
+  SUPPLIER_NAV_SECTION,
+  buildOrganizationDetailsPath,
+} from "@/app/routes"
 import type { NavSection } from "@/shared/components/nav-main"
+import { useOrganizationsMine } from "@/entities/organizations/model/useOrganizationsMine"
 
 export function NavUser({
   user,
@@ -69,6 +78,54 @@ export function NavUser({
     if (canNavigate === false) {
       event.preventDefault()
     }
+  }
+
+  const {
+    data: organizations,
+    isLoading: isOrganizationsLoading,
+    isError: isOrganizationsError,
+    refetch: refetchOrganizations,
+  } = useOrganizationsMine()
+
+  const renderOrganizationsMenuContent = () => {
+    if (isOrganizationsLoading) {
+      return (
+        <DropdownMenuItem disabled className="text-xs text-muted-foreground">
+          Загружаем организации…
+        </DropdownMenuItem>
+      )
+    }
+
+    if (isOrganizationsError) {
+      return (
+        <DropdownMenuItem
+          className="flex items-center gap-2 text-xs text-muted-foreground"
+          onSelect={(event) => {
+            event.preventDefault()
+            refetchOrganizations()
+          }}
+        >
+          <IconRefresh className="size-3.5" />
+          Повторить попытку
+        </DropdownMenuItem>
+      )
+    }
+
+    if (!organizations || organizations.length === 0) {
+      return (
+        <DropdownMenuItem disabled className="text-xs text-muted-foreground">
+          Нет доступных организаций
+        </DropdownMenuItem>
+      )
+    }
+
+    return organizations.map((organization) => (
+      <DropdownMenuItem asChild key={organization.id}>
+        <Link to={buildOrganizationDetailsPath(organization.id)}>
+          {organization.name}
+        </Link>
+      </DropdownMenuItem>
+    ))
   }
 
   return (
@@ -123,12 +180,15 @@ export function NavUser({
               Account
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link to={ROUTE_PATHS.account.organizations}>
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
               <IconBuilding />
               Organizations
-            </Link>
-          </DropdownMenuItem>
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent className="min-w-[220px]">
+              {renderOrganizationsMenuContent()}
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
