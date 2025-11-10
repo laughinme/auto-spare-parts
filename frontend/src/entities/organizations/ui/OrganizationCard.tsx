@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 import type { Organization } from "@/entities/organizations/model/types";
 import { Badge } from "@/shared/components/ui/badge";
 import {
@@ -13,6 +15,7 @@ import { cn } from "@/shared/lib/utils";
 type OrganizationCardProps = {
   organization: Organization;
   className?: string;
+  to?: string | null;
 };
 
 const createdAtFormatter = new Intl.DateTimeFormat("ru-RU", {
@@ -24,12 +27,13 @@ const createdAtFormatter = new Intl.DateTimeFormat("ru-RU", {
 export function OrganizationCard({
   organization,
   className,
+  to = null,
 }: OrganizationCardProps) {
   const createdAtLabel = getCreatedAtLabel(organization.createdAt);
   const countryLabel = organization.country?.trim() || "—";
 
-  return (
-    <Card className={cn("h-full", className)}>
+  const body = (
+    <>
       <CardHeader className="space-y-3 pb-4">
         <div className="flex items-start justify-between gap-3">
           <CardTitle className="text-lg leading-tight">
@@ -59,6 +63,25 @@ export function OrganizationCard({
           </div>
         </dl>
       </CardContent>
+    </>
+  );
+
+  return (
+    <Card
+      className={cn(
+        "h-full transition-shadow",
+        to &&
+          "overflow-hidden hover:shadow-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background",
+        className,
+      )}
+    >
+      {to ? (
+        <Link to={to} className="block h-full focus-visible:outline-none">
+          {body}
+        </Link>
+      ) : (
+        body
+      )}
     </Card>
   );
 }

@@ -1,3 +1,4 @@
+import { buildOrganizationDetailsPath } from "@/app/routes";
 import { useOrganizationsMine } from "@/entities/organizations/model/useOrganizationsMine";
 import {
   OrganizationCard,
@@ -63,6 +64,7 @@ export function OrganizationsListWidget() {
                 <OrganizationCard
                   key={organization.id}
                   organization={organization}
+                  to={buildOrganizationDetailsPath(organization.id)}
                 />
               ))}
         </div>

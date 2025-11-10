@@ -17,6 +17,7 @@ import GaragePage from "@/pages/mainpages/GaragePage"
 import GarageVehicleDetailsPage from "@/pages/mainpages/GarageVehicleDetailsPage"
 import AccountPage from "@/pages/mainpages/AccountPage"
 import OrganizationsPage from "@/pages/mainpages/OrganizationsPage"
+import OrganizationDetailsPage from "@/pages/mainpages/OrganizationDetailsPage"
 
 const PlaceholderPage = ({ title }: { title: string }) => (
   <div className="flex flex-1 flex-col">
@@ -30,6 +31,7 @@ export const ROUTE_PATHS = {
   account: {
     profile: "/account",
     organizations: "/account/organizations",
+    organizationDetails: "/account/organizations/:organizationId",
   },
   buyer: {
     fyp: "/buyer/fyp",
@@ -60,6 +62,12 @@ export const buildSupplierProductDetailsPath = (productId: string) =>
   ROUTE_PATHS.supplier.productDetails.replace(
     ":productId",
     encodeURIComponent(productId),
+  )
+
+export const buildOrganizationDetailsPath = (organizationId: string) =>
+  ROUTE_PATHS.account.organizationDetails.replace(
+    ":organizationId",
+    encodeURIComponent(organizationId),
   )
 
 export const SUPPLIER_NAV_SECTION: NavSection = {
@@ -119,6 +127,10 @@ export const PROTECTED_ROUTES = [
   {
     path: ROUTE_PATHS.account.organizations,
     element: <OrganizationsPage />,
+  },
+  {
+    path: ROUTE_PATHS.account.organizationDetails,
+    element: <OrganizationDetailsPage />,
   },
   {
     path: ROUTE_PATHS.supplier.dashboard,
