@@ -90,3 +90,8 @@ export type UpdateSupplierProductVariables = {
   productId: string;
   product: UpdateProductBody;
 };
+
+export type PublishProductVars = {
+  orgId: string;
+  productId: string;
+}

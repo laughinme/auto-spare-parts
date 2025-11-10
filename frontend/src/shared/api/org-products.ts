@@ -138,3 +138,16 @@ export async function updateOrgProduct({ org_id, product_id }: ProductDetailPara
   );
   return response.data;
 }
+
+export type PublishProductParams = { 
+  org_id: string; 
+  product_id: string
+ }
+
+export async function publishProduct ({ org_id, product_id }: PublishProductParams) {
+  const response = await apiProtected.post<OrgProductDto>(
+    `/organizations/${org_id}/products/${product_id}/publish/`,
+  );
+  return response.data;
+  
+} 
