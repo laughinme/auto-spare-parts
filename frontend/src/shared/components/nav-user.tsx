@@ -1,3 +1,4 @@
+import type { MouseEvent } from "react"
 import {
   IconBuilding,
   IconDotsVertical,
@@ -22,16 +23,22 @@ import {
 } from "@/shared/components/ui/dropdown-menu"
 import { Button } from "@/shared/components/ui/button"
 import { useAuth } from "@/app/providers/auth/useAuth"
-import { ROUTE_PATHS } from "@/app/routes"
+import { ROUTE_PATHS, SUPPLIER_NAV_SECTION } from "@/app/routes"
+import type { NavSection } from "@/shared/components/nav-main"
 
 export function NavUser({
   user,
+  onNavItemSelect,
 }: {
   user: {
     name: string
     email: string
     avatar: string
   }
+  onNavItemSelect?: (args: {
+    section: NavSection
+    item: NavSection["items"][number]
+  }) => boolean | void
 }) {
   const logout = useAuth()?.logout
   const displayName = user.name?.trim() || "User"
@@ -48,6 +55,20 @@ export function NavUser({
 
   const handleLogout = () => {
     logout?.()
+  }
+
+  const handleSupplierItemClick = (
+    event: MouseEvent<HTMLAnchorElement>,
+    item: NavSection["items"][number],
+  ) => {
+    const canNavigate = onNavItemSelect?.({
+      section: SUPPLIER_NAV_SECTION,
+      item,
+    })
+
+    if (canNavigate === false) {
+      event.preventDefault()
+    }
   }
 
   return (
@@ -108,6 +129,23 @@ export function NavUser({
               Organizations
             </Link>
           </DropdownMenuItem>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          {SUPPLIER_NAV_SECTION.items.map((item) => {
+            const Icon = item.icon
+            return (
+              <DropdownMenuItem asChild key={item.path}>
+                <Link
+                  to={item.path}
+                  onClick={(event) => handleSupplierItemClick(event, item)}
+                >
+                  {Icon ? <Icon className="size-4" /> : null}
+                  {item.title}
+                </Link>
+              </DropdownMenuItem>
+            )
+          })}
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={handleLogout}>

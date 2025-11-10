@@ -44,7 +44,7 @@ export function SiteHeader({
           onItemSelect={onNavItemSelect}
         />
         <div className="ml-auto flex items-center gap-3">
-          <NavUser user={user} />
+          <NavUser user={user} onNavItemSelect={onNavItemSelect} />
         </div>
       </div>
     </header>

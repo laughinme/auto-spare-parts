@@ -62,6 +62,27 @@ export const buildSupplierProductDetailsPath = (productId: string) =>
     encodeURIComponent(productId),
   )
 
+export const SUPPLIER_NAV_SECTION: NavSection = {
+  label: "Supplier",
+  items: [
+    {
+      title: "Dashboard",
+      path: ROUTE_PATHS.supplier.dashboard,
+      icon: BarChartIcon,
+    },
+    {
+      title: "My products",
+      path: ROUTE_PATHS.supplier.products,
+      icon: CardStackIcon,
+    },
+    {
+      title: "My orders",
+      path: ROUTE_PATHS.supplier.orders,
+      icon: ClipboardIcon,
+    },
+  ],
+}
+
 export const ROUTE_SECTIONS: NavSection[] = [
   {
     label: "Buyer",
@@ -84,26 +105,6 @@ export const ROUTE_SECTIONS: NavSection[] = [
       {
         title: "My orders",
         path: ROUTE_PATHS.buyer.orders,
-        icon: ClipboardIcon,
-      },
-    ],
-  },
-  {
-    label: "Supplier",
-    items: [
-      {
-        title: "Dashboard",
-        path: ROUTE_PATHS.supplier.dashboard,
-        icon: BarChartIcon,
-      },
-      {
-        title: "My products",
-        path: ROUTE_PATHS.supplier.products,
-        icon: CardStackIcon,
-      },
-      {
-        title: "My orders",
-        path: ROUTE_PATHS.supplier.orders,
         icon: ClipboardIcon,
       },
     ],

@@ -33,71 +33,59 @@ export function NavMain({
     event: MouseEvent<HTMLAnchorElement>
   }) => boolean | void
 }) {
-  const nodes: ReactNode[] = []
-
-  sections.forEach((section, index) => {
-    nodes.push(
-      <div
-        key={`section-${section.label}`}
-        className="flex flex-nowrap items-center gap-3"
-      >
-        <span className="text-[0.7rem] font-semibold uppercase tracking-wide text-muted-foreground">
-          {section.label}
-        </span>
-        <div className="flex flex-nowrap items-center gap-1">
-          {section.items.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              end
-              onClick={(event) => {
-                const result = onItemSelect?.({ section, item, event })
-                if (result === false) {
-                  event.preventDefault()
-                }
-              }}
-              className={({ isActive }) =>
-                cn(
-                  "inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                  isActive
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                )
-              }
-            >
-              {item.icon && <item.icon className="size-4 shrink-0" />}
-              <span className="flex items-center gap-1">
-                {item.title}
-                {itemCounters?.[item.path] && itemCounters[item.path]! > 0 ? (
-                  <Badge
-                    variant="secondary"
-                    className="px-1.5 py-0 text-[0.65rem] font-semibold leading-none"
-                  >
-                    {itemCounters[item.path]}
-                  </Badge>
-                ) : null}
-              </span>
-            </NavLink>
-          ))}
-        </div>
-      </div>
-    )
-
-    if (index === 0 && searchSlot) {
-      nodes.push(
-        <div
-          key="nav-search-slot"
-          className="flex min-w-[240px] flex-none items-center justify-center"
-        >
-          {searchSlot}
-        </div>
-      )
-    }
-  })
-
   return (
     <nav className="flex flex-1 flex-nowrap items-center gap-6 overflow-x-auto">
-      {nodes}
+      {sections.map((section) => (
+        <div
+          key={`section-${section.label}`}
+          className="flex flex-nowrap items-center gap-3"
+        >
+          <span className="text-[0.7rem] font-semibold uppercase tracking-wide text-muted-foreground">
+            {section.label}
+          </span>
+          <div className="flex flex-nowrap items-center gap-1">
+            {section.items.map((item) => (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                end
+                onClick={(event) => {
+                  const result = onItemSelect?.({ section, item, event })
+                  if (result === false) {
+                    event.preventDefault()
+                  }
+                }}
+                className={({ isActive }) =>
+                  cn(
+                    "inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                    isActive
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  )
+                }
+              >
+                {item.icon && <item.icon className="size-4 shrink-0" />}
+                <span className="flex items-center gap-1">
+                  {item.title}
+                  {itemCounters?.[item.path] && itemCounters[item.path]! > 0 ? (
+                    <Badge
+                      variant="secondary"
+                      className="px-1.5 py-0 text-[0.65rem] font-semibold leading-none"
+                    >
+                      {itemCounters[item.path]}
+                    </Badge>
+                  ) : null}
+                </span>
+              </NavLink>
+            ))}
+          </div>
+        </div>
+      ))}
+      {searchSlot ? (
+        <div className="ml-auto flex min-w-[240px] flex-none items-center justify-center">
+          {searchSlot}
+        </div>
+      ) : null}
     </nav>
   )
 }
