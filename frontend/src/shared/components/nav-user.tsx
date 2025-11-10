@@ -1,10 +1,10 @@
 import {
-  IconCreditCard,
+  IconBuilding,
   IconDotsVertical,
   IconLogout,
-  IconNotification,
   IconUserCircle,
 } from "@tabler/icons-react"
+import { Link } from "react-router-dom"
 
 import {
   Avatar,
@@ -22,6 +22,7 @@ import {
 } from "@/shared/components/ui/dropdown-menu"
 import { Button } from "@/shared/components/ui/button"
 import { useAuth } from "@/app/providers/auth/useAuth"
+import { ROUTE_PATHS } from "@/app/routes"
 
 export function NavUser({
   user,
@@ -95,17 +96,17 @@ export function NavUser({
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>
-            <IconUserCircle />
-            Account
+          <DropdownMenuItem asChild>
+            <Link to={ROUTE_PATHS.account.profile}>
+              <IconUserCircle />
+              Account
+            </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            <IconCreditCard />
-            Billing
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            <IconNotification />
-            Notifications
+          <DropdownMenuItem asChild>
+            <Link to={ROUTE_PATHS.account.organizations}>
+              <IconBuilding />
+              Organizations
+            </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />

@@ -13,7 +13,8 @@ import { toast } from "sonner";
 
 import { buildGarageVehicleDetailsPath } from "@/app/routes";
 import type { Vehicle } from "@/entities/vehicle/model/types";
-import { VehicleCard, VehicleRow } from "@/entities/vehicle/ui";
+import { VehicleCard } from "@/entities/vehicle/ui/VehicleCard";
+import { VehicleRow } from "@/entities/vehicle/ui/VehicleRow";
 import { useRemoveFromGarage } from "@/features/vehicle/useRemoveFromGarage";
 import { useVehicleFeedInfinite } from "@/features/vehicle/useVehicleFeed";
 import { Button } from "@/shared/components/ui/button";
