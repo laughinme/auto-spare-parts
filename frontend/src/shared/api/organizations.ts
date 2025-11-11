@@ -3,6 +3,7 @@ import apiProtected from "./axiosInstance";
 export type OrganizationType = "supplier" | "workshop";
 export type KycStatus = "not_started" | "pending" | "verified" | "rejected";
 export type PayoutSchedule = "daily" | "weekly" | "monthly";
+export type UserRoles = "owner" | "admin" | "staff" | "accountant";
 
 export type StripeAccountResponse = {
   account: string;
@@ -47,5 +48,23 @@ export async function getOrganizationsList(): Promise<OrganizationDto[]> {
 export async function getOrganizationDetails(orgId: string): Promise<OrganizationDto> {
   const encodedOrgId = encodeURIComponent(orgId);
   const response = await apiProtected.get<OrganizationDto>(`/organizations/${encodedOrgId}/`);
+  return response.data;
+}
+
+export type UserPosDto ={
+  org_id: string;
+  user_id: string;
+  role: UserRoles;
+  invited_by:{
+    id: string;
+    username: string;
+  }
+  invited_at: string | null;
+  accepted_at: string | null;
+}
+
+export async function getOrganizationUserPositions(orgId: string): Promise<UserPosDto> {
+  const encodedOrgId = encodeURIComponent(orgId);
+  const response = await apiProtected.get<UserPosDto>(`/organizations/${encodedOrgId}}/me/`);
   return response.data;
 }

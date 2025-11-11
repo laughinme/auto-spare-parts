@@ -80,8 +80,9 @@ export async function getOrgProducts({
   status,
   q,
 }: OrgProductParams) {
+  const encodedOrgId = encodeURIComponent(org_id);
   const response = await apiProtected.get<PageDto<OrgProductDto>>(
-    `/organizations/${org_id}/products/`,
+    `/organizations/${encodedOrgId}/products/`,
     {
       params: {
         limit,
@@ -95,9 +96,10 @@ export async function getOrgProducts({
   return response.data;
 }
 
-export async function createOrgProduct(orgId: string, payload: CreateOrgProductBody) {
+export async function createOrgProduct(org_id: string, payload: CreateOrgProductBody) {
+  const encodedOrgId = encodeURIComponent(org_id);
   const response = await apiProtected.post<OrgProductDto>(
-    `/organizations/${orgId}/products/`,
+    `/organizations/${encodedOrgId}/products/`,
     payload,
   );
 
@@ -110,8 +112,9 @@ export type ProductDetailParams = {
  }
 
 export async function getOrgProductDetail({ org_id, product_id }: ProductDetailParams) {
+  const encodedOrgId = encodeURIComponent(org_id);
   const response = await apiProtected.get<OrgProductDto>(
-    `/organizations/${org_id}/products/${product_id}/`,
+    `/organizations/${encodedOrgId}/products/${product_id}/`,
   );
   return response.data;
 }
@@ -132,8 +135,9 @@ export type UpdateProductBodyDto = {
 }
 
 export async function updateOrgProduct({ org_id, product_id }: ProductDetailParams, payload: UpdateProductBodyDto) {
+  const encodedOrgId = encodeURIComponent(org_id);
   const response = await apiProtected.patch<OrgProductDto>(
-    `/organizations/${org_id}/products/${product_id}/`,
+    `/organizations/${encodedOrgId}/products/${product_id}/`,
     payload,
   );
   return response.data;
@@ -145,16 +149,18 @@ export type PublishProductParams = {
  }
 
 export async function publishProduct ({ org_id, product_id }: PublishProductParams) {
+  const encodedOrgId = encodeURIComponent(org_id);
   const response = await apiProtected.post<OrgProductDto>(
-    `/organizations/${org_id}/products/${product_id}/publish`,
+    `/organizations/${encodedOrgId}/products/${product_id}/publish`,
   );
   return response.data;
   
 } 
 
 export async function unpublishProduct ({ org_id, product_id }: PublishProductParams) {
+  const encodedOrgId = encodeURIComponent(org_id);
   const response = await apiProtected.post<OrgProductDto>(
-    `/organizations/${org_id}/products/${product_id}/unpublish`,
+    `/organizations/${encodedOrgId}/products/${product_id}/unpublish`,
   );
   return response.data;
   
