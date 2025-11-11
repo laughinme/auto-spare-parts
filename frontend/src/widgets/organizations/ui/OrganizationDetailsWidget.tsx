@@ -1,7 +1,13 @@
 import { RefreshCcw } from "lucide-react";
 
-import type { Organization } from "@/entities/organizations/model/types";
+import type { Organization, UserPos } from "@/entities/organizations/model/types";
 import { useOrganizationDetails } from "@/entities/organizations/model/useOrganizationDetails";
+import {  useOrganizationMyPosition } from "@/entities/organizations/model/useOrganizationPos";
+import {
+  OrganizationRoleCard,
+  OrganizationRoleCardError,
+  OrganizationRoleCardSkeleton,
+} from "@/entities/organizations/ui/OrganizationRoleCard";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import {
@@ -27,6 +33,12 @@ export function OrganizationDetailsWidget({
     isError,
     refetch,
   } = useOrganizationDetails(organizationId);
+  const {
+    data: roleData,
+    isLoading: isRoleLoading,
+    isError: isRoleError,
+    refetch: refetchRole,
+  } =  useOrganizationMyPosition(organizationId);
 
   if (isLoading) {
     return <OrganizationDetailsSkeleton />;
@@ -39,16 +51,29 @@ export function OrganizationDetailsWidget({
   return (
     <OrganizationDetailsCard
       organization={data}
+      roleState={{
+        role: roleData ?? null,
+        isLoading: isRoleLoading,
+        isError: isRoleError,
+        refetch: refetchRole,
+      }}
     />
   );
 }
 
 type OrganizationDetailsCardProps = {
   organization: Organization;
+  roleState: {
+    role: UserPos | null;
+    isLoading: boolean;
+    isError: boolean;
+    refetch: () => Promise<unknown>;
+  };
 };
 
 function OrganizationDetailsCard({
   organization,
+  roleState,
 }: OrganizationDetailsCardProps) {
   const countryLabel = organization.country?.trim() || "—";
   const countryBadgeLabel =
@@ -136,6 +161,19 @@ function OrganizationDetailsCard({
             </ul>
           </CardContent>
         </Card>
+      </section>
+
+      <section>
+        {roleState.isLoading && <OrganizationRoleCardSkeleton />}
+        {!roleState.isLoading && roleState.isError && (
+          <OrganizationRoleCardError onRetry={roleState.refetch} />
+        )}
+        {!roleState.isLoading && !roleState.isError && roleState.role && (
+          <OrganizationRoleCard role={roleState.role} />
+        )}
+        {!roleState.isLoading && !roleState.isError && !roleState.role && (
+          <OrganizationRoleEmptyState />
+        )}
       </section>
     </div>
   );
@@ -301,6 +339,21 @@ function OrganizationDetailsSkeleton() {
         </Card>
       </div>
     </div>
+  );
+}
+
+function OrganizationRoleEmptyState() {
+  return (
+    <Card className="border-dashed border-border/60">
+      <CardContent className="space-y-2 py-6 text-sm text-muted-foreground">
+        <p className="font-semibold text-foreground">
+          Нет данных о вашей роли
+        </p>
+        <p>
+          Попросите администратора организации отправить приглашение или повторите запрос чуть позже.
+        </p>
+      </CardContent>
+    </Card>
   );
 }
 

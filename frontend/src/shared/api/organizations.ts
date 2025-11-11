@@ -65,6 +65,6 @@ export type UserPosDto ={
 
 export async function getOrganizationUserPositions(orgId: string): Promise<UserPosDto> {
   const encodedOrgId = encodeURIComponent(orgId);
-  const response = await apiProtected.get<UserPosDto>(`/organizations/${encodedOrgId}}/me/`);
+  const response = await apiProtected.get<UserPosDto>(`/organizations/${encodedOrgId}/me/`);
   return response.data;
 }
