@@ -28,6 +28,14 @@ import { Label } from "@/shared/components/ui/label";
 import { Separator } from "@/shared/components/ui/separator";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Textarea } from "@/shared/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/shared/components/ui/dialog";
 
 const SKELETON_COUNT = 3;
 const MIN_SHIPPING_ADDRESS_LENGTH = 5;
@@ -37,6 +45,7 @@ export function CartWidget() {
   const [showLocked, setShowLocked] = useState(false);
   const [shippingAddress, setShippingAddress] = useState("");
   const [orderNotes, setOrderNotes] = useState("");
+  const [isCheckoutDialogOpen, setCheckoutDialogOpen] = useState(false);
   const {
     data: cart,
     isLoading,
@@ -203,7 +212,7 @@ export function CartWidget() {
   const hasCheckoutItems = checkoutReadyItems.length > 0;
 
   const checkoutDisabled =
-    isLoading || !hasCheckoutItems || isShippingAddressTooShort;
+    isLoading || !hasCheckoutItems;
 
   const checkoutHint = (() => {
     if (!hasCheckoutItems) {
@@ -216,11 +225,7 @@ export function CartWidget() {
       return "Добавьте товары, чтобы продолжить.";
     }
 
-    if (isShippingAddressTooShort) {
-      return "Укажите адрес доставки, чтобы перейти к оплате.";
-    }
-
-    return "Все товары доступны. Можно оформить заказ.";
+    return "Нажмите «Оформить заказ», чтобы указать адрес в диалоге и перейти к оплате.";
   })();
 
   const handleCheckout = () => {
@@ -279,10 +284,19 @@ export function CartWidget() {
         queryClient.invalidateQueries({ queryKey: ["cart", true] }).catch(() => null);
         queryClient.invalidateQueries({ queryKey: ["cart-summary"] }).catch(() => null);
 
+        setCheckoutDialogOpen(false);
+
         toast.success("Перенаправляем на страницу оплаты…");
         window.location.assign(url);
       },
     });
+  };
+
+  const handleOpenCheckoutDialog = () => {
+    if (!hasCheckoutItems || checkoutMutation.isPending) {
+      return;
+    }
+    setCheckoutDialogOpen(true);
   };
 
   return (
@@ -372,41 +386,8 @@ export function CartWidget() {
 
           <Separator />
 
-          <div className="grid gap-4 lg:grid-cols-2">
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center justify-between text-sm">
-                <Label htmlFor="cart-shipping-address" className="font-medium">
-                  Адрес доставки
-                </Label>
-                <span className="text-xs uppercase text-muted-foreground">
-                  обязательно
-                </span>
-              </div>
-              <Textarea
-                id="cart-shipping-address"
-                placeholder="Город, улица, дом, контактный телефон"
-                value={shippingAddress}
-                onChange={(event) => setShippingAddress(event.target.value)}
-                aria-invalid={isShippingAddressTooShort}
-              />
-              <p className="text-xs text-muted-foreground">
-                Укажите полный адрес, чтобы продавец смог оформить доставку.
-              </p>
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="cart-order-notes" className="text-sm font-medium">
-                Комментарий к заказу
-              </Label>
-              <Textarea
-                id="cart-order-notes"
-                placeholder="Например: подъезд, желаемое время доставки, контакты"
-                value={orderNotes}
-                onChange={(event) => setOrderNotes(event.target.value)}
-              />
-              <p className="text-xs text-muted-foreground">
-                Опционально. Передадим сообщение продавцу вместе с заказом.
-              </p>
-            </div>
+          <div className="rounded-lg border border-dashed bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+            Адрес и комментарий к заказу можно будет указать в появившемся диалоговом окне после нажатия кнопки «Оформить заказ».
           </div>
 
           <Separator />
@@ -432,17 +413,94 @@ export function CartWidget() {
             type="button"
             size="lg"
             disabled={checkoutDisabled || checkoutMutation.isPending}
-            onClick={handleCheckout}
+            onClick={handleOpenCheckoutDialog}
           >
             {(checkoutMutation.isPending || isFetching) && (
               <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
             )}
-            {checkoutMutation.isPending ? "Переход к оплате…" : "Оформить заказ"}
+            {checkoutMutation.isPending ? "Обработка…" : "Оформить заказ"}
           </Button>
         </CardFooter>
       </Card>
 
       {content}
+
+      <Dialog open={isCheckoutDialogOpen} onOpenChange={setCheckoutDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Укажите адрес доставки</DialogTitle>
+            <DialogDescription>
+              После сохранения мы перенаправим вас на защищённую страницу оплаты Stripe.
+            </DialogDescription>
+          </DialogHeader>
+          <form
+            className="space-y-4"
+            onSubmit={(event) => {
+              event.preventDefault();
+              handleCheckout();
+            }}
+          >
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <Label htmlFor="dialog-shipping-address" className="font-medium">
+                  Адрес доставки
+                </Label>
+                <span className="text-xs uppercase text-muted-foreground">
+                  обязательно
+                </span>
+              </div>
+              <Textarea
+                id="dialog-shipping-address"
+                placeholder="Город, улица, дом, контактный телефон"
+                value={shippingAddress}
+                onChange={(event) => setShippingAddress(event.target.value)}
+                aria-invalid={isShippingAddressTooShort}
+              />
+              <p className="text-xs text-muted-foreground">
+                Укажите полный адрес, чтобы продавец смог оформить доставку.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="dialog-order-notes" className="text-sm font-medium">
+                Комментарий к заказу
+              </Label>
+              <Textarea
+                id="dialog-order-notes"
+                placeholder="Например: подъезд, желаемое время доставки, контакты"
+                value={orderNotes}
+                onChange={(event) => setOrderNotes(event.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Опционально. Передадим сообщение продавцу вместе с заказом.
+              </p>
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setCheckoutDialogOpen(false)}
+                disabled={checkoutMutation.isPending}
+              >
+                Отмена
+              </Button>
+              <Button
+                type="submit"
+                disabled={checkoutMutation.isPending}
+              >
+                {checkoutMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
+                    Создание платежа…
+                  </>
+                ) : (
+                  "Оплатить"
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -471,12 +529,12 @@ const formatMoney = (value: number) => {
   }
 
   try {
-    return new Intl.NumberFormat("ru-RU", {
+    return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "RUB",
+      currency: "USD",
       maximumFractionDigits: 0,
     }).format(value);
   } catch {
-    return Number(value).toLocaleString("ru-RU");
+    return `$${Number(value).toLocaleString("en-US")}`;
   }
 };

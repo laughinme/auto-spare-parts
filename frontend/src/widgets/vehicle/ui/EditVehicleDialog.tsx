@@ -30,13 +30,14 @@ export function EditVehicleDialog({
 }: EditVehicleDialogProps) {
   const [resetToken, setResetToken] = useState(0);
   const updateVehicleMutation = useUpdateGarageVehicle();
+  const { reset: resetMutation } = updateVehicleMutation;
 
   useEffect(() => {
     if (!open) {
-      updateVehicleMutation.reset();
+      resetMutation();
       setResetToken((token) => token + 1);
     }
-  }, [open, updateVehicleMutation]);
+  }, [open, resetMutation]);
 
   const initialValues = useMemo(
     () => (vehicle ? vehicleToFormValues(vehicle) : EMPTY_VEHICLE_FORM),
@@ -98,6 +99,7 @@ export function EditVehicleDialog({
 
     if (Object.keys(payload).length === 0) {
       toast.info("Изменений не обнаружено");
+      onOpenChange(false);
       return;
     }
 
@@ -136,8 +138,8 @@ export function EditVehicleDialog({
       {
         onSuccess: () => {
           toast.success("Данные автомобиля обновлены");
-          onOpenChange(false);
         },
+        onSettled: () => onOpenChange(false),
       },
     );
   };

@@ -145,13 +145,13 @@ const formatMoney = (value: number) => {
   }
 
   try {
-    return new Intl.NumberFormat("ru-RU", {
+    return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "RUB",
+      currency: "USD",
       maximumFractionDigits: 0,
     }).format(value);
   } catch {
-    return Number(value).toLocaleString("ru-RU");
+    return `$${Number(value).toLocaleString("en-US")}`;
   }
 };
 
