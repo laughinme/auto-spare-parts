@@ -89,7 +89,7 @@ class StripeService:
             line_items=line_items,  # pyright: ignore[reportArgumentType]
             ui_mode='embedded',
             mode='payment',
-            return_url=settings.WEB_URL + '/return?session_id={CHECKOUT_SESSION_ID}',
+            return_url=settings.WEB_URL + '/buyer/orders?session_id={CHECKOUT_SESSION_ID}',
             # automatic_tax={'enabled': True},
             metadata={
                 'order_id': str(order.id),
@@ -136,8 +136,8 @@ class StripeService:
             line_items=line_items,  # pyright: ignore[reportArgumentType]
             ui_mode='hosted',
             mode='payment',
-            success_url=settings.WEB_URL + '/return?session_id={CHECKOUT_SESSION_ID}',
-            cancel_url=settings.WEB_URL + '/return?session_id={CHECKOUT_SESSION_ID}',
+            success_url=settings.WEB_URL + '/buyer/orders?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url=settings.WEB_URL + '/buyer/orders?session_id={CHECKOUT_SESSION_ID}',
             # automatic_tax={'enabled': True},
             metadata={
                 'order_id': str(order.id),
