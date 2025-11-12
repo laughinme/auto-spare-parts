@@ -1,4 +1,5 @@
-import { type ReactNode, useCallback, useEffect, useState } from "react"
+import { type ReactNode, useCallback, useEffect, useRef, useState } from "react"
+import { useQueryClient } from "@tanstack/react-query"
 import {
   BrowserRouter,
   Navigate,
@@ -36,6 +37,7 @@ export type ProtectedOutletContext = {
 function ProtectedLayout({ user }: ProtectedLayoutProps) {
   const location = useLocation()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const email = user.email ?? ""
   const rawName =
     "name" in user && typeof user.name === "string" ? user.name : undefined
@@ -61,6 +63,7 @@ function ProtectedLayout({ user }: ProtectedLayoutProps) {
   const cartCount = cartSummary?.totalItems ?? 0
   const navItemCounters =
     cartCount > 0 ? { [ROUTE_PATHS.buyer.cart]: cartCount } : undefined
+  const lastCheckoutSearch = useRef<string | null>(null)
 
   const handleSetHeaderSearch = useCallback((node: ReactNode) => {
     setHeaderSearch(node)
@@ -78,6 +81,29 @@ function ProtectedLayout({ user }: ProtectedLayoutProps) {
       setLastAccessiblePath(location.pathname)
     }
   }, [hasSupplierAccess, isSupplierPath, location.pathname])
+
+  useEffect(() => {
+    if (!location.search || lastCheckoutSearch.current === location.search) {
+      return
+    }
+
+    const params = new URLSearchParams(location.search)
+    if (!params.has("session_id") && !params.has("redirect_status")) {
+      return
+    }
+
+    lastCheckoutSearch.current = location.search
+
+    const invalidateCartQueries = async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["cart", false] }),
+        queryClient.invalidateQueries({ queryKey: ["cart", true] }),
+        queryClient.invalidateQueries({ queryKey: ["cart-summary"] }),
+      ])
+    }
+
+    void invalidateCartQueries()
+  }, [location.search, queryClient])
 
   useEffect(() => {
     if (isSupplierPath(location.pathname) && !hasSupplierAccess) {

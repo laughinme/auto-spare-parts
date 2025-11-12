@@ -1,13 +1,18 @@
 import { useMemo, useState, type ReactNode } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { AlertTriangle, Loader2, Package2, ShoppingCart } from "lucide-react";
 import { ReloadIcon, TrashIcon } from "@radix-ui/react-icons";
+import { toast } from "sonner";
 
 import { ROUTE_PATHS, buildProductDetailsPath } from "@/app/routes";
 import { useCartQuery } from "@/entities/cart/model/useCartQuery";
 import { CartItemCard } from "@/entities/cart/ui/CartItemCard";
+import type { Cart } from "@/entities/cart/model/types";
 import { useRemoveCartItem } from "@/features/cart/useRemoveCartItem";
 import { useClearCart } from "@/features/cart/useClearCart";
+import type { CartSummaryModel } from "@/features/cart/useGetCartSummary";
+import { useStripeHostedCheckout } from "@/features/orders/useStripeHostedCheckout";
 import { Button } from "@/shared/components/ui/button";
 import {
   Card,
@@ -22,11 +27,16 @@ import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Label } from "@/shared/components/ui/label";
 import { Separator } from "@/shared/components/ui/separator";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import { Textarea } from "@/shared/components/ui/textarea";
 
 const SKELETON_COUNT = 3;
+const MIN_SHIPPING_ADDRESS_LENGTH = 5;
 
 export function CartWidget() {
+  const queryClient = useQueryClient();
   const [showLocked, setShowLocked] = useState(false);
+  const [shippingAddress, setShippingAddress] = useState("");
+  const [orderNotes, setOrderNotes] = useState("");
   const {
     data: cart,
     isLoading,
@@ -36,14 +46,41 @@ export function CartWidget() {
   } = useCartQuery({ includeLocked: showLocked });
   const removeMutation = useRemoveCartItem();
   const clearMutation = useClearCart();
+  const checkoutMutation = useStripeHostedCheckout();
 
-  const hasLockedItems =
-    cart?.items.some((item) => item.status === "locked" || !item.product.allowCart) ??
-    false;
+  const cartItems = cart?.items ?? [];
 
-  const totalLabel = cart ? formatMoney(cart.totalAmount) : "—";
-  const uniqueItems = cart?.uniqueItems ?? 0;
-  const totalItems = cart?.totalItems ?? 0;
+  const checkoutReadyItems = useMemo(
+    () =>
+      cartItems.filter(
+        (item) => item.status === "active" && item.product.allowCart,
+      ),
+    [cartItems],
+  );
+
+  const visibleItems = useMemo(
+    () => (showLocked ? cartItems : checkoutReadyItems),
+    [cartItems, checkoutReadyItems, showLocked],
+  );
+
+  const hasLockedItems = cartItems.length > checkoutReadyItems.length;
+
+  const visibleTotals = useMemo(
+    () => ({
+      uniqueItems: visibleItems.length,
+      totalItems: visibleItems.reduce((total, item) => total + item.quantity, 0),
+      totalAmount: visibleItems.reduce(
+        (total, item) => total + item.totalPrice,
+        0,
+      ),
+    }),
+    [visibleItems],
+  );
+
+  const totalLabel =
+    visibleItems.length > 0 ? formatMoney(visibleTotals.totalAmount) : "—";
+  const uniqueItems = visibleTotals.uniqueItems;
+  const totalItems = visibleTotals.totalItems;
 
   const content = useMemo(() => {
     if (isLoading && !cart) {
@@ -91,7 +128,19 @@ export function CartWidget() {
       );
     }
 
-    if (!cart || cart.items.length === 0) {
+    if (!cart || visibleItems.length === 0) {
+      const hiddenItemsHint =
+        hasLockedItems && !showLocked && cartItems.length > 0 ? (
+          <p className="text-sm text-muted-foreground">
+            Недавно оплаченные или заблокированные позиции скрыты из корзины. Включите{" "}
+            <span className="font-semibold">«Показывать недоступные»</span>, чтобы увидеть их.
+          </p>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Добавьте запчасти из каталога или подборки.
+          </p>
+        );
+
       return (
         <Card>
           <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
@@ -100,9 +149,7 @@ export function CartWidget() {
               <h3 className="text-lg font-semibold text-foreground">
                 Ваша корзина пуста
               </h3>
-              <p className="text-sm text-muted-foreground">
-                Добавьте запчасти из каталога или подборки.
-              </p>
+              {hiddenItemsHint}
             </div>
             <Button asChild variant="secondary">
               <Link to={ROUTE_PATHS.buyer.fyp}>
@@ -116,7 +163,7 @@ export function CartWidget() {
 
     return (
       <div className="space-y-4">
-        {cart.items.map((item) => {
+        {visibleItems.map((item) => {
           const isRemoving =
             removeMutation.isPending && removeMutation.variables === item.id;
 
@@ -138,10 +185,105 @@ export function CartWidget() {
         })}
       </div>
     );
-  }, [cart, isError, isLoading, refetch, removeMutation]);
+  }, [
+    cart,
+    cartItems.length,
+    hasLockedItems,
+    isError,
+    isLoading,
+    refetch,
+    removeMutation,
+    showLocked,
+    visibleItems,
+  ]);
+
+  const normalizedShippingAddress = shippingAddress.trim();
+  const isShippingAddressTooShort =
+    normalizedShippingAddress.length < MIN_SHIPPING_ADDRESS_LENGTH;
+  const hasCheckoutItems = checkoutReadyItems.length > 0;
 
   const checkoutDisabled =
-    isLoading || !cart || cart.items.length === 0 || hasLockedItems;
+    isLoading || !hasCheckoutItems || isShippingAddressTooShort;
+
+  const checkoutHint = (() => {
+    if (!hasCheckoutItems) {
+      if (cartItems.length === 0) {
+        return "Заполните корзину доступными товарами, чтобы продолжить.";
+      }
+      if (hasLockedItems) {
+        return "Недоступные позиции скрыты. Уберите их или дождитесь обновления статуса.";
+      }
+      return "Добавьте товары, чтобы продолжить.";
+    }
+
+    if (isShippingAddressTooShort) {
+      return "Укажите адрес доставки, чтобы перейти к оплате.";
+    }
+
+    return "Все товары доступны. Можно оформить заказ.";
+  })();
+
+  const handleCheckout = () => {
+    if (!cart || checkoutMutation.isPending) {
+      return;
+    }
+
+    if (isShippingAddressTooShort) {
+      toast.error("Укажите полный адрес доставки");
+      return;
+    }
+
+    if (!hasCheckoutItems) {
+      toast.error("Нет доступных товаров для оформления заказа.");
+      return;
+    }
+
+    const payload = {
+      cart_item_ids: Array.from(
+        new Set(
+          checkoutReadyItems.map((item) => item.id),
+        ),
+      ),
+      shipping_address: normalizedShippingAddress,
+      notes: orderNotes.trim() ? orderNotes.trim() : undefined,
+    };
+
+    checkoutMutation.mutate(payload, {
+      onSuccess: ({ url }) => {
+        const makeEmptyCart = (cart: Cart | undefined): Cart | undefined =>
+          cart
+            ? {
+                ...cart,
+                items: [],
+                uniqueItems: 0,
+                totalItems: 0,
+                totalAmount: 0,
+              }
+            : cart;
+
+        queryClient.setQueryData<Cart | undefined>(["cart", false], makeEmptyCart);
+        queryClient.setQueryData<Cart | undefined>(["cart", true], makeEmptyCart);
+        queryClient.setQueryData<CartSummaryModel | undefined>(
+          ["cart-summary"],
+          (summary) =>
+            summary
+              ? {
+                  ...summary,
+                  totalItems: 0,
+                  totalAmount: 0,
+                }
+              : summary,
+        );
+
+        queryClient.invalidateQueries({ queryKey: ["cart", false] }).catch(() => null);
+        queryClient.invalidateQueries({ queryKey: ["cart", true] }).catch(() => null);
+        queryClient.invalidateQueries({ queryKey: ["cart-summary"] }).catch(() => null);
+
+        toast.success("Перенаправляем на страницу оплаты…");
+        window.location.assign(url);
+      },
+    });
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -230,6 +372,45 @@ export function CartWidget() {
 
           <Separator />
 
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between text-sm">
+                <Label htmlFor="cart-shipping-address" className="font-medium">
+                  Адрес доставки
+                </Label>
+                <span className="text-xs uppercase text-muted-foreground">
+                  обязательно
+                </span>
+              </div>
+              <Textarea
+                id="cart-shipping-address"
+                placeholder="Город, улица, дом, контактный телефон"
+                value={shippingAddress}
+                onChange={(event) => setShippingAddress(event.target.value)}
+                aria-invalid={isShippingAddressTooShort}
+              />
+              <p className="text-xs text-muted-foreground">
+                Укажите полный адрес, чтобы продавец смог оформить доставку.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="cart-order-notes" className="text-sm font-medium">
+                Комментарий к заказу
+              </Label>
+              <Textarea
+                id="cart-order-notes"
+                placeholder="Например: подъезд, желаемое время доставки, контакты"
+                value={orderNotes}
+                onChange={(event) => setOrderNotes(event.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Опционально. Передадим сообщение продавцу вместе с заказом.
+              </p>
+            </div>
+          </div>
+
+          <Separator />
+
           <div className="flex flex-col gap-2 text-sm text-muted-foreground">
             <span>
               {showLocked
@@ -245,15 +426,18 @@ export function CartWidget() {
         </CardContent>
         <CardFooter className="flex flex-col gap-3 border-t pt-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-sm text-muted-foreground">
-            {checkoutDisabled
-              ? "Заполните корзину доступными товарами, чтобы продолжить."
-              : "Все товары доступны. Можно оформить заказ."}
+            {checkoutHint}
           </div>
-          <Button size="lg" disabled={checkoutDisabled}>
-            {isFetching && (
+          <Button
+            type="button"
+            size="lg"
+            disabled={checkoutDisabled || checkoutMutation.isPending}
+            onClick={handleCheckout}
+          >
+            {(checkoutMutation.isPending || isFetching) && (
               <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
             )}
-            Оформить заказ
+            {checkoutMutation.isPending ? "Переход к оплате…" : "Оформить заказ"}
           </Button>
         </CardFooter>
       </Card>
