@@ -17,6 +17,7 @@ import GaragePage from "@/pages/mainpages/GaragePage"
 import GarageVehicleDetailsPage from "@/pages/mainpages/GarageVehicleDetailsPage"
 import AccountPage from "@/pages/mainpages/AccountPage"
 import OrganizationDetailsPage from "@/pages/mainpages/OrganizationDetailsPage"
+import BuyerOrdersPage from "@/pages/mainpages/BuyerOrdersPage"
 
 const PlaceholderPage = ({ title }: { title: string }) => (
   <div className="flex flex-1 flex-col">
@@ -152,7 +153,7 @@ export const PROTECTED_ROUTES = [
   },
   {
     path: ROUTE_PATHS.buyer.orders,
-    element: <PlaceholderPage title="Buyer orders" />,
+    element: <BuyerOrdersPage />,
   },
   {
     path: ROUTE_PATHS.supplier.products,
