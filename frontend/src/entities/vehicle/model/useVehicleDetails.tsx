@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 
-import { getVehicleDetails } from "@/shared/api/vehicles"
+import { getVehicleDetails } from "@/entities/vehicle/api"
 import { toVehicle } from "./adapters"
 import { vehicleDetailQueryKey } from "./queryKeys"
 

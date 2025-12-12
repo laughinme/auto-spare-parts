@@ -1,4 +1,4 @@
-import apiProtected, { apiPublic } from "./axiosInstance";
+import apiProtected, { apiPublic } from "@/shared/api/axiosInstance";
 
 export type ProductsFeedParams = {
   limit?: number

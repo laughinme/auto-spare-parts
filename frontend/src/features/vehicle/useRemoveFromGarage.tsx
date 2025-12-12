@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { AxiosError } from "axios"
 import { toast } from "sonner"
 
-import { removeVehicle } from "@/shared/api/vehicles"
+import { removeVehicle } from "@/entities/vehicle/api"
 import type { Vehicle } from "@/entities/vehicle/model/types"
 import { vehicleDetailQueryKey } from "@/entities/vehicle/model/queryKeys"
 import {

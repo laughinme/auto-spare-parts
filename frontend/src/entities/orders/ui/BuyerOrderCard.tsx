@@ -9,7 +9,7 @@ import {
 import type { ReactNode } from "react";
 
 import type { BuyerOrder, BuyerOrderItem } from "@/entities/orders/model/types";
-import type { OrderStatus } from "@/shared/api/orders";
+import type { OrderStatus } from "@/entities/orders/api";
 import { Badge } from "@/shared/components/ui/badge";
 import {
   Card,

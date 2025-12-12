@@ -1,4 +1,4 @@
-import {getVehiclesMakes} from '@/shared/api/vehicles';
+import {getVehiclesMakes} from '@/entities/vehicle/api';
 import { toVehicleMakes } from '../model/adapters';
 import { useQuery } from '@tanstack/react-query';
 

@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { unpublishProduct } from "@/shared/api/org-products";
+import { unpublishProduct } from "@/entities/supplierProducts/api";
 import { toSupplierProduct } from "@/entities/supplierProducts/model/adapters";
 import type {
   SupplierProduct,

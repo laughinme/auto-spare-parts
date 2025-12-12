@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getCart } from "@/shared/api/cart";
+import { getCart } from "@/entities/cart/api";
 import { toCart } from "./adapters";
 
 type UseCartQueryOptions = {

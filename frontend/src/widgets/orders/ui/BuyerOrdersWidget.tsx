@@ -13,7 +13,7 @@ import {
   ORDER_STATUSES,
   type OrderSort,
   type OrderStatus,
-} from "@/shared/api/orders";
+} from "@/entities/orders/api";
 import { Button } from "@/shared/components/ui/button";
 import {
   Select,

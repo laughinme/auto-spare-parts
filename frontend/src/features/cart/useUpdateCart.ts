@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 import type { Cart } from "@/entities/cart/model/types"
-import { updateCart, type UpdateCart } from "@/shared/api/cart"
+import { updateCart, type UpdateCart } from "@/entities/cart/api"
 import type { CartSummaryModel } from "./useGetCartSummary"
 
 const SUMMARY_KEY = ["cart-summary"] as const

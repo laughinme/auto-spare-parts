@@ -1,6 +1,6 @@
-import type { OrganizationDto } from "@/shared/api/organizations";
+import type { OrganizationDto } from "@/entities/organizations/api";
 import type { Organization } from "./types";
-import type { UserPosDto } from "@/shared/api/organizations";
+import type { UserPosDto } from "@/entities/organizations/api";
 import type { UserPos } from "./types";
 
 export const toOrganization = (dto: OrganizationDto): Organization => ({

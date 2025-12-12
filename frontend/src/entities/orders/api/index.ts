@@ -1,4 +1,4 @@
-import apiProtected from "./axiosInstance";
+import apiProtected from "@/shared/api/axiosInstance";
 
 export const ORDER_STATUSES = ["pending", "paid", "refunded", "failed", "cancelled", "expired"] as const;
 export type OrderStatus = (typeof ORDER_STATUSES)[number];

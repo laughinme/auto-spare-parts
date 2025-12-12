@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { getVehicleYears } from "@/shared/api/vehicles";
+import { getVehicleYears } from "@/entities/vehicle/api";
 
 export function useVehicleYears(params: { model_id?: number | null } = {}) {
   const modelId =

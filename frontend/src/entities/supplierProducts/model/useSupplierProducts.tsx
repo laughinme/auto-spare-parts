@@ -5,7 +5,7 @@ import {
   type OrgProductStatus,
   type OrgProductDto,
   type PageDto,
-} from "@/shared/api/org-products";
+} from "@/entities/supplierProducts/api";
 
 import { toSupplierProductsPage } from "./adapters";
 import type { SupplierProductsPage } from "./types";

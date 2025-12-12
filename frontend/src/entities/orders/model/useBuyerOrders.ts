@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { getBuyerOrders, type OrdersListResponseDto } from "@/shared/api/orders";
+import { getBuyerOrders, type OrdersListResponseDto } from "@/entities/orders/api";
 
 import { toBuyerOrdersList } from "./adapters";
 import type { BuyerOrdersList, UseBuyerOrdersParams } from "./types";

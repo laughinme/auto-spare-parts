@@ -1,5 +1,5 @@
 import type { FilterState } from "./types"
-import type { CatalogParams } from "@/shared/api/products"
+import type { CatalogParams } from "@/entities/product/api"
 
 const DEFAULT_LIMIT = 20
 

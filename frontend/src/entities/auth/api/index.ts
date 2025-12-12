@@ -1,6 +1,6 @@
 import axios from "axios";
 
-import apiProtected, { apiPublic } from "./axiosInstance";
+import apiProtected, { apiPublic } from "@/shared/api/axiosInstance";
 import type { AuthCredentials, AuthTokens, AuthUser } from "@/entities/auth/model";
 
 export const registerUser = async (credentials: AuthCredentials): Promise<AuthTokens> => {

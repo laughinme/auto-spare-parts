@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   getOrgProductDetail,
   type OrgProductDto,
-} from "@/shared/api/org-products";
+} from "@/entities/supplierProducts/api";
 
 import { toSupplierProduct } from "./adapters";
 import type { SupplierProduct } from "./types";

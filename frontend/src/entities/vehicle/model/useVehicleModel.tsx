@@ -1,4 +1,4 @@
-import { getVehicleModels } from "@/shared/api/vehicles";
+import { getVehicleModels } from "@/entities/vehicle/api";
 import { toVehicleModels } from "../model/adapters";
 import { useQuery } from "@tanstack/react-query";
 

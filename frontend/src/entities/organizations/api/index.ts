@@ -1,4 +1,4 @@
-import apiProtected from "./axiosInstance";
+import apiProtected from "@/shared/api/axiosInstance";
 
 export type OrganizationType = "supplier" | "workshop";
 export type KycStatus = "not_started" | "pending" | "verified" | "rejected";

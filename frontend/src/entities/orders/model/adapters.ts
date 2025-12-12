@@ -4,7 +4,7 @@ import type {
   OrderProductDto,
   OrderSellerOrganizationDto,
   OrdersListResponseDto,
-} from "@/shared/api/orders";
+} from "@/entities/orders/api";
 
 import type {
   BuyerOrder,

@@ -2,8 +2,8 @@ import axios from "axios";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import type { OrderPreparePayload, StripeHostedCheckoutResponse } from "@/shared/api/orders";
-import { prepareStripeHostedCheckout } from "@/shared/api/orders";
+import type { OrderPreparePayload, StripeHostedCheckoutResponse } from "@/entities/orders/api";
+import { prepareStripeHostedCheckout } from "@/entities/orders/api";
 
 const getCheckoutErrorMessage = (error: unknown): string => {
   if (axios.isAxiosError(error)) {

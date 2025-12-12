@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/shared/components/ui/dialog";
-import type { AddVehicleBody } from "@/shared/api/vehicles";
+import type { AddVehicleBody } from "@/entities/vehicle/api";
 import {
   EMPTY_VEHICLE_FORM,
   VehicleForm,
