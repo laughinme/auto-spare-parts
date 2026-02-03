@@ -89,12 +89,19 @@ export function VehicleForm({
   const [form, setForm] = useState<VehicleFormValues>(initialValues);
   const [makeSearch, setMakeSearch] = useState("");
   const [modelSearch, setModelSearch] = useState("");
+  const [isMakeSuggestionsOpen, setIsMakeSuggestionsOpen] = useState(false);
+  const [isModelSuggestionsOpen, setIsModelSuggestionsOpen] = useState(false);
+  const [makeLimit, setMakeLimit] = useState(DEFAULT_LIMIT);
 
   useEffect(() => {
     setForm(initialValues);
-    setMakeSearch("");
-    setModelSearch("");
-  }, [initialValues, resetToken]);
+    setMakeSearch(initialValues.makeId ? prefillMakeOption?.makeName ?? "" : "");
+    setModelSearch(
+      initialValues.modelId ? prefillModelOption?.modelName ?? "" : "",
+    );
+    setIsMakeSuggestionsOpen(false);
+    setIsModelSuggestionsOpen(false);
+  }, [initialValues, resetToken, prefillMakeOption, prefillModelOption]);
 
   const selectedMakeId = useMemo(
     () => (form.makeId ? Number(form.makeId) : null),
@@ -112,13 +119,17 @@ export function VehicleForm({
   const trimmedMakeSearch = makeSearch.trim();
   const trimmedModelSearch = modelSearch.trim();
 
+  useEffect(() => {
+    setMakeLimit(DEFAULT_LIMIT);
+  }, [trimmedMakeSearch]);
+
   const {
     data: makes = [],
     isLoading: isLoadingMakes,
     isFetching: isFetchingMakes,
     isError: isErrorMakes,
   } = useVehicleMakes({
-    limit: DEFAULT_LIMIT,
+    limit: makeLimit,
     search: trimmedMakeSearch === "" ? null : trimmedMakeSearch,
   });
 
@@ -152,6 +163,8 @@ export function VehicleForm({
     return exists ? makes : [prefillMakeOption, ...makes];
   }, [makes, prefillMakeOption]);
 
+  const canLoadMoreMakes = makes.length >= makeLimit;
+
   const modelOptions = useMemo(() => {
     if (
       !prefillModelOption ||
@@ -166,21 +179,59 @@ export function VehicleForm({
     return exists ? models : [prefillModelOption, ...models];
   }, [models, prefillModelOption, selectedMakeId]);
 
-  const handleMakeChange = (value: string) => {
+  useEffect(() => {
+    if (
+      selectedMakeId === null ||
+      form.modelId !== null ||
+      trimmedModelSearch !== "" ||
+      isLoadingModels ||
+      isFetchingModels ||
+      isErrorModels
+    ) {
+      return;
+    }
+
+    if (models.length === 1) {
+      const [onlyModel] = models;
+      setForm((prev) => ({
+        ...prev,
+        modelId: String(onlyModel.modelId),
+        year: null,
+      }));
+      setModelSearch(onlyModel.modelName);
+      setIsModelSuggestionsOpen(false);
+    }
+  }, [
+    selectedMakeId,
+    form.modelId,
+    trimmedModelSearch,
+    isLoadingModels,
+    isFetchingModels,
+    isErrorModels,
+    models,
+  ]);
+
+  const handleMakeChange = (value: string, name: string) => {
     setForm((prev) => ({
       ...prev,
       makeId: value,
       modelId: null,
       year: null,
     }));
+    setMakeSearch(name);
+    setModelSearch("");
+    setIsMakeSuggestionsOpen(false);
+    setIsModelSuggestionsOpen(false);
   };
 
-  const handleModelChange = (value: string) => {
+  const handleModelChange = (value: string, name: string) => {
     setForm((prev) => ({
       ...prev,
       modelId: value,
       year: null,
     }));
+    setModelSearch(name);
+    setIsModelSuggestionsOpen(false);
   };
 
   const updateField =
@@ -216,8 +267,6 @@ export function VehicleForm({
     trimmedComment,
   ]);
 
-  const isMakesLoadingState = isLoadingMakes || isFetchingMakes;
-  const isModelsLoadingState = isLoadingModels || isFetchingModels;
   const isYearsLoadingState = isLoadingYears || isFetchingYears;
 
   const canSubmit =
@@ -264,86 +313,189 @@ export function VehicleForm({
       <div className="grid gap-5">
         <div className="space-y-2">
           <Label htmlFor="vehicle-make-search">Марка</Label>
-          <Input
-            id="vehicle-make-search"
-            placeholder="Поиск по маркам"
-            value={makeSearch}
-            onChange={(event) => setMakeSearch(event.target.value)}
-            autoComplete="off"
-          />
-          <Select
-            value={form.makeId ?? undefined}
-            onValueChange={handleMakeChange}
-          >
-            <SelectTrigger
-              className="w-full"
-              disabled={isMakesLoadingState || isErrorMakes}
-            >
-              <SelectValue placeholder="Выберите марку" />
-            </SelectTrigger>
-            <SelectContent align="start">
-              {makeOptions.length === 0 ? (
-                <SelectItem value="__empty" disabled>
-                  {isErrorMakes
-                    ? "Не удалось загрузить марки"
-                    : "Марки не найдены"}
-                </SelectItem>
-              ) : (
-                makeOptions.map((make) => (
-                  <SelectItem key={make.makeId} value={String(make.makeId)}>
-                    {make.makeName}
-                  </SelectItem>
-                ))
-              )}
-            </SelectContent>
-          </Select>
+          <div className="relative">
+            <Input
+              id="vehicle-make-search"
+              placeholder="Начните вводить марку"
+              value={makeSearch}
+              onChange={(event) => {
+                const nextValue = event.target.value;
+                setMakeSearch(nextValue);
+                setForm((prev) => ({
+                  ...prev,
+                  makeId: null,
+                  modelId: null,
+                  year: null,
+                }));
+                setModelSearch("");
+                setIsMakeSuggestionsOpen(true);
+              }}
+              onFocus={() => setIsMakeSuggestionsOpen(true)}
+              onBlur={() => setIsMakeSuggestionsOpen(false)}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") {
+                  setIsMakeSuggestionsOpen(false);
+                }
+              }}
+              autoComplete="off"
+              aria-expanded={isMakeSuggestionsOpen}
+              aria-autocomplete="list"
+              aria-controls="vehicle-make-suggestions"
+            />
+            {isMakeSuggestionsOpen && (
+              <div
+                id="vehicle-make-suggestions"
+                className="bg-popover text-popover-foreground absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-md border shadow-md"
+                role="listbox"
+                onScroll={(event) => {
+                  const target = event.currentTarget;
+                  const nearBottom =
+                    target.scrollTop + target.clientHeight >=
+                    target.scrollHeight - 24;
+
+                  if (!nearBottom || !canLoadMoreMakes || isFetchingMakes) {
+                    return;
+                  }
+
+                  setMakeLimit((prev) => prev + DEFAULT_LIMIT);
+                }}
+              >
+                <div className="p-1">
+                  {isLoadingMakes && makes.length === 0 ? (
+                    <div className="text-muted-foreground px-2 py-1.5 text-sm">
+                      Загрузка марок...
+                    </div>
+                  ) : isErrorMakes && makes.length === 0 ? (
+                    <div className="text-muted-foreground px-2 py-1.5 text-sm">
+                      Не удалось загрузить марки
+                    </div>
+                  ) : makeOptions.length === 0 ? (
+                    <div className="text-muted-foreground px-2 py-1.5 text-sm">
+                      Марки не найдены
+                    </div>
+                  ) : (
+                    <>
+                      {makeOptions.map((make) => (
+                        <button
+                          key={make.makeId}
+                          type="button"
+                          className="hover:bg-accent focus:bg-accent focus:text-accent-foreground flex w-full items-center rounded-sm px-2 py-1.5 text-left text-sm"
+                          onMouseDown={(event) => {
+                            event.preventDefault();
+                            handleMakeChange(
+                              String(make.makeId),
+                              make.makeName,
+                            );
+                          }}
+                        >
+                          {make.makeName}
+                        </button>
+                      ))}
+                      {isFetchingMakes && (
+                        <div className="text-muted-foreground px-2 py-1.5 text-sm">
+                          Загрузка марок...
+                        </div>
+                      )}
+                      {isErrorMakes && (
+                        <div className="text-muted-foreground px-2 py-1.5 text-sm">
+                          Не удалось загрузить марки
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="vehicle-model-search">Модель</Label>
-          <Input
-            id="vehicle-model-search"
-            placeholder="Поиск по моделям"
-            value={modelSearch}
-            onChange={(event) => setModelSearch(event.target.value)}
-            autoComplete="off"
-            disabled={selectedMakeId === null}
-          />
-          <Select
-            value={form.modelId ?? undefined}
-            onValueChange={handleModelChange}
-          >
-            <SelectTrigger
-              className="w-full"
-              disabled={
-                selectedMakeId === null ||
-                isModelsLoadingState ||
-                isErrorModels
+          <div className="relative">
+            <Input
+              id="vehicle-model-search"
+              placeholder={
+                selectedMakeId === null
+                  ? "Сначала выберите марку"
+                  : "Начните вводить модель"
               }
-            >
-              <SelectValue placeholder="Выберите модель" />
-            </SelectTrigger>
-            <SelectContent align="start">
-              {modelOptions.length === 0 ? (
-                <SelectItem value="__empty" disabled>
-                  {selectedMakeId === null
-                    ? "Сначала выберите марку"
-                    : isErrorModels
-                      ? "Не удалось загрузить модели"
-                      : "Модели не найдены"}
-                </SelectItem>
-              ) : (
-                modelOptions.map((model) => (
-                  <SelectItem
-                    key={model.modelId}
-                    value={String(model.modelId)}
-                  >
-                    {model.modelName}
-                  </SelectItem>
-                ))
-              )}
-            </SelectContent>
-          </Select>
+              value={modelSearch}
+              onChange={(event) => {
+                const nextValue = event.target.value;
+                setModelSearch(nextValue);
+                setForm((prev) => ({
+                  ...prev,
+                  modelId: null,
+                  year: null,
+                }));
+                setIsModelSuggestionsOpen(true);
+              }}
+              onFocus={() => setIsModelSuggestionsOpen(true)}
+              onBlur={() => setIsModelSuggestionsOpen(false)}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") {
+                  setIsModelSuggestionsOpen(false);
+                }
+              }}
+              autoComplete="off"
+              disabled={selectedMakeId === null}
+              aria-expanded={isModelSuggestionsOpen}
+              aria-autocomplete="list"
+              aria-controls="vehicle-model-suggestions"
+            />
+            {isModelSuggestionsOpen && selectedMakeId !== null && (
+              <div
+                id="vehicle-model-suggestions"
+                className="bg-popover text-popover-foreground absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-md border shadow-md"
+                role="listbox"
+              >
+                <div className="p-1">
+                  {isLoadingModels && modelOptions.length === 0 ? (
+                    <div className="text-muted-foreground px-2 py-1.5 text-sm">
+                      Загрузка моделей...
+                    </div>
+                  ) : isErrorModels && modelOptions.length === 0 ? (
+                    <div className="text-muted-foreground px-2 py-1.5 text-sm">
+                      Не удалось загрузить модели
+                    </div>
+                  ) : modelOptions.length === 0 ? (
+                    <div className="text-muted-foreground px-2 py-1.5 text-sm">
+                      Модели не найдены
+                    </div>
+                  ) : (
+                    <>
+                      {modelOptions.map((model) => (
+                        <button
+                          key={model.modelId}
+                          type="button"
+                          className="hover:bg-accent focus:bg-accent focus:text-accent-foreground flex w-full items-center rounded-sm px-2 py-1.5 text-left text-sm"
+                          onMouseDown={(event) => {
+                            event.preventDefault();
+                            handleModelChange(
+                              String(model.modelId),
+                              model.modelName,
+                            );
+                          }}
+                        >
+                          {model.modelName}
+                        </button>
+                      ))}
+                      {isFetchingModels && (
+                        <div className="text-muted-foreground px-2 py-1.5 text-sm">
+                          Загрузка моделей...
+                        </div>
+                      )}
+                      {isErrorModels && (
+                        <div className="text-muted-foreground px-2 py-1.5 text-sm">
+                          Не удалось загрузить модели
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="space-y-2">
