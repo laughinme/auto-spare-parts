@@ -57,7 +57,7 @@ export function SupplierProductCard({
   const body = (
     <article className={cn("flex h-full flex-col", className)}>
       <CardHeader className="space-y-1 border-b p-0">
-        <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
+        <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted/60">
           {cover ? (
             <img
               src={cover.url}
@@ -67,66 +67,68 @@ export function SupplierProductCard({
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center text-muted-foreground">
-              <ImageIcon className="size-10" aria-hidden />
+              <ImageIcon className="size-8" aria-hidden />
               <span className="sr-only">Нет изображения</span>
             </div>
           )}
           <Badge
             variant={statusVariant[product.status] ?? "secondary"}
-            className="absolute left-3 top-3 uppercase"
+            className="absolute left-2 top-2 px-2 py-0.5 text-[10px] uppercase"
           >
             {statusLabel[product.status] ?? product.status}
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="flex flex-1 flex-col gap-4 px-5 py-4">
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-            <CardTitle className="line-clamp-2 text-base font-semibold leading-tight">
-              {product.title}
-            </CardTitle>
-            <div className="flex min-w-[140px] flex-col gap-1 text-right sm:text-left">
-              <span className="text-xs uppercase tracking-wide text-muted-foreground">
-                Цена
-              </span>
-              <span className="text-lg font-semibold leading-none">
-                {priceLabel}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                Остаток:&nbsp;
-                <span className="font-semibold text-foreground">
-                  {quantityLabel}
-                </span>
+      <CardContent className="flex flex-1 flex-col gap-3 px-4 py-3">
+        <div className="flex items-start justify-between gap-3">
+          <CardTitle className="line-clamp-2 text-[15px] font-semibold leading-tight">
+            {product.title}
+          </CardTitle>
+          <div className="shrink-0 text-right">
+            <span className="text-sm font-semibold leading-none">
+              {priceLabel}
+            </span>
+            <div className="text-[11px] text-muted-foreground">
+              Остаток:&nbsp;
+              <span className="font-semibold text-foreground">
+                {quantityLabel}
               </span>
             </div>
           </div>
-
-          {product.description ? (
-            <p className="line-clamp-3 text-sm text-muted-foreground">
-              {product.description}
-            </p>
-          ) : (
-            <span className="text-sm text-muted-foreground">
-              Описание отсутствует
-            </span>
-          )}
         </div>
-        <dl className="grid grid-cols-[auto,1fr] gap-x-2 gap-y-1 text-sm">
-          <dt className="text-muted-foreground">Бренд:</dt>
-          <dd className="font-medium text-foreground">{product.make.name}</dd>
-          <dt className="text-muted-foreground">Артикул:</dt>
-          <dd className="font-medium text-foreground">
-            {product.partNumber}
-          </dd>
-          <dt className="text-muted-foreground">Состояние:</dt>
-          <dd className="capitalize text-foreground">
-            {conditionLabel[product.condition] ?? product.condition}
-          </dd>
-        </dl>
+
+        {product.description ? (
+          <p className="line-clamp-2 text-xs text-muted-foreground">
+            {product.description}
+          </p>
+        ) : (
+          <span className="text-xs text-muted-foreground">
+            Описание отсутствует
+          </span>
+        )}
+
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+          <div className="flex items-center gap-1">
+            <span className="text-muted-foreground">Бренд:</span>
+            <span className="font-medium text-foreground">{product.make.name}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="text-muted-foreground">Артикул:</span>
+            <span className="font-medium text-foreground">
+              {product.partNumber}
+            </span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="text-muted-foreground">Состояние:</span>
+            <span className="capitalize text-foreground">
+              {conditionLabel[product.condition] ?? product.condition}
+            </span>
+          </div>
+        </div>
       </CardContent>
       {!to && actions ? (
-        <CardFooter className="border-t px-5 py-4">
-          <div className="flex w-full flex-wrap items-center justify-between gap-3">
+        <CardFooter className="border-t px-4 py-3">
+          <div className="flex w-full flex-wrap items-center justify-between gap-2">
             {actions}
           </div>
         </CardFooter>
@@ -147,8 +149,8 @@ export function SupplierProductCard({
             {body}
           </Link>
           {actions ? (
-            <CardFooter className="border-t px-5 py-4">
-              <div className="flex w-full flex-wrap items-center justify-between gap-3">
+            <CardFooter className="border-t px-4 py-3">
+              <div className="flex w-full flex-wrap items-center justify-between gap-2">
                 {actions}
               </div>
             </CardFooter>
