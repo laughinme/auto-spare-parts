@@ -1,12 +1,10 @@
-import aiofiles
-import shutil
-from datetime import date, datetime
+from datetime import datetime
 
 from uuid import UUID, uuid4
-from pathlib import Path
 from fastapi import UploadFile, status, HTTPException
 
 from core.config import Settings
+from core.media_storage import get_media_storage
 from domain.users import UserPatch, ExpandUserFields, UserModel
 from domain.organizations import OrganizationModel
 from database.relational_db import (
@@ -17,6 +15,7 @@ from database.relational_db import (
 )
 
 settings = Settings() # type: ignore
+media_storage = get_media_storage()
 
 class UserService:
     def __init__(
@@ -96,11 +95,6 @@ class UserService:
         file: UploadFile,
         user: User
     ) -> None:
-        folder = Path(settings.MEDIA_DIR, "users", str(user.id))
-        if folder.exists():
-            shutil.rmtree(folder)
-        folder.mkdir(parents=True, exist_ok=True)
-
         if file.content_type not in ("image/jpeg", "image/png"):
             raise HTTPException(
                 status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
@@ -109,32 +103,18 @@ class UserService:
 
         ext  = ".jpg" if file.content_type == "image/jpeg" else ".png"
         name = f"{uuid4().hex}{ext}"
+        key = media_storage.build_key("users", str(user.id), name)
+        url = await media_storage.save_upload(
+            file,
+            key=key,
+            max_mb=settings.MAX_PHOTO_SIZE,
+        )
 
-        file_path = folder / name
-        limit_bytes = settings.MAX_PHOTO_SIZE * 1024 * 1024
-        written = 0
-        async with aiofiles.open(file_path, "wb") as out:
-            while chunk := await file.read(1024 * 1024):
-                if written + len(chunk) > limit_bytes:
-                    try:
-                        await out.flush()
-                        await out.close()
-                    except Exception:
-                        pass
-                    try:
-                        file_path.unlink(missing_ok=True)
-                    except Exception:
-                        pass
-                    raise HTTPException(
-                        status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                        detail=f"File too large. Max {settings.MAX_PHOTO_SIZE} MB"
-                    )
-                await out.write(chunk)
-                written += len(chunk)
-
-        url = f"{settings.SITE_URL}/{settings.MEDIA_DIR}/users/{user.id}/{name}"
-
+        old_url = user.profile_pic_url
         user.profile_pic_url = url
+
+        if old_url and old_url != url:
+            await media_storage.delete_by_url(old_url)
 
     async def admin_list_users(
         self,

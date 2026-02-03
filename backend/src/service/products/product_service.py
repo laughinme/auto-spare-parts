@@ -1,14 +1,13 @@
-import aiofiles
 from uuid import UUID, uuid4
 from decimal import Decimal
 from datetime import datetime
-from pathlib import Path
 from fastapi import UploadFile, status, HTTPException
 from redis.asyncio import Redis
 from sqlalchemy.exc import IntegrityError
 
 from utils.cursor import parse_cursor, create_cursor
 from core.config import Settings
+from core.media_storage import get_media_storage
 from database.relational_db import (
     UoW,
     ProductsInterface,
@@ -30,6 +29,7 @@ from domain.products import (
 )
 
 settings = Settings() # type: ignore
+media_storage = get_media_storage()
 
 class ProductService:
     """Service for working with products"""
@@ -191,16 +191,9 @@ class ProductService:
         return media
 
     async def delete_media(self, media: ProductMedia) -> None:
-        """Delete media file and remove from filesystem"""
-        # Delete physical file first
+        """Delete media file and remove from storage"""
         try:
-            if media.url and settings.MEDIA_DIR in media.url:
-                url_parts = media.url.split(f"/{settings.MEDIA_DIR}/")
-                if len(url_parts) > 1:
-                    relative_path = url_parts[1]
-                    file_path = Path(settings.MEDIA_DIR) / relative_path
-                    if file_path.exists():
-                        file_path.unlink()
+            await media_storage.delete_by_url(media.url)
         except Exception:
             pass
         
@@ -220,52 +213,26 @@ class ProductService:
                 detail="Only JPEG and PNG files are allowed"
             )
         
-        # Create directory structure
-        product_media_dir = Path(settings.MEDIA_DIR) / "products" / str(product.id)
-        product_media_dir.mkdir(parents=True, exist_ok=True)
-        
         # Generate unique filename (same approach as user service)
         ext = ".jpg" if file.content_type == "image/jpeg" else ".png"
         unique_filename = f"{uuid4().hex}{ext}"
-        
-        # Save file with async approach (same as user service)
-        file_path = product_media_dir / unique_filename
-        limit_bytes = settings.MAX_PHOTO_SIZE * 1024 * 1024
-        written = 0
-        
+        key = media_storage.build_key("products", str(product.id), unique_filename)
+
         try:
-            async with aiofiles.open(file_path, "wb") as out:
-                while chunk := await file.read(1024 * 1024):
-                    if written + len(chunk) > limit_bytes:
-                        try:
-                            await out.flush()
-                            await out.close()
-                        except Exception:
-                            pass
-                        try:
-                            file_path.unlink(missing_ok=True)
-                        except Exception:
-                            pass
-                        raise HTTPException(
-                            status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                            detail=f"File too large. Max {settings.MAX_PHOTO_SIZE} MB"
-                        )
-                    await out.write(chunk)
-                    written += len(chunk)
+            media_url = await media_storage.save_upload(
+                file,
+                key=key,
+                max_mb=settings.MAX_PHOTO_SIZE,
+            )
         except HTTPException:
             raise
         except Exception as e:
-            try:
-                file_path.unlink(missing_ok=True)
-            except Exception:
-                pass
             raise HTTPException(
-                status.HTTP_500_INTERNAL_SERVER_ERROR, 
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Could not save file: {str(e)}"
             )
-        
+
         # Create media record
-        media_url = f"{settings.SITE_URL}/{settings.MEDIA_DIR}/products/{product.id}/{unique_filename}"
         media = ProductMedia(
             product_id=product.id,
             url=media_url,

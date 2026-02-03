@@ -1,7 +1,7 @@
 import logging
 
 from pathlib import Path
-from pydantic import SecretStr
+from pydantic import SecretStr, Field, AliasChoices
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -25,8 +25,29 @@ class Settings(BaseSettings):
     WEB_URL: str = 'https://localhost:5173'
     
     # Media settings
+    MEDIA_BACKEND: str = Field(default='local', validation_alias=AliasChoices('MEDIA_BACKEND', 'MEDIA_STORAGE'))
     MEDIA_DIR: str = 'media'
-    MAX_PHOTO_SIZE: int = 10 # in MB
+    MEDIA_PUBLIC_BASE_URL: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices('MEDIA_PUBLIC_BASE_URL', 'MEDIA_CDN_URL'),
+    )
+    MEDIA_BUCKET: str | None = Field(default=None, validation_alias=AliasChoices('MEDIA_BUCKET', 'BUCKET_NAME'))
+    MEDIA_REGION: str | None = Field(default=None, validation_alias=AliasChoices('MEDIA_REGION', 'AWS_REGION'))
+    MEDIA_ENDPOINT_URL: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices('MEDIA_ENDPOINT_URL', 'AWS_ENDPOINT_URL_S3'),
+    )
+    MEDIA_ACCESS_KEY_ID: SecretStr | None = Field(
+        default=None,
+        validation_alias=AliasChoices('MEDIA_ACCESS_KEY_ID', 'AWS_ACCESS_KEY_ID'),
+    )
+    MEDIA_SECRET_ACCESS_KEY: SecretStr | None = Field(
+        default=None,
+        validation_alias=AliasChoices('MEDIA_SECRET_ACCESS_KEY', 'AWS_SECRET_ACCESS_KEY'),
+    )
+    MEDIA_PREFIX: str = ''
+    MEDIA_S3_ADDRESSING_STYLE: str = 'virtual'
+    MAX_PHOTO_SIZE: int = 20 # in MB
     
     # External services
     STRIPE_SECRET_KEY: str
