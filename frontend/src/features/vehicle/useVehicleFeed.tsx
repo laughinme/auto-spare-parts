@@ -1,7 +1,7 @@
 import { useMemo } from "react"
 import { useInfiniteQuery } from "@tanstack/react-query"
 
-import { getVehicles } from "@/shared/api/vehicles"
+import { getVehicles } from "@/entities/vehicle/api"
 import { toVehicle } from "@/entities/vehicle/model/adapters"
 import type { Vehicle } from "@/entities/vehicle/model/types"
 import { VEHICLE_FEED_QUERY_KEY } from "./vehicleFeedCache"

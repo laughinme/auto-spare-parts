@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
-import { clearCart } from "@/shared/api/cart"
+import { clearCart } from "@/entities/cart/api"
 import type { Cart } from "@/entities/cart/model/types"
 import type { CartSummaryModel } from "./useGetCartSummary"
 

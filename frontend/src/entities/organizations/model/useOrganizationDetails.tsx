@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { getOrganizationDetails, type OrganizationDto } from "@/shared/api/organizations";
+import { getOrganizationDetails, type OrganizationDto } from "@/entities/organizations/api";
 import { toOrganization } from "./adapters";
 import type { Organization } from "./types";
 

@@ -7,7 +7,7 @@ import type { OrganizationSummary } from "@/entities/auth/model";
 import {
   createSupplierAccount,
   createSupplierAccountSession,
-} from "@/shared/api/organizations";
+} from "@/entities/organizations/api";
 
 type UseStripeOnboardingParams = {
   organization: OrganizationSummary | null | undefined;

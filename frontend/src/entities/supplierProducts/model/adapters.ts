@@ -3,7 +3,7 @@ import type {
   OrgProductDto,
   PageDto,
   UpdateProductBodyDto,
-} from "@/shared/api/org-products";
+} from "@/entities/supplierProducts/api";
 import type { ProductDetail } from "@/entities/product/model/types";
 
 import type {

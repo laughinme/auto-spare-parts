@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 
-import { getCartSummary } from "@/shared/api/cart"
+import { getCartSummary } from "@/entities/cart/api"
 
 export type CartSummaryModel = {
   totalItems: number

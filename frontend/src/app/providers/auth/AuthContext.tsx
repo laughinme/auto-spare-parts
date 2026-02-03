@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import * as api from "@/shared/api";
+import { getMyProfile, loginUser, logoutUser, registerUser } from "@/entities/auth/api";
 import {
   apiPublic,
   setAccessToken as setAxiosAccessToken,
@@ -45,7 +45,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     queryKey: ["me"],
     queryFn: async () => {
       try {
-        return await api.getMyProfile();
+        return await getMyProfile();
       } catch (error) {
         console.log("API profile fetch failed:", error);
         throw error;
@@ -56,7 +56,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   });
 
   const loginMutation = useMutation<AuthTokens, unknown, AuthCredentials>({
-    mutationFn: api.loginUser,
+    mutationFn: loginUser,
     onSuccess: (data) => {
       if (data?.access_token) {
         setAccessToken(data.access_token);
@@ -69,7 +69,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   });
 
   const registerMutation = useMutation<AuthTokens, unknown, AuthCredentials>({
-    mutationFn: api.registerUser,
+    mutationFn: registerUser,
     onSuccess: (data) => {
       if (data?.access_token) {
         setAccessToken(data.access_token);
@@ -82,7 +82,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   });
 
   const logoutMutation = useMutation<void, unknown, void>({
-    mutationFn: api.logoutUser,
+    mutationFn: logoutUser,
     onSuccess: () => {
       clearSession();
       queryClient.clear();

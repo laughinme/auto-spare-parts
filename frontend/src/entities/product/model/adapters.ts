@@ -1,4 +1,4 @@
-import type { CursorPageDto, ProductDetailsDto, ProductDto } from "@/shared/api/products";
+import type { CursorPageDto, ProductDetailsDto, ProductDto } from "@/entities/product/api";
 import type { Product, ProductDetail, ProductFeed } from "./types";
 
 export const toProduct = (dto: ProductDto): Product => ({

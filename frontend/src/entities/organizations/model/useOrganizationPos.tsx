@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 
-import { getOrganizationUserPositions, type UserPosDto } from "@/shared/api/organizations";
+import { getOrganizationUserPositions, type UserPosDto } from "@/entities/organizations/api";
 import type { UserPos } from "./types";
 import { toUserPos } from "./adapters";
 

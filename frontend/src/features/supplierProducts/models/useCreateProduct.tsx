@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
-import { createOrgProduct } from "@/shared/api/org-products"
+import { createOrgProduct } from "@/entities/supplierProducts/api"
 import { toCreateOrgProductBody, toSupplierProduct } from "@/entities/supplierProducts/model/adapters"
 import type {
   CreateSupplierProductVariables,

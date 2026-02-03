@@ -1,4 +1,4 @@
-import type { CartDto, CartItemDto } from "@/shared/api/cart";
+import type { CartDto, CartItemDto } from "@/entities/cart/api";
 import type { Cart, CartItem, CartProduct } from "./types";
 
 const toNumber = (value: string | number): number =>

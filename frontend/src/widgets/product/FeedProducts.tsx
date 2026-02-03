@@ -21,7 +21,7 @@ import {
 } from "@/shared/components/ui/card"
 import { Input } from "@/shared/components/ui/input"
 import { Skeleton } from "@/shared/components/ui/skeleton"
-import { getProductsCatalog } from "@/shared/api/products"
+import { getProductsCatalog } from "@/entities/product/api"
 
 const CATALOG_PAGE_SIZE = 20
 

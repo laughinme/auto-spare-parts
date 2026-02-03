@@ -4,7 +4,7 @@ import { SupplierProductCard } from "@/entities/supplierProducts/ui/SupplierProd
 import { useSupplierProducts } from "@/entities/supplierProducts/model/useSupplierProducts";
 import { PublishProductButton } from "@/features/supplierProducts/ui/PublishProductButton";
 import { UnpublishProductButton } from "@/features/supplierProducts/ui/UnpublishProductButton";
-import type { OrgProductStatus } from "@/shared/api/org-products";
+import type { OrgProductStatus } from "@/entities/supplierProducts/api";
 import { Button } from "@/shared/components/ui/button";
 import {
   Card,

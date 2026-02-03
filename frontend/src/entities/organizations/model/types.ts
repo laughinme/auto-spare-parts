@@ -1,4 +1,4 @@
-import type { UserRoles } from "@/shared/api/organizations";
+import type { UserRoles } from "@/entities/organizations/api";
 
 export type Organization = {
   id: string;

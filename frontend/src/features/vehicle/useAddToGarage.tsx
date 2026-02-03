@@ -6,7 +6,7 @@ import {
   addVehicle,
   type AddVehicleBody,
   type VehicleDto,
-} from "@/shared/api/vehicles"
+} from "@/entities/vehicle/api"
 import { toVehicle } from "@/entities/vehicle/model/adapters"
 import type { Vehicle } from "@/entities/vehicle/model/types"
 import {

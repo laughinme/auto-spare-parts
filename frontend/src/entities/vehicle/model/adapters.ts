@@ -1,7 +1,7 @@
-import type { VehicleDto, CursorPageDto } from "@/shared/api/vehicles";
+import type { VehicleDto, CursorPageDto } from "@/entities/vehicle/api";
 import type { Vehicle, VehicleFeed } from "./types";
 import type { VehicleMake, VehicleModel } from "./types";
-import type { VehicleMakeDto, VehicleModelDto } from "@/shared/api/vehicles";
+import type { VehicleMakeDto, VehicleModelDto } from "@/entities/vehicle/api";
 
 
 export const toVehicle = (dto: VehicleDto): Vehicle => ({

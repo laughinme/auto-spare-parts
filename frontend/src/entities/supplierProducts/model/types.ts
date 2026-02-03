@@ -3,7 +3,7 @@ import type {
   OrgProductOriginality,
   OrgProductStatus,
   OrgProductStockType,
-} from "@/shared/api/org-products";
+} from "@/entities/supplierProducts/api";
 
 export type SupplierProductCreatePayload = {
   title: string;

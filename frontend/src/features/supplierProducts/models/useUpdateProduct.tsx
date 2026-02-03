@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
-import { updateOrgProduct } from "@/shared/api/org-products"
+import { updateOrgProduct } from "@/entities/supplierProducts/api"
 import {
   toUpdateOrgProductBody,
   toSupplierProduct,

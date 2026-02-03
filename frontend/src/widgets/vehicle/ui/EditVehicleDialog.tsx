@@ -3,7 +3,7 @@ import { toast } from "sonner";
 
 import type { Vehicle } from "@/entities/vehicle/model/types";
 import { useUpdateGarageVehicle } from "@/features/vehicle/useUpdateGarageVehicle";
-import type { UpdateVehicleBody } from "@/shared/api/vehicles";
+import type { UpdateVehicleBody } from "@/entities/vehicle/api";
 import {
   Dialog,
   DialogContent,

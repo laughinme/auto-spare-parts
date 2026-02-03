@@ -1,4 +1,4 @@
-import apiProtected from "./axiosInstance";
+import apiProtected from "@/shared/api/axiosInstance";
 
 export type OrgProductStatus = "draft" | "published" | "archived";
 export type OrgProductStockType = "unique" | "stock";

@@ -7,7 +7,7 @@ import {
   type OrgProductOriginality,
   type OrgProductStatus,
   type OrgProductStockType,
-} from "@/shared/api/org-products";
+} from "@/entities/supplierProducts/api";
 import { useVehicleMakes } from "@/entities/vehicle/model/useVehicleMakes";
 import type { SupplierProduct } from "@/entities/supplierProducts/model/types";
 import { Button } from "@/shared/components/ui/button";

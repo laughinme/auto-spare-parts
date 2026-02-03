@@ -1,6 +1,6 @@
 import type { InfiniteData } from "@tanstack/react-query"
 
-import type { CursorPageDto, VehicleDto } from "@/shared/api/vehicles"
+import type { CursorPageDto, VehicleDto } from "@/entities/vehicle/api"
 import type { Vehicle } from "@/entities/vehicle/model/types"
 import { fromVehicle } from "@/entities/vehicle/model/adapters"
 

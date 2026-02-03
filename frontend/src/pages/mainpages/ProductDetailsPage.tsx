@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query"
 import { ArrowLeft, RefreshCcw } from "lucide-react"
 
 import { toProductDetails } from "@/entities/product/model/adapters"
-import { getProductDetails } from "@/shared/api/products"
+import { getProductDetails } from "@/entities/product/api"
 import { Button } from "@/shared/components/ui/button"
 import { Skeleton } from "@/shared/components/ui/skeleton"
 import { ProductDetailsWidget } from "@/widgets/product/ProductDetailsWidget"

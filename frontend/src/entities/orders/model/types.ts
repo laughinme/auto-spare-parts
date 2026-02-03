@@ -5,7 +5,7 @@ import type {
   OrderProductStockType,
   OrderSort,
   OrderStatus,
-} from "@/shared/api/orders";
+} from "@/entities/orders/api";
 
 export type BuyerOrderProductMedia = {
   id: string;
