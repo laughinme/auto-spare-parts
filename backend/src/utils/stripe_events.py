@@ -12,7 +12,7 @@ logger = getLogger(__name__)
 
 async def parse_event(
     request: Request,
-    secret: str | None = settings.STRIPE_LOCAL_CONNECT_WEBHOOK_SECRET,
+    secret: str | None = settings.STRIPE_WEBHOOK_SECRET,
 ) -> stripe.Event:
     try:
         payload_bytes = await request.body()
