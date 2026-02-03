@@ -108,21 +108,6 @@ export function LoginForm({
                 >
                   {submitLabel}
                 </Button>
-                <Field className="items-center gap-3">
-                  <div className="h-px w-full bg-neutral-800" />
-                  <span className="text-xs uppercase tracking-wide text-neutral-500">
-                    Or continue with
-                  </span>
-                  <div className="h-px w-full bg-neutral-800" />
-                </Field>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  disabled={disabled}
-                  className="bg-neutral-900 text-neutral-100 hover:bg-neutral-800 border border-neutral-800 rounded-md"
-                >
-                  Continue with Google
-                </Button>
                 <FieldDescription className="text-center text-sm text-neutral-400">
                   Don&apos;t have an account?{" "}
                   <button

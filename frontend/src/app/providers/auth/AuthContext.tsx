@@ -6,6 +6,7 @@ import {
   setAccessToken as setAxiosAccessToken,
   setUnauthorizedHandler as setAxiosUnauthorizedHandler
 } from "@/shared/api/axiosInstance";
+import { CSRF_HEADER_NAME, getCsrfTokenFromCookies } from "@/shared/api/authCookies";
 import { AuthContext } from "./AuthContextObject";
 import type { AuthContextValue, AuthCredentials, AuthTokens, AuthUser } from "@/entities/auth/model";
 
@@ -119,17 +120,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     (async () => {
       try {
-        const csrfToken = document.cookie
-          .split(";")
-          .map((cookie) => cookie.trim())
-          .find((cookie) => cookie.startsWith("csrf_token="))
-          ?.split("=")
-          .at(1);
+        const csrfToken = getCsrfTokenFromCookies();
 
-        const decodedCsrfToken = csrfToken ? decodeURIComponent(csrfToken) : null;
-
-        if (!decodedCsrfToken) {
-          console.log("[Auth] CSRF-токен не найден, прекращаем попытку восстановления.");
+        if (!csrfToken) {
           return;
         }
 
@@ -137,7 +130,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           "/auth/refresh",
           {},
           {
-            headers: { "X-CSRF-Token": decodedCsrfToken },
+            headers: { [CSRF_HEADER_NAME]: csrfToken },
             withCredentials: true
           }
         );

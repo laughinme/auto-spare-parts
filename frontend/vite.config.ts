@@ -20,7 +20,7 @@ export default defineConfig({
     https: {},
     proxy: {
       "/api/v1": {
-        target: "https://backend-auto-spare-parts.fly.dev",
+        target: "https://auto-spare-parts.fly.dev",
         changeOrigin: true,
         secure: true,
         followRedirects: true

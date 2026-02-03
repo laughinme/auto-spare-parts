@@ -7,6 +7,7 @@ import axios, {
   type InternalAxiosRequestConfig
 } from "axios";
 import type { AuthTokens } from "@/entities/auth/model";
+import { CSRF_HEADER_NAME, getCsrfTokenFromCookies } from "@/shared/api/authCookies";
 
 const BASE_URL = "/api/v1";
 
@@ -43,14 +44,7 @@ const notifyUnauthorized = (): void => {
   }
 };
 
-const getCsrfToken = (): string | null => {
-  const csrfCookie = document.cookie
-    .split(";")
-    .map((cookie) => cookie.trim())
-    .find((cookie) => cookie.startsWith("csrf_token="));
-
-  return csrfCookie ? decodeURIComponent(csrfCookie.split("=")[1]) : null;
-};
+const getCsrfToken = (): string | null => getCsrfTokenFromCookies();
 
 const toAxiosHeaders = (headers?: AxiosRequestHeaders): AxiosHeaders => {
   if (headers instanceof AxiosHeaders) {
@@ -72,7 +66,7 @@ const performRefresh = async (): Promise<string | null> => {
       "/auth/refresh",
       {},
       {
-        headers: { "X-CSRF-Token": csrfToken },
+        headers: { [CSRF_HEADER_NAME]: csrfToken },
         withCredentials: true
       }
     );
