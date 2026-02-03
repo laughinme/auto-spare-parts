@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select"
+import { cn } from "@/shared/lib/utils"
 import type { FilterState } from "../model/types"
 
 type ProductFiltersFormProps = {
@@ -23,6 +24,7 @@ type ProductFiltersFormProps = {
   onApply: () => void
   disabled?: boolean
   isLoading?: boolean
+  className?: string
 }
 
 type NullableOption<T> = T | "all"
@@ -50,6 +52,7 @@ export function ProductFiltersForm({
   onApply,
   disabled = false,
   isLoading = false,
+  className,
 }: ProductFiltersFormProps) {
   const makeId = useId()
   const priceMinId = useId()
@@ -66,10 +69,10 @@ export function ProductFiltersForm({
   }
 
   return (
-    <Card className="border bg-background/80 shadow-sm backdrop-blur">
-      <CardContent className="px-4 py-4 sm:px-6 sm:py-5">
+    <Card className={cn("border bg-background/80 shadow-sm backdrop-blur", className)}>
+      <CardContent className="flex justify-center px-4 py-3 sm:px-5 sm:py-4">
         <form
-          className="flex flex-col gap-4"
+          className="flex w-full max-w-[20rem] flex-col gap-3"
           onSubmit={(event) => {
             event.preventDefault()
             if (!disabled) {
@@ -77,9 +80,11 @@ export function ProductFiltersForm({
             }
           }}
         >
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <div className="space-y-2">
-              <Label htmlFor={makeId}>Бренд/Производитель</Label>
+          <div className="grid gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor={makeId} className="text-xs text-muted-foreground">
+                Бренд/Производитель
+              </Label>
               <Input
                 id={makeId}
                 placeholder="ID производителя"
@@ -96,10 +101,11 @@ export function ProductFiltersForm({
                   })
                 }}
                 disabled={disabled}
+                className="h-9 text-sm"
               />
             </div>
-            <div className="space-y-2">
-              <Label>Состояние</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Состояние</Label>
               <Select
                 value={conditionValue}
                 onValueChange={(value) =>
@@ -110,7 +116,7 @@ export function ProductFiltersForm({
                 }
                 disabled={disabled}
               >
-                <SelectTrigger className="w-full justify-between">
+                <SelectTrigger className="h-9 w-full justify-between text-sm">
                   <SelectValue placeholder="Состояние" />
                 </SelectTrigger>
                 <SelectContent>
@@ -122,8 +128,8 @@ export function ProductFiltersForm({
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label>Оригинальность</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Оригинальность</Label>
               <Select
                 value={originalityValue}
                 onValueChange={(value) =>
@@ -136,7 +142,7 @@ export function ProductFiltersForm({
                 }
                 disabled={disabled}
               >
-                <SelectTrigger className="w-full justify-between">
+                <SelectTrigger className="h-9 w-full justify-between text-sm">
                   <SelectValue placeholder="Оригинальность" />
                 </SelectTrigger>
                 <SelectContent>
@@ -148,8 +154,10 @@ export function ProductFiltersForm({
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor={priceMinId}>Цена от</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor={priceMinId} className="text-xs text-muted-foreground">
+                Цена от
+              </Label>
               <Input
                 id={priceMinId}
                 placeholder="0"
@@ -160,10 +168,13 @@ export function ProductFiltersForm({
                   onChange({ price_min: value })
                 }}
                 disabled={disabled}
+                className="h-9 text-sm"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor={priceMaxId}>Цена до</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor={priceMaxId} className="text-xs text-muted-foreground">
+                Цена до
+              </Label>
               <Input
                 id={priceMaxId}
                 placeholder="100000"
@@ -171,11 +182,12 @@ export function ProductFiltersForm({
                 value={state.price_max ?? ""}
                 onChange={(event) => onChange({ price_max: event.target.value })}
                 disabled={disabled}
+                className="h-9 text-sm"
               />
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-2">
+          <div className="flex items-center justify-center gap-2">
             <Button
               type="button"
               variant="outline"

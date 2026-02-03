@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useInfiniteQuery } from "@tanstack/react-query"
 import { useOutletContext } from "react-router-dom"
-import { Search, SlidersHorizontal } from "lucide-react"
+import { Search } from "lucide-react"
 
 import type { ProtectedOutletContext } from "@/app/App"
 import { toProductFeed } from "@/entities/product/model/adapters"
@@ -39,7 +39,6 @@ export function FeedProducts() {
 
   const [draftFilters, setDraftFilters] = useState<FilterState>(createDefaultFilters)
   const [appliedFilters, setAppliedFilters] = useState<FilterState>(createDefaultFilters)
-  const [areFiltersVisible, setFiltersVisible] = useState(true)
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { data: cart } = useCartQuery()
   const addMutation = useAddToCart()
@@ -172,6 +171,7 @@ export function FeedProducts() {
     : isFetchingNextPage
       ? loadingMoreSkeletonCount
       : 0
+  const shouldRenderGrid = products.length > 0 || skeletonCount > 0
 
   const searchNode = useMemo(() => {
     const value = draftFilters.q ?? ""
@@ -221,128 +221,122 @@ export function FeedProducts() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-end">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => setFiltersVisible((prev) => !prev)}
-          className="gap-2"
-          aria-expanded={areFiltersVisible}
-        >
-          <SlidersHorizontal className="size-4" />
-          {areFiltersVisible ? "Скрыть фильтры" : "Показать фильтры"}
-        </Button>
-      </div>
-
-      {areFiltersVisible && (
-        <ProductFiltersForm
-          state={draftFilters}
-          onChange={handleFiltersChange}
-          onReset={handleReset}
-          onApply={handleApply}
-          disabled={isLoading || isFetchingNextPage}
-          isLoading={isLoading || isFetchingNextPage}
-        />
-      )}
-
-      {isError && (
-        <div className="flex items-start justify-between gap-4 rounded-xl border border-destructive/40 bg-destructive/10 px-5 py-4 text-sm text-destructive">
-          <span className="leading-snug">
-            Не удалось загрузить каталог товаров. Попробуйте ещё раз.
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => refetch()}
-          >
-            Обновить
-          </Button>
-        </div>
-      )}
-
-      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-        {products.map((product) => {
-          const cartItem = cart?.items.find(
-            (item) => item.product.id === product.id
-          )
-          const quantity = cartItem?.quantity ?? 0
-          const isAddPending =
-            addMutation.isPending &&
-            addMutation.variables?.product_id === product.id
-          const isUpdatePending =
-            updateMutation.isPending &&
-            updateMutation.variables?.item_id === cartItem?.id
-          const isRemovePending =
-            removeMutation.isPending && removeMutation.variables === cartItem?.id
-          const isMutating = isAddPending || isUpdatePending || isRemovePending
-
-          return (
-            <ProductCard
-              key={product.id}
-              product={product}
-              quantity={quantity}
-              onAddToCart={() =>
-                addMutation.mutate({
-                  product_id: product.id,
-                  quantity: 1,
-                })
-              }
-              onIncrement={() => {
-                if (!cartItem) {
-                  addMutation.mutate({
-                    product_id: product.id,
-                    quantity: 1,
-                  })
-                  return
-                }
-                updateMutation.mutate({
-                  item_id: cartItem.id,
-                  quantity: cartItem.quantity + 1,
-                })
-              }}
-              onDecrement={() => {
-                if (!cartItem) {
-                  return
-                }
-                if (cartItem.quantity <= 1) {
-                  removeMutation.mutate(cartItem.id)
-                  return
-                }
-                updateMutation.mutate({
-                  item_id: cartItem.id,
-                  quantity: cartItem.quantity - 1,
-                })
-              }}
-              isMutating={isMutating}
+      <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[22rem_minmax(0,1fr)] lg:items-start">
+        <aside className="lg:sticky lg:top-20 lg:h-[calc(100vh-5rem)] lg:overflow-y-auto lg:flex lg:justify-center">
+          <div className="w-full lg:max-w-[22rem]">
+            <ProductFiltersForm
+              state={draftFilters}
+              onChange={handleFiltersChange}
+              onReset={handleReset}
+              onApply={handleApply}
+              disabled={isLoading || isFetchingNextPage}
+              isLoading={isLoading || isFetchingNextPage}
             />
-          )
-        })}
+          </div>
+        </aside>
 
-        {Array.from({ length: skeletonCount }).map((_, index) => (
-          <ProductCardSkeleton key={`product-skeleton-${index}`} />
-        ))}
+        <div className="flex flex-col gap-6">
+          {isError && (
+            <div className="flex items-start justify-between gap-4 rounded-xl border border-destructive/40 bg-destructive/10 px-5 py-4 text-sm text-destructive">
+              <span className="leading-snug">
+                Не удалось загрузить каталог товаров. Попробуйте ещё раз.
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => refetch()}
+              >
+                Обновить
+              </Button>
+            </div>
+          )}
+
+          {shouldRenderGrid ? (
+            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+              {products.map((product) => {
+                const cartItem = cart?.items.find(
+                  (item) => item.product.id === product.id
+                )
+                const quantity = cartItem?.quantity ?? 0
+                const isAddPending =
+                  addMutation.isPending &&
+                  addMutation.variables?.product_id === product.id
+                const isUpdatePending =
+                  updateMutation.isPending &&
+                  updateMutation.variables?.item_id === cartItem?.id
+                const isRemovePending =
+                  removeMutation.isPending && removeMutation.variables === cartItem?.id
+                const isMutating = isAddPending || isUpdatePending || isRemovePending
+
+                return (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    quantity={quantity}
+                    onAddToCart={() =>
+                      addMutation.mutate({
+                        product_id: product.id,
+                        quantity: 1,
+                      })
+                    }
+                    onIncrement={() => {
+                      if (!cartItem) {
+                        addMutation.mutate({
+                          product_id: product.id,
+                          quantity: 1,
+                        })
+                        return
+                      }
+                      updateMutation.mutate({
+                        item_id: cartItem.id,
+                        quantity: cartItem.quantity + 1,
+                      })
+                    }}
+                    onDecrement={() => {
+                      if (!cartItem) {
+                        return
+                      }
+                      if (cartItem.quantity <= 1) {
+                        removeMutation.mutate(cartItem.id)
+                        return
+                      }
+                      updateMutation.mutate({
+                        item_id: cartItem.id,
+                        quantity: cartItem.quantity - 1,
+                      })
+                    }}
+                    isMutating={isMutating}
+                  />
+                )
+              })}
+
+              {Array.from({ length: skeletonCount }).map((_, index) => (
+                <ProductCardSkeleton key={`product-skeleton-${index}`} />
+              ))}
+            </div>
+          ) : null}
+
+          {isEmpty && (
+            <div className="rounded-xl border bg-card px-6 py-10 text-center text-sm text-muted-foreground">
+              Пока нет товаров для отображения.
+            </div>
+          )}
+
+          {hasNextPage && (
+            <div className="flex justify-center">
+              <Button
+                variant="outline"
+                onClick={() => fetchNextPage()}
+                disabled={isFetchingNextPage}
+              >
+                {isFetchingNextPage ? "Загрузка..." : "Показать ещё"}
+              </Button>
+            </div>
+          )}
+
+          <div ref={loaderRef} aria-hidden className="h-px w-full" />
+        </div>
       </div>
-
-      {isEmpty && (
-        <div className="rounded-xl border bg-card px-6 py-10 text-center text-sm text-muted-foreground">
-          Пока нет товаров для отображения.
-        </div>
-      )}
-
-      {hasNextPage && (
-        <div className="flex justify-center">
-          <Button
-            variant="outline"
-            onClick={() => fetchNextPage()}
-            disabled={isFetchingNextPage}
-          >
-            {isFetchingNextPage ? "Загрузка..." : "Показать ещё"}
-          </Button>
-        </div>
-      )}
-
-      <div ref={loaderRef} aria-hidden className="h-px w-full" />
     </div>
   )
 }
