@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { AlertTriangle, Loader2, Package2, ShoppingCart } from "lucide-react";
@@ -16,16 +16,10 @@ import { useStripeHostedCheckout } from "@/features/orders/useStripeHostedChecko
 import { Button } from "@/shared/components/ui/button";
 import {
   Card,
-  CardAction,
   CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
 } from "@/shared/components/ui/card";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Label } from "@/shared/components/ui/label";
-import { Separator } from "@/shared/components/ui/separator";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Textarea } from "@/shared/components/ui/textarea";
 import {
@@ -76,7 +70,6 @@ export function CartWidget() {
 
   const visibleTotals = useMemo(
     () => ({
-      uniqueItems: visibleItems.length,
       totalItems: visibleItems.reduce((total, item) => total + item.quantity, 0),
       totalAmount: visibleItems.reduce(
         (total, item) => total + item.totalPrice,
@@ -88,7 +81,6 @@ export function CartWidget() {
 
   const totalLabel =
     visibleItems.length > 0 ? formatMoney(visibleTotals.totalAmount) : "—";
-  const uniqueItems = visibleTotals.uniqueItems;
   const totalItems = visibleTotals.totalItems;
 
   const content = useMemo(() => {
@@ -211,22 +203,7 @@ export function CartWidget() {
     normalizedShippingAddress.length < MIN_SHIPPING_ADDRESS_LENGTH;
   const hasCheckoutItems = checkoutReadyItems.length > 0;
 
-  const checkoutDisabled =
-    isLoading || !hasCheckoutItems;
-
-  const checkoutHint = (() => {
-    if (!hasCheckoutItems) {
-      if (cartItems.length === 0) {
-        return "Заполните корзину доступными товарами, чтобы продолжить.";
-      }
-      if (hasLockedItems) {
-        return "Недоступные позиции скрыты. Уберите их или дождитесь обновления статуса.";
-      }
-      return "Добавьте товары, чтобы продолжить.";
-    }
-
-    return "Нажмите «Оформить заказ», чтобы указать адрес в диалоге и перейти к оплате.";
-  })();
+  const checkoutDisabled = isLoading || !hasCheckoutItems;
 
   const handleCheckout = () => {
     if (!cart || checkoutMutation.isPending) {
@@ -301,129 +278,89 @@ export function CartWidget() {
 
   return (
     <div className="flex flex-col gap-6">
-      <Card>
-        <CardHeader>
-          <div className="space-y-2">
-            <CardTitle className="flex items-center gap-2 text-xl">
-              <ShoppingCart className="size-5 text-muted-foreground" aria-hidden />
-              Корзина
-            </CardTitle>
-            <CardDescription>
-              Управляйте составом заказа и контролируйте доступность позиций.
-            </CardDescription>
-          </div>
-          <CardAction>
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2 border-destructive/50 bg-destructive/10 text-xs text-destructive hover:bg-destructive/20"
-                onClick={() => clearMutation.mutate()}
-                disabled={
-                  clearMutation.isPending || !cart || cart.items.length === 0
-                }
-              >
-                {clearMutation.isPending ? (
-                  <>
-                    <ReloadIcon className="size-3.5 animate-spin" aria-hidden />
-                    Очистка…
-                  </>
-                ) : (
-                  <>
-                    <TrashIcon className="size-3.5" aria-hidden />
-                    Очистить
-                  </>
-                )}
-              </Button>
+      <Card className="gap-0 py-0">
+        <CardContent className="py-3">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex min-w-0 items-center gap-2 overflow-x-auto pr-2 text-sm text-muted-foreground whitespace-nowrap">
+              <ShoppingCart className="size-4 shrink-0" aria-hidden />
+
+              <span>Товаров:</span>
+              {isLoading && !cart ? (
+                <Skeleton className="h-5 w-10 shrink-0" />
+              ) : (
+                <span className="font-semibold tabular-nums text-foreground">
+                  {totalItems}
+                </span>
+              )}
+
+              <span className="text-muted-foreground/60">•</span>
+
+              <span>Сумма:</span>
+              {isLoading && !cart ? (
+                <Skeleton className="h-5 w-24 shrink-0" />
+              ) : (
+                <span className="font-semibold tabular-nums text-foreground">
+                  {totalLabel}
+                </span>
+              )}
+
+              <span className="text-muted-foreground/60">•</span>
+
               <Label
                 htmlFor="cart-include-locked"
-                className="cursor-pointer rounded-md border bg-background/80 px-3 py-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground"
+                className="flex cursor-pointer items-center gap-2 text-xs font-medium text-muted-foreground"
               >
                 <Checkbox
                   id="cart-include-locked"
                   checked={showLocked}
                   onCheckedChange={(value) => setShowLocked(value === true)}
                 />
-                Показывать недоступные
+                Недоступные
               </Label>
             </div>
-          </CardAction>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-3">
-            <SummaryCell
-              label="Позиции"
-              value={
-                isLoading && !cart ? (
-                  <Skeleton className="h-6 w-14" />
-                ) : (
-                  uniqueItems
-                )
-              }
-            />
-            <SummaryCell
-              label="Всего товаров"
-              value={
-                isLoading && !cart ? (
-                  <Skeleton className="h-6 w-16" />
-                ) : (
-                  totalItems
-                )
-              }
-            />
-            <SummaryCell
-              label="Сумма заказа"
-              value={
-                isLoading && !cart ? (
-                  <Skeleton className="h-6 w-24" />
-                ) : (
-                  totalLabel
-                )
-              }
-            />
-          </div>
 
-          <Separator />
-
-          <div className="rounded-lg border border-dashed bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
-            Адрес и комментарий к заказу можно будет указать в появившемся диалоговом окне после нажатия кнопки «Оформить заказ».
-          </div>
-
-          <Separator />
-
-          <div className="flex flex-col gap-2 text-sm text-muted-foreground">
-            <span>
-              {showLocked
-                ? "Показываются все товары, включая заблокированные."
-                : "Сейчас отображаются только доступные для покупки товары."}
-            </span>
-            {hasLockedItems && (
-              <span className="text-destructive">
-                Уберите недоступные позиции, чтобы оформить заказ.
-              </span>
-            )}
+            <Button
+              type="button"
+              size="sm"
+              className="shrink-0"
+              disabled={checkoutDisabled || checkoutMutation.isPending}
+              onClick={handleOpenCheckoutDialog}
+            >
+              {(checkoutMutation.isPending || isFetching) && (
+                <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
+              )}
+              {checkoutMutation.isPending ? "Обработка…" : "Оформить заказ"}
+            </Button>
           </div>
         </CardContent>
-        <CardFooter className="flex flex-col gap-3 border-t pt-6 sm:flex-row sm:items-center sm:justify-between">
-          <div className="text-sm text-muted-foreground">
-            {checkoutHint}
-          </div>
-          <Button
-            type="button"
-            size="lg"
-            disabled={checkoutDisabled || checkoutMutation.isPending}
-            onClick={handleOpenCheckoutDialog}
-          >
-            {(checkoutMutation.isPending || isFetching) && (
-              <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
-            )}
-            {checkoutMutation.isPending ? "Обработка…" : "Оформить заказ"}
-          </Button>
-        </CardFooter>
       </Card>
 
       {content}
+
+      {cartItems.length > 0 && (
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+            onClick={() => clearMutation.mutate()}
+            disabled={clearMutation.isPending || !cart || cart.items.length === 0}
+          >
+            {clearMutation.isPending ? (
+              <>
+                <ReloadIcon className="size-3.5 animate-spin" aria-hidden />
+                Очистка…
+              </>
+            ) : (
+              <>
+                <TrashIcon className="size-3.5" aria-hidden />
+                Очистить корзину
+              </>
+            )}
+          </Button>
+        </div>
+      )}
 
       <Dialog open={isCheckoutDialogOpen} onOpenChange={setCheckoutDialogOpen}>
         <DialogContent>
@@ -501,24 +438,6 @@ export function CartWidget() {
           </form>
         </DialogContent>
       </Dialog>
-    </div>
-  );
-}
-
-type SummaryCellProps = {
-  label: string;
-  value: ReactNode;
-};
-
-function SummaryCell({ label, value }: SummaryCellProps) {
-  return (
-    <div className="flex flex-col gap-1 rounded-lg border bg-muted/30 px-4 py-3">
-      <span className="text-xs uppercase tracking-wide text-muted-foreground">
-        {label}
-      </span>
-      <span className="text-base font-semibold text-foreground">
-        {value}
-      </span>
     </div>
   );
 }
