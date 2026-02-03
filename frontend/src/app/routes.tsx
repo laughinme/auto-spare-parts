@@ -110,7 +110,7 @@ export const ROUTE_SECTIONS: NavSection[] = [
         icon: BoxIcon,
       },
       {
-        title: "My orders",
+        title: "Orders",
         path: ROUTE_PATHS.buyer.orders,
         icon: ClipboardIcon,
       },

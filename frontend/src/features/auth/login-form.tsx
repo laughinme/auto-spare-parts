@@ -1,21 +1,21 @@
 import { type ComponentProps, type FormEvent } from "react"
 
-import { Button } from "@/shared/ui/button"
+import { Button } from "@/shared/components/ui/button"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/shared/ui/card"
+} from "@/shared/components/ui/card"
 import {
   Field,
   FieldDescription,
   FieldGroup,
   FieldError,
   FieldLabel,
-} from "@/shared/ui/field"
-import { Input } from "@/shared/ui/input"
+} from "@/shared/components/ui/field"
+import { Input } from "@/shared/components/ui/input"
 import { cn } from "@/shared/lib/utils"
 
 type LoginFormProps = ComponentProps<"div"> & {
