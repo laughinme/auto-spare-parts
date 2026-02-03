@@ -146,13 +146,24 @@ export function SupplierProductForm({
 }: SupplierProductFormProps) {
   const [form, setForm] = useState<SupplierProductFormValues>(initialValues);
   const [makeSearch, setMakeSearch] = useState(initialMakeName);
+  const [isMakeSuggestionsOpen, setIsMakeSuggestionsOpen] = useState(false);
+  const [makeLimit, setMakeLimit] = useState(MAKES_LIMIT);
 
   useEffect(() => {
     setForm(initialValues);
-    setMakeSearch(initialMakeName);
-  }, [initialValues, initialMakeName, resetToken]);
+    setMakeSearch(
+      initialValues.makeId
+        ? prefillMakeOption?.makeName ?? initialMakeName
+        : initialMakeName,
+    );
+    setIsMakeSuggestionsOpen(false);
+  }, [initialValues, initialMakeName, prefillMakeOption, resetToken]);
 
   const trimmedMakeSearch = makeSearch.trim();
+
+  useEffect(() => {
+    setMakeLimit(MAKES_LIMIT);
+  }, [trimmedMakeSearch]);
 
   const {
     data: makes = [],
@@ -160,7 +171,7 @@ export function SupplierProductForm({
     isFetching: isFetchingMakes,
     isError: isErrorMakes,
   } = useVehicleMakes({
-    limit: MAKES_LIMIT,
+    limit: makeLimit,
     search: trimmedMakeSearch === "" ? null : trimmedMakeSearch,
   });
 
@@ -176,6 +187,8 @@ export function SupplierProductForm({
 
     return [prefillMakeOption, ...makes];
   }, [makes, prefillMakeOption]);
+
+  const canLoadMoreMakes = makes.length >= makeLimit;
 
   const hasChanges = useMemo(() => {
     if (!requireChanges) {
@@ -308,42 +321,93 @@ export function SupplierProductForm({
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="supplier-product-make-search">Марка</Label>
-            <Input
-              id="supplier-product-make-search"
-              value={makeSearch}
-              onChange={(event) => setMakeSearch(event.target.value)}
-              placeholder="Начните вводить название марки"
-              autoComplete="off"
-            />
-            <Select
-              value={form.makeId || undefined}
-              onValueChange={(value) => updateField("makeId")(value)}
-            >
-              <SelectTrigger
-                className="w-full"
-                disabled={
-                  (isLoadingMakes && makeOptions.length === 0) || isErrorMakes
-                }
-              >
-                <SelectValue placeholder="Выберите марку" />
-              </SelectTrigger>
-              <SelectContent>
-                {makeOptions.length === 0 && !isLoadingMakes ? (
-                  <SelectItem value="__empty" disabled>
-                    Марки не найдены
-                  </SelectItem>
-                ) : (
-                  makeOptions.map((make) => (
-                    <SelectItem
-                      key={make.makeId}
-                      value={String(make.makeId)}
-                    >
-                      {make.makeName}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
+            <div className="relative">
+              <Input
+                id="supplier-product-make-search"
+                value={makeSearch}
+                onChange={(event) => {
+                  const nextValue = event.target.value;
+                  setMakeSearch(nextValue);
+                  setForm((prev) => ({ ...prev, makeId: "" }));
+                  setIsMakeSuggestionsOpen(true);
+                }}
+                onFocus={() => setIsMakeSuggestionsOpen(true)}
+                onBlur={() => setIsMakeSuggestionsOpen(false)}
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") {
+                    setIsMakeSuggestionsOpen(false);
+                  }
+                }}
+                placeholder="Начните вводить название марки"
+                autoComplete="off"
+                aria-expanded={isMakeSuggestionsOpen}
+                aria-autocomplete="list"
+                aria-controls="supplier-product-make-suggestions"
+              />
+              {isMakeSuggestionsOpen && (
+                <div
+                  id="supplier-product-make-suggestions"
+                  className="bg-popover text-popover-foreground absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-md border shadow-md"
+                  role="listbox"
+                  onScroll={(event) => {
+                    const target = event.currentTarget;
+                    const nearBottom =
+                      target.scrollTop + target.clientHeight >=
+                      target.scrollHeight - 24;
+
+                    if (!nearBottom || !canLoadMoreMakes || isFetchingMakes) {
+                      return;
+                    }
+
+                    setMakeLimit((prev) => prev + MAKES_LIMIT);
+                  }}
+                >
+                  <div className="p-1">
+                    {isLoadingMakes && makes.length === 0 ? (
+                      <div className="text-muted-foreground px-2 py-1.5 text-sm">
+                        Загрузка марок...
+                      </div>
+                    ) : isErrorMakes && makes.length === 0 ? (
+                      <div className="text-muted-foreground px-2 py-1.5 text-sm">
+                        Не удалось загрузить марки
+                      </div>
+                    ) : makeOptions.length === 0 ? (
+                      <div className="text-muted-foreground px-2 py-1.5 text-sm">
+                        Марки не найдены
+                      </div>
+                    ) : (
+                      <>
+                        {makeOptions.map((make) => (
+                          <button
+                            key={make.makeId}
+                            type="button"
+                            className="hover:bg-accent focus:bg-accent focus:text-accent-foreground flex w-full items-center rounded-sm px-2 py-1.5 text-left text-sm"
+                            onMouseDown={(event) => {
+                              event.preventDefault();
+                              updateField("makeId")(String(make.makeId));
+                              setMakeSearch(make.makeName);
+                              setIsMakeSuggestionsOpen(false);
+                            }}
+                          >
+                            {make.makeName}
+                          </button>
+                        ))}
+                        {isFetchingMakes && (
+                          <div className="text-muted-foreground px-2 py-1.5 text-sm">
+                            Загрузка марок...
+                          </div>
+                        )}
+                        {isErrorMakes && (
+                          <div className="text-muted-foreground px-2 py-1.5 text-sm">
+                            Не удалось загрузить марки
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
             <p className="text-xs text-muted-foreground">
               {isLoadingMakes || isFetchingMakes
                 ? "Загрузка марок…"
