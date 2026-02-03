@@ -15,6 +15,7 @@ interface AuthProviderProps {
 }
 
 const SKIP_REFRESH_KEY = "auth:skipRefresh";
+const HOME_PATH = "/home";
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const queryClient = useQueryClient();
@@ -64,6 +65,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       }
       if (typeof window !== "undefined") {
         sessionStorage.removeItem(SKIP_REFRESH_KEY);
+        if (window.location.pathname !== HOME_PATH) {
+          window.history.replaceState(null, "", HOME_PATH);
+        }
       }
       queryClient.invalidateQueries({ queryKey: ["me"] });
     }
@@ -77,6 +81,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       }
       if (typeof window !== "undefined") {
         sessionStorage.removeItem(SKIP_REFRESH_KEY);
+        if (window.location.pathname !== HOME_PATH) {
+          window.history.replaceState(null, "", HOME_PATH);
+        }
       }
       queryClient.invalidateQueries({ queryKey: ["me"] });
     }

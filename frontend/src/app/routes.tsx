@@ -33,7 +33,7 @@ export const ROUTE_PATHS = {
     organizationDetails: "/account/organizations/:organizationId",
   },
   buyer: {
-    fyp: "/buyer/fyp",
+    fyp: "/home",
     productDetails: "/buyer/products/:productId",
     cart: "/buyer/cart",
     garage: "/buyer/garage",

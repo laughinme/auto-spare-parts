@@ -173,7 +173,7 @@ function ProtectedLayout({ user }: ProtectedLayoutProps) {
       <SiteHeader
         sections={ROUTE_SECTIONS}
         user={headerUser}
-        homePath={ROUTE_PATHS.supplier.dashboard}
+        homePath={ROUTE_PATHS.buyer.fyp}
         searchSlot={headerSearch}
         navItemCounters={navItemCounters}
         onNavItemSelect={handleNavItemSelect}
@@ -235,7 +235,7 @@ function App() {
           <Route
             index
             element={
-              <Navigate to={ROUTE_PATHS.supplier.dashboard} replace />
+              <Navigate to={ROUTE_PATHS.buyer.fyp} replace />
             }
           />
           {PROTECTED_ROUTES.map((route) => (
@@ -248,7 +248,7 @@ function App() {
           <Route
             path="*"
             element={
-              <Navigate to={ROUTE_PATHS.supplier.dashboard} replace />
+              <Navigate to={ROUTE_PATHS.buyer.fyp} replace />
             }
           />
         </Route>
