@@ -1,8 +1,7 @@
 from uuid import UUID
 
-from database.relational_db import UoW, User, Organization, OrganizationsInterface
-from domain.organizations import OrganizationCreate
-from domain.organizations.enums import KycStatus
+from database.relational_db import UoW, User, Organization, OrganizationsInterface, OrgMembership
+from domain.organizations import MembershipRole
 
 
 class OrganizationService:
@@ -10,7 +9,12 @@ class OrganizationService:
         self.uow = uow
         self.org_repo = org_repo
 
-    async def create_organization(self, owner: User, country_code: str, name: str) -> Organization:
+    async def create_organization(
+        self, 
+        owner: User, 
+        country_code: str, 
+        name: str
+    ) -> Organization:
         organization = Organization(
             name=name,
             country=country_code,
@@ -20,6 +24,12 @@ class OrganizationService:
         )
 
         await self.org_repo.add(organization)
+        await self.uow.session.flush()
+        await self.org_repo.ensure_membership(
+            organization.id,
+            owner.id,
+            MembershipRole.OWNER,
+        )
         await self.uow.commit()
         await self.uow.session.refresh(organization)
         return organization
@@ -32,3 +42,13 @@ class OrganizationService:
 
     async def list_my(self, owner: User) -> list[Organization]:
         return await self.org_repo.list_by_owner(owner.id)
+    
+    async def get_my_membership(self, org_id: UUID | str, user: User) -> OrgMembership | None:
+        return await self.org_repo.get_membership(org_id, user.id)
+    
+    async def list_mine(self, user: User) -> list[Organization]:
+        return await self.org_repo.list_for_user(user.id)
+
+    async def get_membership_role(self, org_id: UUID | str, user_id: UUID | str) -> MembershipRole | None:
+        membership = await self.org_repo.get_membership(org_id, user_id)
+        return membership.role if membership else None

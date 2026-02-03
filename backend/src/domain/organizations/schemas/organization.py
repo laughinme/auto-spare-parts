@@ -2,7 +2,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 from ..enums import OrganizationType, KycStatus, PayoutSchedule
-from ...common.timestamps import TimestampModel
+from ...common import TimestampModel
 
 class OrganizationModel(TimestampModel):
     id: UUID = Field(..., description="Unique identifier for the organization")

@@ -6,6 +6,7 @@ from .products import (
     MediaCreate,
     ProductBrief,
 )
+from .stock import AdjustStock
 
 __all__ = [
     "ProductModel",
@@ -14,4 +15,5 @@ __all__ = [
     "MediaModel",
     "MediaCreate",
     "ProductBrief",
+    "AdjustStock",
 ]

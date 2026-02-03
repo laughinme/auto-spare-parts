@@ -1,5 +1,6 @@
 from typing import Annotated
 from uuid import UUID
+from decimal import Decimal
 from fastapi import APIRouter, Depends, Query, HTTPException
 
 from domain.products import ProductModel, ProductCondition, ProductOriginality
@@ -22,8 +23,8 @@ async def search_products_cursor(
     make_id: int | None = Query(None, description="Filter by make"),
     condition: ProductCondition | None = Query(None, description="Filter by condition"),
     originality: ProductOriginality | None = Query(None, description="Filter by originality"),
-    price_min: float | None = Query(None, ge=0, description="Minimum price filter"),
-    price_max: float | None = Query(None, ge=0, description="Maximum price filter"),
+    price_min: Decimal | None = Query(None, ge=0, description="Minimum price filter"),
+    price_max: Decimal | None = Query(None, ge=0, description="Maximum price filter"),
 ):
     products, next_cursor = await svc.search_published_products_cursor(
         limit=limit,

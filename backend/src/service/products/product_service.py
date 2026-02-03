@@ -1,11 +1,13 @@
 import aiofiles
 from uuid import UUID, uuid4
+from decimal import Decimal
 from datetime import datetime
 from pathlib import Path
 from fastapi import UploadFile, status, HTTPException
 from redis.asyncio import Redis
 from sqlalchemy.exc import IntegrityError
 
+from utils.cursor import parse_cursor, create_cursor
 from core.config import Settings
 from database.relational_db import (
     UoW,
@@ -24,6 +26,7 @@ from domain.products import (
     ProductCondition,
     ProductOriginality,
     StockType,
+    AdjustStock,
 )
 
 settings = Settings() # type: ignore
@@ -44,9 +47,9 @@ class ProductService:
         self.media_repo = media_repo
         self.carts_repo = carts_repo
         self.redis = redis
-        
-        
-    def _validate_product_integrity(self, product: Product) -> None:
+    
+    @staticmethod
+    def _validate_product_integrity(product: Product) -> None:
         if product.stock_type == StockType.UNIQUE:
             if product.allow_cart:
                 raise ValueError("Cart cannot be allowed for UNIQUE stock type")
@@ -167,6 +170,16 @@ class ProductService:
         
         # await self.uow.commit()
         # await self.uow.session.refresh(product)
+        return product
+    
+    async def adjust_stock(self, product: Product, payload: AdjustStock) -> Product:
+        """Adjust product stock"""
+        product.quantity_on_hand += payload.delta
+        if product.quantity_on_hand < 0:
+            raise HTTPException(400, detail='Not enough stock')
+        
+        await self.uow.commit()
+        await self.uow.session.refresh(product)
         return product
 
     async def add_media(self, product: Product, payload: MediaCreate) -> ProductMedia:
@@ -313,21 +326,11 @@ class ProductService:
         make_id: int | None = None,
         condition: ProductCondition | None = None,
         originality: ProductOriginality | None = None,
-        price_min: float | None = None,
-        price_max: float | None = None,
+        price_min: Decimal | None = None,
+        price_max: Decimal | None = None,
         cursor: str | None = None,
     ) -> tuple[list[Product], str | None]:
         """Search published products with cursor pagination (same pattern as admin users)"""
-        cursor_created_at = None
-        cursor_id = None
-        if cursor:
-            try:
-                ts_str, id_str = cursor.split("_", 1)
-                cursor_created_at = datetime.fromisoformat(ts_str)
-                cursor_id = UUID(id_str)
-            except Exception:
-                raise HTTPException(400, detail='Invalid cursor')
-
         products = await self.products_repo.search_published_products_cursor(
             limit=limit,
             search=search,
@@ -336,19 +339,10 @@ class ProductService:
             originality=originality,
             price_min=price_min,
             price_max=price_max,
-            cursor_created_at=cursor_created_at,
-            cursor_id=cursor_id,
+            **parse_cursor(cursor),
         )
 
-        next_cursor = None
-        if len(products) == limit:
-            last = products[-1]
-            if last.created_at is None:
-                next_cursor = None
-            else:
-                next_cursor = f"{last.created_at.isoformat()}_{last.id}"
-
-        return products, next_cursor
+        return products, create_cursor(products, limit)
 
     async def get_feed_products_cursor(
         self,
@@ -357,31 +351,12 @@ class ProductService:
         cursor: str | None = None,
     ) -> tuple[list[Product], str | None]:
         """Get products for feed using cursor pagination (same pattern as admin users)"""
-        cursor_created_at = None
-        cursor_id = None
-        if cursor:
-            try:
-                ts_str, id_str = cursor.split("_", 1)
-                cursor_created_at = datetime.fromisoformat(ts_str)
-                cursor_id = UUID(id_str)
-            except Exception:
-                raise HTTPException(400, detail='Invalid cursor')
-
         products = await self.products_repo.get_feed_products_cursor(
             limit=limit,
-            cursor_created_at=cursor_created_at,
-            cursor_id=cursor_id,
+            **parse_cursor(cursor),
         )
-
-        next_cursor = None
-        if len(products) == limit:
-            last = products[-1]
-            if last.created_at is None:
-                next_cursor = None
-            else:
-                next_cursor = f"{last.created_at.isoformat()}_{last.id}"
-
-        return products, next_cursor
+        
+        return products, create_cursor(products, limit)
 
     async def get_published_product(self, product_id: UUID | str) -> Product | None:
         """Get published product by ID for public viewing"""

@@ -1,8 +1,10 @@
+from typing import Iterable
 from uuid import UUID
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from pydantic import EmailStr
 from sqlalchemy import select, and_, or_, func
 from sqlalchemy.ext.asyncio import AsyncSession
+# from sqlalchemy.orm import raiseload, selectinload
 
 from .users_table import User
 
@@ -73,3 +75,23 @@ class UserInterface:
         )
         
         return result.mappings().all()
+    
+    # TODO: Add custom load for expandable relationships
+    # async def custom_load(self, id: UUID | str, expand: Iterable[str] | None = None) -> User | None:
+    #     # Always raise on unexpected lazy loads to guarantee we control eager fetching scope.
+    #     stmt = (
+    #         select(User)
+    #         .where(User.id == id)
+    #         .options(raiseload("*"))
+    #     )
+
+    #     expand = set(expand or [])
+
+    #     # Load roles only when explicitly requested through expand.
+    #     if "roles" in expand:
+    #         stmt = stmt.options(selectinload(User.roles))
+
+    #     # if "organization" in expand:
+    #     #     stmt = stmt.options(selectinload(User.organization))
+        
+    #     return await self.session.scalar(stmt)

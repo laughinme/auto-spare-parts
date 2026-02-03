@@ -2,8 +2,7 @@ from typing import Annotated
 from uuid import UUID
 from fastapi import APIRouter, Depends, Path, HTTPException
 
-from core.security import auth_user
-from database.relational_db import User
+from core.security import require
 from domain.products import (
     ProductPatch,
     ProductModel,
@@ -20,7 +19,7 @@ router = APIRouter()
 async def get_org_product(
     org_id: Annotated[UUID, Path(..., description="Organization ID")],
     product_id: Annotated[UUID, Path(..., description="Product ID")],
-    _: Annotated[User, Depends(auth_user)],
+    _: Annotated[None, Depends(require('staff', scope='org'))],
     svc: Annotated[ProductService, Depends(get_product_service)],
 ):
     product = await svc.get_product(product_id)
@@ -38,7 +37,7 @@ async def patch_org_product(
     payload: ProductPatch,
     org_id: Annotated[UUID, Path(..., description="Organization ID")],
     product_id: Annotated[UUID, Path(..., description="Product ID")],
-    _: Annotated[User, Depends(auth_user)],
+    _: Annotated[None, Depends(require('staff', scope='org'))],
     svc: Annotated[ProductService, Depends(get_product_service)],
 ):
     product = await svc.get_product(product_id)
@@ -57,7 +56,7 @@ async def patch_org_product(
 async def delete_org_product(
     org_id: Annotated[UUID, Path(..., description="Organization ID")],
     product_id: Annotated[UUID, Path(..., description="Product ID")],
-    user: Annotated[User, Depends(auth_user)],
+    _: Annotated[None, Depends(require('staff', scope='org'))],
     svc: Annotated[ProductService, Depends(get_product_service)],
 ):
     pass

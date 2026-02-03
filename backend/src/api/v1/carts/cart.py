@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 
 from core.security import auth_user
 from domain.carts import (
@@ -20,8 +20,9 @@ router = APIRouter()
 async def get_cart(
     user: Annotated[User, Depends(auth_user)],
     cart_service: Annotated[CartService, Depends(get_cart_service)],
+    include_locked: bool = Query(False, description="Whether to include locked items in the cart"),
 ):
-    cart = await cart_service.get_user_cart(user)
+    cart = await cart_service.get_user_cart(user, include_locked)
     return cart
 
 

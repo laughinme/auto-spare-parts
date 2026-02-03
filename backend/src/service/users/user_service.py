@@ -7,7 +7,8 @@ from pathlib import Path
 from fastapi import UploadFile, status, HTTPException
 
 from core.config import Settings
-from domain.users import UserPatch
+from domain.users import UserPatch, ExpandUserFields, UserModel
+from domain.organizations import OrganizationModel
 from database.relational_db import (
     UoW,
     UserInterface, 
@@ -40,6 +41,55 @@ class UserService:
         await self.uow.commit()
             
         await self.uow.session.refresh(user)
+        
+    # async def for_profile(self, user_id: UUID | str, expand: set[ExpandUserFields]) -> UserModel:
+    #     # Convert enum set to raw values for low-level repository consumption.
+    #     expand_tokens = {field.value for field in expand}
+
+    #     user = await self.user_repo.custom_load(
+    #         id=user_id,
+    #         expand=expand_tokens,
+    #     )
+    #     if user is None:
+    #         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="User not found")
+    #     return self._build_profile_model(user, expand)
+
+    # def _build_profile_model(
+    #     self,
+    #     user: User,
+    #     expand: set[ExpandUserFields],
+    # ) -> UserModel:
+    #     # Base payload always includes scalar attributes from the users table.
+    #     payload = {
+    #         "id": user.id,
+    #         "email": user.email,
+    #         "username": user.username,
+    #         "profile_pic_url": user.profile_pic_url,
+    #         "bio": user.bio,
+    #         "language_code": user.language_code,
+    #         "is_onboarded": user.is_onboarded,
+    #         "banned": user.banned,
+    #         "created_at": user.created_at,
+    #         "updated_at": user.updated_at,
+    #     }
+
+    #     # Attach organization details only when expansion is enabled.
+    #     if ExpandUserFields.ORGANIZATION in expand:
+    #         organization = getattr(user, "organization", None)
+    #         payload["organization"] = (
+    #             OrganizationModel.model_validate(
+    #                 organization,
+    #                 from_attributes=True,
+    #             )
+    #             if organization is not None
+    #             else None
+    #         )
+
+    #     # Attach role slugs only if roles were eagerly fetched.
+    #     if ExpandUserFields.ROLES in expand:
+    #         payload["roles"] = [role.slug for role in getattr(user, "roles", [])]
+
+    #     return UserModel.model_validate(payload)
 
     async def add_picture(
         self,

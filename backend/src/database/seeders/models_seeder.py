@@ -2,7 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 
 from .base_seeder import BaseSeeder
-from ..relational_db.tables.models.models_table import Model
+from ..relational_db.tables import Model
 
 
 class ModelsSeeder(BaseSeeder):
