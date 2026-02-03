@@ -177,13 +177,13 @@ export function FeedProducts() {
     const value = draftFilters.q ?? ""
     return (
       <form
-        className="flex items-center gap-2"
+        className="flex w-full items-center gap-2"
         onSubmit={(event) => {
           event.preventDefault()
           handleApply()
         }}
       >
-        <div className="relative flex items-center">
+        <div className="relative flex w-full items-center">
           <Search className="absolute left-3 size-4 text-muted-foreground" />
           <Input
             value={value}
@@ -191,7 +191,7 @@ export function FeedProducts() {
               handleFiltersChange({ q: event.target.value })
             }
             placeholder="Поиск по каталогу"
-            className="w-52 pl-9"
+            className="w-full min-w-0 pl-9 sm:w-52 md:w-64"
             autoComplete="off"
             spellCheck={false}
           />

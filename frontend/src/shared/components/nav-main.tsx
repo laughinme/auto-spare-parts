@@ -1,7 +1,6 @@
 import type {
   ComponentType,
   MouseEvent,
-  ReactNode,
   SVGProps,
 } from "react"
 import { NavLink } from "react-router-dom"
@@ -20,12 +19,10 @@ export type NavSection = {
 
 export function NavMain({
   sections,
-  searchSlot,
   itemCounters,
   onItemSelect,
 }: {
   sections: NavSection[]
-  searchSlot?: ReactNode
   itemCounters?: Record<string, number>
   onItemSelect?: (args: {
     section: NavSection
@@ -81,11 +78,6 @@ export function NavMain({
           </div>
         </div>
       ))}
-      {searchSlot ? (
-        <div className="ml-auto flex min-w-[240px] flex-none items-center justify-center">
-          {searchSlot}
-        </div>
-      ) : null}
     </nav>
   )
 }
