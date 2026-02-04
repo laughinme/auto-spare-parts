@@ -18,6 +18,14 @@ import {
 import { Input } from "@/shared/components/ui/input"
 import { cn } from "@/shared/lib/utils"
 
+const DEMO_PASSWORD = "Password123!"
+
+const DEMO_USERS = [
+  { key: "admin", label: "Админ", email: "admin@demo.local" },
+  { key: "supplier", label: "Поставщик", email: "supplier1@demo.local" },
+  { key: "buyer", label: "Покупатель", email: "buyer1@demo.local" },
+] as const
+
 type LoginFormProps = ComponentProps<"div"> & {
   email: string
   password: string
@@ -61,8 +69,8 @@ export function LoginForm({
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit} className="space-y-6">
+            {errorMessage ? <FieldError>{errorMessage}</FieldError> : null}
             <FieldGroup>
-              {errorMessage ? <FieldError>{errorMessage}</FieldError> : null}
               <Field>
                 <FieldLabel
                   htmlFor="email"
@@ -108,6 +116,32 @@ export function LoginForm({
                 >
                   {submitLabel}
                 </Button>
+
+              </Field>
+            </FieldGroup>
+
+            <div className="flex flex-col gap-2">
+               <div className="space-y-1">              
+                <p className="text-sm font-semibold text-white">Демо пользователи · Click</p>
+            </div>
+              {DEMO_USERS.map((user) => (
+                <Button
+                  key={user.key}
+	                  type="button"
+	                  variant="outline"
+	                  disabled={disabled}
+	                  className="h-auto w-full flex-col items-start gap-1 rounded-lg border-neutral-700/60 bg-neutral-900/60 px-3 py-2 text-left text-neutral-100 hover:bg-neutral-800/70 hover:text-white"
+	                  onClick={() => {
+	                    onEmailChange(user.email)
+	                    onPasswordChange(DEMO_PASSWORD)
+	                  }}
+                >
+                  <span className="text-sm font-medium leading-none">
+                    {user.label}
+                  </span>
+                </Button>
+              ))}
+            </div>
                 <FieldDescription className="text-center text-sm text-neutral-400">
                   Don&apos;t have an account?{" "}
                   <button
@@ -118,8 +152,6 @@ export function LoginForm({
                     Sign up
                   </button>
                 </FieldDescription>
-              </Field>
-            </FieldGroup>
           </form>
         </CardContent>
       </Card>
