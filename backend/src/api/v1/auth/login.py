@@ -4,11 +4,10 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi_limiter import FastAPILimiter
 from fastapi_limiter.depends import RateLimiter
 
-from core.config import Settings
+from core.http.cookies import clear_auth_cookies, set_auth_cookies
 from service.auth import CredentialsService, get_credentials_service
 from domain.auth import UserLogin, TokenPair
 
-settings = Settings() # pyright: ignore[reportCallIssue]
 router = APIRouter()
 security = HTTPBearer(
     auto_error=False, 
@@ -39,24 +38,7 @@ async def login_user(
     access, refresh, csrf = await svc.login(payload, client)
     
     if client == 'web':
-        response.set_cookie(
-            "refresh_token",
-            refresh,
-            max_age=settings.REFRESH_TTL,
-            httponly=True,
-            secure=True,
-            samesite="none",
-            path='/',
-        )
-        response.set_cookie(
-            'csrf_token',
-            csrf,
-            max_age=settings.REFRESH_TTL,
-            secure=True,
-            httponly=False,
-            samesite='none',
-            path='/',
-        )
+        set_auth_cookies(response, refresh, csrf)
     
         return TokenPair(access_token=access, refresh_token=None)
     
@@ -86,7 +68,6 @@ async def logout(
     await svc.logout(token)
     
     if refresh_cookie:
-        response.delete_cookie("refresh_token", samesite="none")
-        response.delete_cookie("csrf_token", samesite="none")
+        clear_auth_cookies(response)
         
     return {'message': 'Logged out successfully'}

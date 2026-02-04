@@ -7,39 +7,68 @@ services:
     env_file:
       - ./backend/.env
     environment:
-      DATABASE_URL: 'postgresql+asyncpg://postgres:secret@db:5432/template-pg'
-    ports:
-      - "8080:8080"
+      APP_STAGE: dev
+      API_HOST: 0.0.0.0
+      API_PORT: 8080
+      SITE_URL: http://localhost
+      COOKIE_SECURE: "false"
+      COOKIE_SAMESITE: "lax"
+      DATABASE_URL: postgresql+asyncpg://postgres:secret@db:5432/templatepg
+      REDIS_URL: redis://redis:6379/0
     depends_on:
       db:
         condition: service_healthy
-    #   redis:
-    #     condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend/secrets:/app/secrets:ro
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
 
-  # redis:
-  #   image: redis:latest
-  #   container_name: redis_service
-  #   volumes:
-  #     - redis_data:/data
-  #   healthcheck:
-  #     test: ["CMD", "redis-cli", "ping"]
-  #     interval: 5s
-  #     timeout: 3s
-  #     retries: 5
+  nginx:
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
+    container_name: nginx
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_started
+    restart: unless-stopped
 
   db:
-    image: postgres:latest
+    image: postgres:17-alpine
+    container_name: postgres
     environment:
-      POSTGRES_USER: "postgres"
-      POSTGRES_PASSWORD: "secret"
-      POSTGRES_DB: "template-pg"
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: templatepg
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:8-alpine
+    container_name: redis_service
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
       timeout: 3s
       retries: 5
+    restart: unless-stopped
 
 volumes:
   postgres_data:
