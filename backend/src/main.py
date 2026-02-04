@@ -32,8 +32,9 @@ app = FastAPI(
     debug=config.DEBUG if config.DEBUG is not None else config.APP_STAGE == "dev",
 )
 
-# Mount static
-app.mount('/media', StaticFiles(directory=config.MEDIA_DIR, check_dir=False), 'media')
+# Mount local media only when using filesystem storage
+if config.MEDIA_BACKEND.lower() == "local":
+    app.mount('/media', StaticFiles(directory=config.MEDIA_DIR, check_dir=False), 'media')
 
 # Including routers
 app.include_router(get_api_routers())

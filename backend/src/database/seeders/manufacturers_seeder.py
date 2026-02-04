@@ -37,6 +37,8 @@ class ManufacturersSeeder(BaseSeeder):
             
             if manufacturer_data["manufacturer_id"] and manufacturer_data["name"]:
                 manufacturers_to_insert.append(manufacturer_data)
+
+        expected_count = len({m["manufacturer_id"] for m in manufacturers_to_insert})
         
         if not manufacturers_to_insert:
             self.log_progress("No valid manufacturers to insert")
@@ -68,3 +70,4 @@ class ManufacturersSeeder(BaseSeeder):
         await self.commit()
         
         self.log_progress(f"Successfully seeded {len(manufacturers_to_insert)} manufacturers")
+        await self.verify_count(Manufacturer, expected_count, "manufacturers")

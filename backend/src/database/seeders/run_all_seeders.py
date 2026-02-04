@@ -4,13 +4,41 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from database.relational_db import get_uow
+from sqlalchemy import select, func
+
+from database.relational_db import (
+    get_uow,
+    Manufacturer,
+    Make,
+    ManufacturerMake,
+    VehicleType,
+    Model,
+    ModelYear,
+    Language,
+    Role,
+    User,
+    Organization,
+    OrgMembership,
+    Product,
+    ProductMedia,
+    Cart,
+    CartItem,
+    Order,
+    OrderItem,
+    ProductReview,
+    SellerReview,
+    GarageVehicle,
+    UserRole,
+)
 from .manufacturers_seeder import ManufacturersSeeder
 from .makes_seeder import MakesSeeder
 from .manufacturer_makes_seeder import ManufacturerMakesSeeder
 from .vehicle_types_seeder import VehicleTypesSeeder
 from .models_seeder import ModelsSeeder
 from .model_years_seeder import ModelYearsSeeder
+from .languages_seeder import LanguagesSeeder
+from .roles_seeder import RolesSeeder
+from .marketplace_seeder import MarketplaceSeeder
 
 
 class SeedRunner:
@@ -30,6 +58,9 @@ class SeedRunner:
             ("Vehicle Types", VehicleTypesSeeder),
             ("Models", ModelsSeeder),
             ("Model Years", ModelYearsSeeder),
+            ("Languages", LanguagesSeeder),
+            ("Roles", RolesSeeder),
+            ("Marketplace", MarketplaceSeeder),
         ]
         
         async for uow in get_uow():
@@ -58,6 +89,9 @@ class SeedRunner:
             "vehicle_types": ("Vehicle Types", VehicleTypesSeeder),
             "models": ("Models", ModelsSeeder),
             "model_years": ("Model Years", ModelYearsSeeder),
+            "languages": ("Languages", LanguagesSeeder),
+            "roles": ("Roles", RolesSeeder),
+            "marketplace": ("Marketplace", MarketplaceSeeder),
         }
         
         if seeder_name not in seeders_map:
@@ -80,6 +114,39 @@ class SeedRunner:
                 print(f"❌ Error during seeding: {e}")
                 raise
 
+    async def print_stats(self) -> None:
+        tables = [
+            ("manufacturers", Manufacturer),
+            ("makes", Make),
+            ("manufacturer_make", ManufacturerMake),
+            ("vehicle_types", VehicleType),
+            ("models", Model),
+            ("model_years", ModelYear),
+            ("languages", Language),
+            ("roles", Role),
+            ("users", User),
+            ("organizations", Organization),
+            ("org_memberships", OrgMembership),
+            ("user_roles", UserRole),
+            ("products", Product),
+            ("product_media", ProductMedia),
+            ("carts", Cart),
+            ("cart_items", CartItem),
+            ("orders", Order),
+            ("order_items", OrderItem),
+            ("product_reviews", ProductReview),
+            ("seller_reviews", SellerReview),
+            ("garage_vehicles", GarageVehicle),
+        ]
+
+        async for uow in get_uow():
+            print("📊 Current table counts:")
+            for label, table in tables:
+                result = await uow.session.execute(select(func.count()).select_from(table))
+                count = result.scalar() or 0
+                print(f"  {label}: {count}")
+            break
+
 async def main():
     """Main function"""
     import argparse
@@ -87,12 +154,17 @@ async def main():
     parser = argparse.ArgumentParser(description="Run database seeders")
     parser.add_argument(
         "--seeder",
-        help="Run specific seeder (manufacturers, makes, manufacturer_makes, vehicle_types, models, model_years)"
+        help="Run specific seeder (manufacturers, makes, manufacturer_makes, vehicle_types, models, model_years, languages, roles, marketplace)"
     )
     parser.add_argument(
         "--force",
         action="store_true",
         help="Force update existing data"
+    )
+    parser.add_argument(
+        "--stats",
+        action="store_true",
+        help="Print table counts and exit"
     )
     
     args = parser.parse_args()
@@ -100,6 +172,9 @@ async def main():
     runner = SeedRunner()
     
     try:
+        if args.stats:
+            await runner.print_stats()
+            return
         if args.seeder:
             await runner.run_specific_seeder(args.seeder, force=args.force)
         else:

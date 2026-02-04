@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.dialects.postgresql import insert
 
 from .base_seeder import BaseSeeder
@@ -14,7 +14,7 @@ class ModelYearsSeeder(BaseSeeder):
         
         # Check if data already exists
         existing_count = await self.get_record_count(ModelYear)
-        if existing_count > 0:
+        if existing_count > 0 and not self.force:
             self.log_progress(f"Table already has {existing_count} model years, skipping...")
             return
 
@@ -22,9 +22,13 @@ class ModelYearsSeeder(BaseSeeder):
         self.log_progress("Loading model years from JSON...")
         model_years_data = await self.load_json_data("model_years.json")
 
-        if not model_years_data:
+        if not model_years_data and not self.force:
             self.log_progress("No model years data found in JSON file")
             return
+
+        if self.force:
+            self.log_progress("Deleting existing model years...")
+            await self.session.execute(delete(ModelYear))
 
         # Get model_name -> model_id mapping from database
         self.log_progress("Fetching models from database...")
@@ -102,3 +106,4 @@ class ModelYearsSeeder(BaseSeeder):
         await self.commit()
 
         self.log_progress(f"Successfully seeded {len(unique_model_years)} unique model years")
+        await self.verify_count(ModelYear, len(unique_model_years), "model_years")

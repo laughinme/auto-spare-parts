@@ -5,4 +5,7 @@ from .manufacturer_makes_seeder import ManufacturerMakesSeeder
 from .vehicle_types_seeder import VehicleTypesSeeder
 from .models_seeder import ModelsSeeder
 from .model_years_seeder import ModelYearsSeeder
+from .languages_seeder import LanguagesSeeder
+from .roles_seeder import RolesSeeder
+from .marketplace_seeder import MarketplaceSeeder
 from .run_all_seeders import SeedRunner
