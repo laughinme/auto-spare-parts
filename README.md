@@ -62,7 +62,7 @@
 
 Frontend (Vercel): https://auto-spare-parts-gules.vercel.app
 
-Backend (Fly.io): https://auto-spare-parts.fly.dev/docs ← замени на актуальный домен твоего Fly-приложения
+Backend (Fly.io): https://auto-spare-parts.fly.dev/docs
 
 
 🔍 Key engineering decisions (коротко)
