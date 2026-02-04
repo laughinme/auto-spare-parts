@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useInfiniteQuery } from "@tanstack/react-query"
 import { useOutletContext } from "react-router-dom"
-import { Search } from "lucide-react"
+import { Filter, Search } from "lucide-react"
 
 import type { ProtectedOutletContext } from "@/app/App"
 import { toProductFeed } from "@/entities/product/model/adapters"
@@ -19,6 +19,12 @@ import {
   CardContent,
   CardFooter,
 } from "@/shared/components/ui/card"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/shared/components/ui/sheet"
 import { Input } from "@/shared/components/ui/input"
 import { Skeleton } from "@/shared/components/ui/skeleton"
 import { getProductsCatalog } from "@/entities/product/api"
@@ -39,6 +45,7 @@ export function FeedProducts() {
 
   const [draftFilters, setDraftFilters] = useState<FilterState>(createDefaultFilters)
   const [appliedFilters, setAppliedFilters] = useState<FilterState>(createDefaultFilters)
+  const [isFiltersSheetOpen, setIsFiltersSheetOpen] = useState(false)
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { data: cart } = useCartQuery()
   const addMutation = useAddToCart()
@@ -221,8 +228,45 @@ export function FeedProducts() {
 
   return (
     <div className="flex flex-col gap-6">
+      <Sheet open={isFiltersSheetOpen} onOpenChange={setIsFiltersSheetOpen}>
+        <div className="lg:hidden flex">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="inline-flex items-center gap-2 px-3"
+            onClick={() => setIsFiltersSheetOpen(true)}
+          >
+            <Filter className="size-4" />
+            Фильтры
+          </Button>
+        </div>
+
+        <SheetContent
+          side="left"
+          className="flex w-[88vw] max-w-[22rem] flex-col gap-4 p-0 sm:w-[24rem]"
+        >
+          <SheetHeader className="px-4 pb-0 pt-6">
+            <SheetTitle className="text-base">Фильтры</SheetTitle>
+          </SheetHeader>
+          <div className="px-4 pb-6">
+            <ProductFiltersForm
+              state={draftFilters}
+              onChange={handleFiltersChange}
+              onReset={handleReset}
+              onApply={() => {
+                handleApply()
+                setIsFiltersSheetOpen(false)
+              }}
+              disabled={isLoading || isFetchingNextPage}
+              isLoading={isLoading || isFetchingNextPage}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
+
       <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[22rem_minmax(0,1fr)] lg:items-start">
-        <aside className="lg:sticky lg:top-20 lg:h-[calc(100vh-5rem)] lg:overflow-y-auto lg:flex lg:justify-center">
+        <aside className="hidden lg:sticky lg:top-20 lg:block lg:h-[calc(100vh-5rem)] lg:overflow-y-auto">
           <div className="w-full lg:max-w-[22rem]">
             <ProductFiltersForm
               state={draftFilters}
