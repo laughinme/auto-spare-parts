@@ -51,6 +51,15 @@ class BaseSeeder(ABC):
     
     async def commit(self):
         await self.uow.commit()
+
+    async def verify_count(self, table_class, expected: int, label: str | None = None) -> None:
+        """Compare expected vs actual row count after seeding."""
+        actual = await self.get_record_count(table_class)
+        name = label or getattr(table_class, "__tablename__", table_class.__name__)
+        if actual != expected:
+            self.log_progress(f"WARNING: {name} count mismatch. Expected {expected}, got {actual}")
+        else:
+            self.log_progress(f"Verified {name}: {actual} rows")
     
     def log_progress(self, message: str):
         """Logging progress"""

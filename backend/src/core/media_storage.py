@@ -201,4 +201,4 @@ class MediaStorage:
 
 @lru_cache
 def get_media_storage() -> MediaStorage:
-    return MediaStorage(Settings())
+    return MediaStorage(Settings())  # pyright: ignore[reportCallIssue]

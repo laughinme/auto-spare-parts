@@ -74,3 +74,4 @@ class ManufacturerMakesSeeder(BaseSeeder):
         await self.commit()
         
         self.log_progress(f"Successfully seeded {len(unique_mappings)} unique manufacturer-make relations")
+        await self.verify_count(ManufacturerMake, len(unique_mappings), "manufacturer_make")

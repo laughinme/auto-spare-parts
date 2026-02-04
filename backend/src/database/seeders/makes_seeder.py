@@ -40,6 +40,8 @@ class MakesSeeder(BaseSeeder):
             # Check required fields
             if make_data["make_id"] and make_data["make_name"]:
                 makes_to_insert.append(make_data)
+
+        expected_count = len({m["make_id"] for m in makes_to_insert})
         
         if not makes_to_insert:
             self.log_progress("No valid makes to insert")
@@ -70,3 +72,4 @@ class MakesSeeder(BaseSeeder):
         await self.commit()
         
         self.log_progress(f"Successfully seeded {len(makes_to_insert)} makes")
+        await self.verify_count(Make, expected_count, "makes")

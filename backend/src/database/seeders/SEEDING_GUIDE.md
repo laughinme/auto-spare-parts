@@ -234,6 +234,36 @@ class ProductService:
         return result.fetchall()
 ```
 
+## Marketplace сидинг (демо-данные)
+
+В проект добавлен сидинг для пользовательских данных: **users, organizations, products, product_media, carts, orders, reviews, garage**.
+
+Запуск:
+```bash
+python -m database.seeders.run_all_seeders --seeder marketplace
+```
+
+Переменные окружения для количества данных:
+```bash
+SEED_SUPPLIERS_COUNT=5
+SEED_BUYERS_COUNT=12
+SEED_PRODUCTS_COUNT=120
+SEED_ORDERS_COUNT=40
+SEED_MAX_MEDIA_PER_PRODUCT=3
+SEED_RANDOM_SEED=42
+```
+
+### Картинки для product_media
+
+Положите изображения в папку:
+```
+backend/src/database/seeders/assets/product_images
+```
+
+Поддерживаются форматы: `.jpg`, `.jpeg`, `.png`, `.webp`.
+
+Если папка пустая, сидинг media будет пропущен (ничего не сломается).
+
 ## Troubleshooting
 
 ### Ошибка подключения к базе:

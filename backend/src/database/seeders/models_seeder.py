@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.dialects.postgresql import insert
 
 from .base_seeder import BaseSeeder
@@ -13,7 +13,7 @@ class ModelsSeeder(BaseSeeder):
         
         # Check if data already exists
         existing_count = await self.get_record_count(Model)
-        if existing_count > 0:
+        if existing_count > 0 and not self.force:
             self.log_progress(f"Table already has {existing_count} models, skipping...")
             return
         
@@ -21,9 +21,13 @@ class ModelsSeeder(BaseSeeder):
         self.log_progress("Loading models from JSON...")
         models_data = await self.load_json_data("models.json")
         
-        if not models_data:
+        if not models_data and not self.force:
             self.log_progress("No models data found in JSON file")
             return
+
+        if self.force:
+            self.log_progress("Deleting existing models...")
+            await self.session.execute(delete(Model))
         
         # Prepare data for insertion
         models_to_insert = []
@@ -68,3 +72,4 @@ class ModelsSeeder(BaseSeeder):
         await self.commit()
         
         self.log_progress(f"Successfully seeded {len(unique_models)} unique models")
+        await self.verify_count(Model, len(unique_models), "models")

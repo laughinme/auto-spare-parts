@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.dialects.postgresql import insert
 
 from .base_seeder import BaseSeeder
@@ -13,7 +13,7 @@ class VehicleTypesSeeder(BaseSeeder):
         
         # Check if data already exists
         existing_count = await self.get_record_count(VehicleType)
-        if existing_count > 0:
+        if existing_count > 0 and not self.force:
             self.log_progress(f"Table already has {existing_count} vehicle types, skipping...")
             return
         
@@ -21,9 +21,13 @@ class VehicleTypesSeeder(BaseSeeder):
         self.log_progress("Loading vehicle types from JSON...")
         vehicle_types_data = await self.load_json_data("vehicle_types.json")
         
-        if not vehicle_types_data:
+        if not vehicle_types_data and not self.force:
             self.log_progress("No vehicle types data found in JSON file")
             return
+
+        if self.force:
+            self.log_progress("Deleting existing vehicle types...")
+            await self.session.execute(delete(VehicleType))
         
         # Prepare data for insertion
         vehicle_types_to_insert = []
@@ -58,3 +62,4 @@ class VehicleTypesSeeder(BaseSeeder):
         await self.commit()
         
         self.log_progress(f"Successfully seeded {len(unique_types)} unique vehicle types")
+        await self.verify_count(VehicleType, len(unique_types), "vehicle_types")
