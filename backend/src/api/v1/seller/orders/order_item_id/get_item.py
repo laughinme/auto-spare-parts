@@ -11,7 +11,7 @@ router = APIRouter()
 
 
 @router.get(
-    '/',
+    '/orders/{order_item_id}',
     response_model=SellerOrderItemModel,
     summary='Get seller order item details',
 )

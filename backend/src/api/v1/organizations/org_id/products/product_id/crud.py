@@ -12,7 +12,7 @@ from service.products import ProductService, get_product_service
 router = APIRouter()
 
 @router.get(
-    path='/',
+    path='/products/{product_id}',
     response_model=ProductModel,
     summary='Get organization product details'
 )
@@ -29,7 +29,7 @@ async def get_org_product(
 
 
 @router.patch(
-    path='/',
+    path='/products/{product_id}',
     response_model=ProductModel,
     summary='Update organization product'
 )
@@ -48,7 +48,7 @@ async def patch_org_product(
 
 
 @router.delete(
-    path='/',
+    path='/products/{product_id}',
     summary='Delete organization product',
     status_code=204,
     deprecated=True,

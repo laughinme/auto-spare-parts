@@ -12,7 +12,7 @@ router = APIRouter()
 
 
 @router.post(
-    '/',
+    '/orders/{order_id}/payments',
     response_model=PrepareCheckoutResponse,
     description="Prepare the current user's shopping cart for checkout",
     include_in_schema=False,
@@ -30,7 +30,7 @@ async def pay_order(
 
 
 @router.post(
-    '/stripe-hosted',
+    '/orders/{order_id}/payments/stripe-hosted',
     response_model=PrepareCheckoutStripeHostedResponse,
     description="Prepare the current user's shopping cart for checkout",
     include_in_schema=False,

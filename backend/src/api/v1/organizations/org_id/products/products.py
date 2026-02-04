@@ -17,7 +17,7 @@ router = APIRouter()
 
 
 @router.post(
-    path='/',
+    path='/products',
     response_model=ProductModel,
     summary='Create new product'
 )
@@ -39,7 +39,7 @@ async def create_product(
 
 
 @router.get(
-    path='/',
+    path='/products',
     response_model=Page[ProductModel],
     summary='List organization products'
 )

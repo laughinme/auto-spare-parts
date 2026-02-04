@@ -11,7 +11,7 @@ router = APIRouter()
 
 
 @router.get(
-    '/',
+    '/orders/{order_id}',
     response_model=OrderModel,
     description="List user's orders. By default returns orders with all statuses."
 )

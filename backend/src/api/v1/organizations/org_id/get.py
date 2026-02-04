@@ -11,7 +11,7 @@ router = APIRouter()
 
 
 @router.get(
-    path='/',
+    path='/{org_id}',
     response_model=OrganizationModel,
     summary='Get organization by ID'
 )

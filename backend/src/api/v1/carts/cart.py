@@ -13,7 +13,7 @@ router = APIRouter()
 
 
 @router.get(
-    '/',
+    '/cart',
     response_model=CartModel,
     description="Get the current user's shopping cart with all items and totals"
 )
@@ -27,7 +27,7 @@ async def get_cart(
 
 
 @router.get(
-    '/summary',
+    '/cart/summary',
     response_model=CartSummary,
     description="Get quick cart summary with total items and amount"
 )
@@ -40,7 +40,7 @@ async def get_cart_summary(
 
 
 @router.delete(
-    '/',
+    '/cart',
     response_model=CartModel,
     description="Remove all items from the cart"
 )

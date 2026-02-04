@@ -7,7 +7,7 @@ from service.vehicles import VehicleService, get_vehicle_service
 router = APIRouter()
 
 @router.get(
-    path='/',
+    path='/makes',
     response_model=list[MakeModel],
     summary='Get all makes'
 )

@@ -82,7 +82,7 @@ export async function getOrgProducts({
 }: OrgProductParams) {
   const encodedOrgId = encodeURIComponent(org_id);
   const response = await apiProtected.get<PageDto<OrgProductDto>>(
-    `/organizations/${encodedOrgId}/products/`,
+    `/organizations/${encodedOrgId}/products`,
     {
       params: {
         limit,
@@ -99,7 +99,7 @@ export async function getOrgProducts({
 export async function createOrgProduct(org_id: string, payload: CreateOrgProductBody) {
   const encodedOrgId = encodeURIComponent(org_id);
   const response = await apiProtected.post<OrgProductDto>(
-    `/organizations/${encodedOrgId}/products/`,
+    `/organizations/${encodedOrgId}/products`,
     payload,
   );
 
@@ -114,7 +114,7 @@ export type ProductDetailParams = {
 export async function getOrgProductDetail({ org_id, product_id }: ProductDetailParams) {
   const encodedOrgId = encodeURIComponent(org_id);
   const response = await apiProtected.get<OrgProductDto>(
-    `/organizations/${encodedOrgId}/products/${product_id}/`,
+    `/organizations/${encodedOrgId}/products/${product_id}`,
   );
   return response.data;
 }
@@ -137,7 +137,7 @@ export type UpdateProductBodyDto = {
 export async function updateOrgProduct({ org_id, product_id }: ProductDetailParams, payload: UpdateProductBodyDto) {
   const encodedOrgId = encodeURIComponent(org_id);
   const response = await apiProtected.patch<OrgProductDto>(
-    `/organizations/${encodedOrgId}/products/${product_id}/`,
+    `/organizations/${encodedOrgId}/products/${product_id}`,
     payload,
   );
   return response.data;

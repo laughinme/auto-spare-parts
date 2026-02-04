@@ -112,7 +112,7 @@ export const getBuyerOrders = async (
   params: GetBuyerOrdersParams = {}
 ): Promise<OrdersListResponseDto> => {
   const { statuses, orderBy, cursor, limit } = params;
-  const response = await apiProtected.get<OrdersListResponseDto>("/orders/", {
+  const response = await apiProtected.get<OrdersListResponseDto>("/orders", {
     params: {
       statuses: statuses && statuses.length > 0 ? statuses : undefined,
       order_by: orderBy,

@@ -9,7 +9,7 @@ from service.users import UserService, get_user_service
 router = APIRouter()
 
 @router.get(
-    path='/',
+    path='/me',
     response_model=UserModel,
     summary='Get user account info'
 )
@@ -23,7 +23,7 @@ async def profile(
 
 
 @router.patch(
-    path='/',
+    path='/me',
     response_model=UserModel,
     summary='Update user info'
 )

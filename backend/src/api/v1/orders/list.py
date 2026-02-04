@@ -13,7 +13,7 @@ router = APIRouter()
 
 
 @router.get(
-    '/',
+    '/orders',
     response_model=CursorPage[OrderModel],
     description="List user's orders. By default returns orders with all statuses."
 )

@@ -7,7 +7,7 @@ def get_garages_router() -> APIRouter:
     from .vehicle_id import get_garage_vehicle_router
     
     router = APIRouter(
-        prefix='/garage',
+        prefix='/me/garage',
         # tags=['Garage'],
         responses={401: {"description": "Not authorized"}}
     )

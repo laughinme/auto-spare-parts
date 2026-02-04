@@ -12,7 +12,7 @@ router = APIRouter()
 
 
 @router.get(
-    '/',
+    '/orders',
     response_model=CursorPage[SellerOrderItemModel],
     summary='List order items that belong to the seller',
     description='Returns order items scoped to the organizations the current user is part of.',

@@ -31,7 +31,7 @@ export type CartDto = {
 }
 
 export async function getCart(params: GetCartParams = {}) {
-  const response = await apiProtected.get<CartDto>("/cart/", { params });
+  const response = await apiProtected.get<CartDto>("/cart", { params });
   return response.data;
 }
 
@@ -41,7 +41,7 @@ export type AddCartItemBody = {
 }
 
 export async function AddToCart(body: AddCartItemBody) {
-  const response = await apiProtected.post<CartDto>('cart/items/', body );
+  const response = await apiProtected.post<CartDto>("/cart/items", body);
   return response.data;
 }
 
@@ -70,7 +70,7 @@ export async function removeCartItem(item_id: string) {
 }
 
 export async function clearCart(){
-  const response = await apiProtected.delete<CartDto>('/cart/');
+  const response = await apiProtected.delete<CartDto>("/cart");
   return response.data;
 
 }

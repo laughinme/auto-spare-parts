@@ -11,7 +11,7 @@ router = APIRouter()
 
 
 @router.post(
-    '/prepare',
+    '/orders/prepare',
     response_model=PrepareCheckoutResponse,
     status_code=201,
     description="Prepare the current user's shopping cart for checkout"
@@ -29,7 +29,7 @@ async def prepare_checkout(
 
 
 @router.post(
-    '/prepare/stripe-hosted',
+    '/orders/prepare/stripe-hosted',
     response_model=PrepareCheckoutStripeHostedResponse,
     status_code=201,
     description="Prepare the current user's shopping cart for checkout with Stripe Hosted Checkout"

@@ -15,7 +15,7 @@ router = APIRouter()
 
 
 @router.post(
-    '/',
+    '/cart/items',
     response_model=CartModel,
     # status_code=201,
     description="Add a product to the cart. If product already exists, quantity will be added to existing amount."
@@ -29,7 +29,7 @@ async def add_item_to_cart(
     return cart
 
 @router.put(
-    '/{item_id}',
+    '/cart/items/{item_id}',
     response_model=CartModel,
     summary="Update cart item quantity",
 )
@@ -42,7 +42,7 @@ async def update_cart_item(
     return await cart_service.update_cart_item_quantity(user, item_id, payload)
 
 @router.delete(
-    '/{item_id}',
+    '/cart/items/{item_id}',
     response_model=CartModel,
     summary="Remove item from cart",
 )

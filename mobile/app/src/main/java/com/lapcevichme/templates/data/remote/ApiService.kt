@@ -78,14 +78,14 @@ interface ApiService {
      * Получение информации о текущем пользователе.
      * Для этого эндпоинта требуется токен доступа.
      */
-    @GET("/api/v1/users/me/")
+    @GET("/api/v1/users/me")
     suspend fun getMe(): Response<UserModelDto>
 
     /**
      * Частично обновляет информацию о пользователе.
      * @param request Тело запроса с полями для обновления.
      */
-    @PATCH("/api/v1/users/me/")
+    @PATCH("/api/v1/users/me")
     suspend fun updateProfile(@Body request: UserPatchRequest): Response<UserModelDto>
 
     /**
@@ -150,7 +150,7 @@ interface ApiService {
      * @param orgId ID организации, информацию о которой нужно получить.
      * @return Модель организации OrganizationDto.
      */
-    @GET("/api/v1/organizations/{org_id}/")
+    @GET("/api/v1/organizations/{org_id}")
     suspend fun getOrganizationById(
         @Path("org_id") orgId: String
     ): Response<OrganizationDto>
@@ -161,7 +161,7 @@ interface ApiService {
      * @param request Тело запроса с данными для создания продукта.
      * @param idempotencyKey Ключ идемпотентности (опционально).
      */
-    @POST("/api/v1/organizations/{org_id}/products/")
+    @POST("/api/v1/organizations/{org_id}/products")
     suspend fun createProduct(
         @Path("org_id") orgId: String,
         @Body request: ProductCreateDto,
@@ -190,7 +190,7 @@ interface ApiService {
      * @param orgId ID организации.
      * @param productId ID продукта.
      */
-    @GET("/api/v1/organizations/{org_id}/products/{product_id}/")
+    @GET("/api/v1/organizations/{org_id}/products/{product_id}")
     suspend fun getOrganizationProductDetails(
         @Path("org_id") orgId: String,
         @Path("product_id") productId: String
@@ -202,7 +202,7 @@ interface ApiService {
      * @param productId ID продукта.
      * @param request Тело запроса с полями для обновления.
      */
-    @PATCH("/api/v1/organizations/{org_id}/products/{product_id}/")
+    @PATCH("/api/v1/organizations/{org_id}/products/{product_id}")
     suspend fun patchOrganizationProduct(
         @Path("org_id") orgId: String,
         @Path("product_id") productId: String,
@@ -214,7 +214,7 @@ interface ApiService {
      * @param orgId ID организации.
      * @param productId ID продукта.
      */
-    @DELETE("/api/v1/organizations/{org_id}/products/{product_id}/")
+    @DELETE("/api/v1/organizations/{org_id}/products/{product_id}")
     suspend fun deleteOrganizationProduct(
         @Path("org_id") orgId: String,
         @Path("product_id") productId: String
@@ -315,7 +315,7 @@ interface ApiService {
      * @param limit Page size
      * @param search Search query
      */
-    @GET("/api/v1/vehicles/makes/")
+    @GET("/api/v1/vehicles/makes")
     suspend fun listMakes(
         @Query("limit") limit: Int? = 5,
         @Query("search") search: String? = null
@@ -327,7 +327,7 @@ interface ApiService {
      * @param makeId Filter by make ID
      * @param search Search query
      */
-    @GET("/api/v1/vehicles/models/")
+    @GET("/api/v1/vehicles/models")
     suspend fun listModels(
         @Query("limit") limit: Int? = 5,
         @Query("make_id") makeId: Int? = null,
@@ -338,7 +338,7 @@ interface ApiService {
      * Get all years for model
      * @param modelId Model ID
      */
-    @GET("/api/v1/vehicles/years/")
+    @GET("/api/v1/vehicles/years")
     suspend fun listYears(
         @Query("model_id") modelId: Int
     ): Response<List<Int>>
@@ -348,7 +348,7 @@ interface ApiService {
      * @return Список моделей городов.
      */
     // Imlpement ts so app works, ts pmo btw
-    @GET("/api/v1/geo/cities/")
+    @GET("/api/v1/geo/cities")
     suspend fun listCities(): Response<List<CityModelDto>>
 
 }

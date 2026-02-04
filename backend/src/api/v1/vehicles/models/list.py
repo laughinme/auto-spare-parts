@@ -7,7 +7,7 @@ from service.vehicles import VehicleService, get_vehicle_service
 router = APIRouter()
 
 @router.get(
-    path='/',
+    path='/models',
     response_model=list[ModelSchema],
     summary='Get all models'
 )

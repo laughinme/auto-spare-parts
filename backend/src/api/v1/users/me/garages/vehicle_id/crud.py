@@ -10,7 +10,7 @@ from service.garages import GarageService, get_garage_service
 router = APIRouter()
 
 @router.get(
-    path='/',
+    path='/{vehicle_id}',
     response_model=VehilceModel,
     summary='Get a vehicle from the garage'
 )
@@ -24,7 +24,7 @@ async def get_vehicle(
 
 
 @router.patch(
-    path='/',
+    path='/{vehicle_id}',
     response_model=VehilceModel,
     summary='Update a vehicle from the garage'
 )
@@ -39,7 +39,7 @@ async def update_vehicle(
     
 
 @router.delete(
-    path='/',
+    path='/{vehicle_id}',
     status_code=204,
     summary='Delete a vehicle from the garage'
 )

@@ -93,7 +93,7 @@ export const addVehicle = async (data: AddVehicleBody) => {
 }
 
 export const removeVehicle = async (vehicleId: string) => {
-    const response = await apiProtected.delete<void>(`/users/me/garage/${vehicleId}/`);
+    const response = await apiProtected.delete<void>(`/users/me/garage/${vehicleId}`);
     return response.data;
 }
 
@@ -106,11 +106,11 @@ export type UpdateVehicleBody= {
     comment?: string;
 }
 export const updateVehicle = async (vehicleId: string, data: UpdateVehicleBody) => {
-    const response = await apiProtected.patch<VehicleDto>(`/users/me/garage/${vehicleId}/`, data);
+    const response = await apiProtected.patch<VehicleDto>(`/users/me/garage/${vehicleId}`, data);
     return response.data;
 }
 
 export const getVehicleDetails = async (vehicleId: string) => {
-    const response = await apiProtected.get<VehicleDto>(`/users/me/garage/${vehicleId}/`);
+    const response = await apiProtected.get<VehicleDto>(`/users/me/garage/${vehicleId}`);
     return response.data;
 }

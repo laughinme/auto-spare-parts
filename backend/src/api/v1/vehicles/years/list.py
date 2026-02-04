@@ -7,7 +7,7 @@ from service.vehicles import VehicleService, get_vehicle_service
 router = APIRouter()
 
 @router.get(
-    path='/',
+    path='/years',
     response_model=list[int],
     summary='Get all years for model'
 )

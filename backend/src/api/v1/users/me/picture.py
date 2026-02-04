@@ -12,7 +12,7 @@ config = Settings() # pyright: ignore[reportCallIssue]
 
 
 @router.put(
-    path='/picture',
+    path='/me/picture',
     response_model=UserModel,
     summary='Update user profile picture'
 )
