@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 
@@ -31,6 +31,12 @@ export function AddVehicleDialog() {
       setResetToken((token) => token + 1);
     }
   };
+
+  useEffect(() => {
+    if (addVehicleMutation.isSuccess) {
+      handleOpenChange(false);
+    }
+  }, [addVehicleMutation.isSuccess]);
 
   const handleSubmit = (values: VehicleFormSubmitPayload) => {
     const payload: AddVehicleBody = {
