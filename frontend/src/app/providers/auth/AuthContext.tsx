@@ -15,7 +15,7 @@ interface AuthProviderProps {
 }
 
 const SKIP_REFRESH_KEY = "auth:skipRefresh";
-const HOME_PATH = "/home";
+const HOME_PATH = "/";
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const queryClient = useQueryClient();

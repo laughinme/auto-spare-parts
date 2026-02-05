@@ -14,6 +14,7 @@ import { useAuth } from "@/app/providers/auth/useAuth"
 import AuthPage from "@/pages/auth/ui/AuthPage"
 import { SiteHeader } from "@/shared/components/site-header"
 import type { AuthUser } from "@/entities/auth/model"
+import { isAdminUser } from "@/entities/auth/lib/roles"
 import { useGetCartSummary } from "@/features/cart/useGetCartSummary"
 import type { NavSection } from "@/shared/components/nav-main"
 import {
@@ -21,6 +22,7 @@ import {
   type SupplierOnboardingDialogCloseReason,
 } from "@/widgets/supplier/ui/SupplierOnboardingDialog"
 import {
+  ADMIN_NAV_SECTION,
   PROTECTED_ROUTES,
   ROUTE_PATHS,
   ROUTE_SECTIONS,
@@ -28,13 +30,15 @@ import {
 
 type ProtectedLayoutProps = {
   user: AuthUser
+  isAdmin: boolean
+  homePath: string
 }
 
 export type ProtectedOutletContext = {
   setHeaderSearch: (node: ReactNode) => void
 }
 
-function ProtectedLayout({ user }: ProtectedLayoutProps) {
+function ProtectedLayout({ user, isAdmin, homePath }: ProtectedLayoutProps) {
   const location = useLocation()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -53,7 +57,7 @@ function ProtectedLayout({ user }: ProtectedLayoutProps) {
   const userOrganization = user.organization ?? null
   const [headerSearch, setHeaderSearch] = useState<ReactNode>(null)
   const [lastAccessiblePath, setLastAccessiblePath] = useState<string>(
-    ROUTE_PATHS.buyer.fyp,
+    homePath,
   )
   const [pendingSupplierPath, setPendingSupplierPath] = useState<string | null>(
     null,
@@ -168,12 +172,16 @@ function ProtectedLayout({ user }: ProtectedLayoutProps) {
     [],
   )
 
+  const navSections = isAdmin
+    ? [...ROUTE_SECTIONS, ADMIN_NAV_SECTION]
+    : ROUTE_SECTIONS
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <SiteHeader
-        sections={ROUTE_SECTIONS}
+        sections={navSections}
         user={headerUser}
-        homePath={ROUTE_PATHS.buyer.fyp}
+        homePath={homePath}
         searchSlot={headerSearch}
         navItemCounters={navItemCounters}
         onNavItemSelect={handleNavItemSelect}
@@ -228,14 +236,27 @@ function App() {
     return <AuthPage />
   }
 
+  const isAdmin = isAdminUser(user)
+  const defaultHomePath = isAdmin
+    ? ROUTE_PATHS.admin.dashboard
+    : ROUTE_PATHS.buyer.fyp
+
   return (
     <BrowserRouter>
       <Routes>
-        <Route element={<ProtectedLayout user={user} />}>
+        <Route
+          element={
+            <ProtectedLayout
+              user={user}
+              isAdmin={isAdmin}
+              homePath={defaultHomePath}
+            />
+          }
+        >
           <Route
             index
             element={
-              <Navigate to={ROUTE_PATHS.buyer.fyp} replace />
+              <Navigate to={defaultHomePath} replace />
             }
           />
           {PROTECTED_ROUTES.map((route) => (
@@ -248,7 +269,7 @@ function App() {
           <Route
             path="*"
             element={
-              <Navigate to={ROUTE_PATHS.buyer.fyp} replace />
+              <Navigate to={defaultHomePath} replace />
             }
           />
         </Route>

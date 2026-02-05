@@ -6,10 +6,12 @@ import {
   ClipboardIcon,
   StarIcon,
 } from "@radix-ui/react-icons"
+import { IconShieldCheck } from "@tabler/icons-react"
 import FypPage from "@/pages/mainpages/fyp"
 import SupplierMain from "@/pages/mainpages/supplierMain"
 import SupplierProductsPage from "@/pages/mainpages/SupplierProductsPage"
 import SupplierProductDetailPage from "@/pages/mainpages/SupplierProductDetailPage"
+import AdminPage from "@/pages/admin/AdminPage"
 import type { NavSection } from "@/shared/components/nav-main"
 import ProductDetailsPage from "@/pages/mainpages/ProductDetailsPage"
 import CartPage from "@/pages/mainpages/CartPage"
@@ -28,6 +30,9 @@ const PlaceholderPage = ({ title }: { title: string }) => (
 )
 
 export const ROUTE_PATHS = {
+  admin: {
+    dashboard: "/admin",
+  },
   account: {
     profile: "/account",
     organizationDetails: "/account/organizations/:organizationId",
@@ -90,6 +95,17 @@ export const SUPPLIER_NAV_SECTION: NavSection = {
   ],
 }
 
+export const ADMIN_NAV_SECTION: NavSection = {
+  label: "Admin",
+  items: [
+    {
+      title: "Control room",
+      path: ROUTE_PATHS.admin.dashboard,
+      icon: IconShieldCheck,
+    },
+  ],
+}
+
 export const ROUTE_SECTIONS: NavSection[] = [
   {
     label: "Buyer",
@@ -119,6 +135,10 @@ export const ROUTE_SECTIONS: NavSection[] = [
 ] as const
 
 export const PROTECTED_ROUTES = [
+  {
+    path: ROUTE_PATHS.admin.dashboard,
+    element: <AdminPage />,
+  },
   {
     path: ROUTE_PATHS.account.profile,
     element: <AccountPage />,
