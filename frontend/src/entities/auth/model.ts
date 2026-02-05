@@ -26,7 +26,12 @@ export interface OrganizationSummary {
 }
 
 export interface AuthUser {
+  id?: string;
   email: string;
+  username?: string | null;
+  role_slugs?: string[];
+  roles?: string[];
+  is_admin?: boolean;
   organization?: OrganizationSummary | null;
   [key: string]: unknown;
 }
