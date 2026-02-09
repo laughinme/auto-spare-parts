@@ -1,9 +1,11 @@
 import { useEffect, useState, type FormEvent, type ReactElement } from "react";
 import { AnimatePresence, motion } from "motion/react";
+import { IconBrandGithub } from "@tabler/icons-react";
 import { useAuth } from "@/app/providers/auth/useAuth";
 import type { AuthCredentials } from "@/entities/auth/model";
 import { LoginForm } from "@/features/auth/login-form";
 import { SignupForm } from "@/features/auth/signup-form";
+import { Button } from "@/shared/components/ui/button";
 
 type Mode = "login" | "register";
 
@@ -80,8 +82,42 @@ export default function AuthPage(): ReactElement {
     }
   };
 
+  const handleDemoLogin = async (demoEmail: string, demoPassword: string) => {
+    if (isLoading || mode !== "login") {
+      return;
+    }
+
+    setEmail(demoEmail);
+    setPassword(demoPassword);
+
+    try {
+      await login({ email: demoEmail.trim(), password: demoPassword });
+    } catch (err) {
+      console.error("Ошибка демо-логина:", err);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-neutral-950 flex items-center justify-center px-4 py-12 text-white overflow-hidden">
+    <div className="relative min-h-screen bg-neutral-950 flex items-center justify-center px-4 py-12 text-white overflow-hidden">
+      <div className="absolute right-4 top-4 z-10">
+        <Button
+          asChild
+          variant="ghost"
+          size="sm"
+          className="text-neutral-200 hover:text-white"
+        >
+          <a
+            href="https://github.com/laughinme/AutoSpareParts"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Открыть репозиторий проекта на GitHub"
+          >
+            <IconBrandGithub className="size-4" />
+            <span className="hidden sm:inline">GitHub</span>
+          </a>
+        </Button>
+      </div>
+
       <motion.div
         className="absolute inset-0 pointer-events-none"
         initial={{ opacity: 0 }}
@@ -117,6 +153,7 @@ export default function AuthPage(): ReactElement {
                 onEmailChange={setEmail}
                 onPasswordChange={setPassword}
                 onSubmit={submit}
+                onDemoLogin={handleDemoLogin}
                 submitLabel={isLoading ? "Загрузка..." : "Login"}
                 disabled={isLoading}
                 submitDisabled={!canSubmit}

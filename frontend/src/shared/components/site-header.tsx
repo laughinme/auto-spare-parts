@@ -1,5 +1,9 @@
 import { useState, type ReactNode } from "react"
-import { IconInnerShadowTop, IconMenu2 } from "@tabler/icons-react"
+import {
+  IconBrandGithub,
+  IconInnerShadowTop,
+  IconMenu2,
+} from "@tabler/icons-react"
 import { Link, NavLink } from "react-router-dom"
 
 import type { NavSection } from "@/shared/components/nav-main"
@@ -144,6 +148,39 @@ export function SiteHeader({
           </div>
         ) : null}
         <div className="flex items-center gap-3">
+          <Button
+            asChild
+            variant="ghost"
+            size="icon"
+            className="sm:hidden"
+          >
+            <a
+              href="https://github.com/laughinme/AutoSpareParts"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Открыть репозиторий проекта на GitHub"
+              title="GitHub"
+            >
+              <IconBrandGithub className="size-5" />
+            </a>
+          </Button>
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            className="hidden sm:inline-flex"
+          >
+            <a
+              href="https://github.com/laughinme/AutoSpareParts"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Открыть репозиторий проекта на GitHub"
+              title="GitHub"
+            >
+              <IconBrandGithub className="size-4" />
+              <span>GitHub</span>
+            </a>
+          </Button>
           <NavUser user={user} onNavItemSelect={onNavItemSelect} />
         </div>
       </div>

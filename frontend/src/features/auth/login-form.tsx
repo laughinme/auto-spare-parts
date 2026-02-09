@@ -32,6 +32,7 @@ type LoginFormProps = ComponentProps<"div"> & {
   onEmailChange: (value: string) => void
   onPasswordChange: (value: string) => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
+  onDemoLogin?: (email: string, password: string) => void | Promise<void>
   submitLabel: string
   disabled?: boolean
   submitDisabled?: boolean
@@ -46,6 +47,7 @@ export function LoginForm({
   onEmailChange,
   onPasswordChange,
   onSubmit,
+  onDemoLogin,
   submitLabel,
   disabled = false,
   submitDisabled = false,
@@ -132,9 +134,10 @@ export function LoginForm({
 	                  disabled={disabled}
 	                  className="h-auto w-full flex-col items-start gap-1 rounded-lg border-neutral-700/60 bg-neutral-900/60 px-3 py-2 text-left text-neutral-100 hover:bg-neutral-800/70 hover:text-white"
 	                  onClick={() => {
-	                    onEmailChange(user.email)
-	                    onPasswordChange(DEMO_PASSWORD)
-	                  }}
+                      onEmailChange(user.email)
+                      onPasswordChange(DEMO_PASSWORD)
+                      void onDemoLogin?.(user.email, DEMO_PASSWORD)
+                    }}
                 >
                   <span className="text-sm font-medium leading-none">
                     {user.label}
